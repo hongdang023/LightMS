@@ -773,26 +773,6 @@ const SEED_PROFILES: Profile[] = [
     is_profile_completed: true,
     nautical_miles: 320, // Preloaded with some points
     created_at: new Date('2024-09-05').toISOString()
-  },
-  {
-    id: 'profile-student-sparrow',
-    full_name: 'Jack Sparrow',
-    avatar_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop',
-    role: 'student',
-    telegram_id: '@jack_sparrow_captain',
-    bio: 'Thuyền trưởng tàu Ngọc Trai Đen. Học Vibe Coding để tự động hóa định vị rương báu.',
-    gmail: 'jacksparrow@the1ight.com',
-    phone_number: '0912121212',
-    facebook_url: 'https://facebook.com/jacksparrow.pirate',
-    industry: 'Logistics / Shipping',
-    current_job: 'Ship Captain',
-    tech_level: 'non-tech',
-    product_idea: 'Bản đồ số định vị các rương báu bị thất lạc và dự báo bão biển',
-    weekly_hours_commitment: 15,
-    motivation_bet: 'Bị quái vật Kraken lôi xuống biển sâu nếu không code được MVP!',
-    is_profile_completed: true,
-    nautical_miles: 50,
-    created_at: new Date('2024-09-05').toISOString()
   }
 ];
 
@@ -801,22 +781,20 @@ const SEED_MASTERY_RECORDS: MasteryRecord[] = [
   { student_id: 'profile-student-tuyethong', skill_id: 'skill-lean', mastery_level: 'needs_improvement', last_updated: new Date('2024-09-18').toISOString() },
   { student_id: 'profile-student-tuyethong', skill_id: 'skill-ai', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() },
   { student_id: 'profile-student-tuyethong', skill_id: 'skill-ui', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() },
-  { student_id: 'profile-student-tuyethong', skill_id: 'skill-ux', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() },
-
-  { student_id: 'profile-student-sparrow', skill_id: 'skill-problem', mastery_level: 'needs_improvement', last_updated: new Date('2024-09-15').toISOString() }
+  { student_id: 'profile-student-tuyethong', skill_id: 'skill-ux', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() }
 ];
 
 const SEED_SUBMISSIONS: Submission[] = [
   {
-    id: 'sub-sparrow-les4',
+    id: 'sub-tuyethong-les4',
     assignment_id: 'asg-les-4',
     batch_id: 'batch-3',
-    student_id: 'profile-student-sparrow',
-    content: 'https://docs.google.com/document/d/sparrow-prd-draft\n\nTàu Ngọc Trai Đen đã viết xong bản PRD định hướng đi tìm Kho báu Aztec. Gặp rào cản lớn về Feasibility (AI không biết bơi). Mong Thuyền trưởng Tuyết Hồng feedback cứu vớt!',
+    student_id: 'profile-student-tuyethong',
+    content: 'https://docs.google.com/document/d/tuyethong-prd-draft\n\nEm gửi bản nháp PRD cho dự án LightMS ạ. Em đang tập trung tối ưu hóa luồng User Flow và phân cấp màu sắc theo Design System. Mong chị Hồng góp ý giúp em!',
     status: 'submitted',
     created_at: new Date('2024-09-20T20:30:00Z').toISOString(),
-    upvotes_count: 2,
-    upvoted_by: ['profile-student-tuyethong', 'profile-admin-hong']
+    upvotes_count: 1,
+    upvoted_by: ['profile-admin-hong']
   }
 ];
 

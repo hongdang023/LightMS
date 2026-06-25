@@ -129,7 +129,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     if (studentId === 'profile-student-tuyethong') {
       return day <= 5;
     }
-    return day <= 1; // Jack Sparrow only completed Day 1
+    return false;
   };
 
   // Helper: Check if a student completed a specific lesson assignment

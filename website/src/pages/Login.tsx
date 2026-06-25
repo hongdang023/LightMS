@@ -28,13 +28,6 @@ export const Login: React.FC = () => {
       role: 'Học viên',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
       desc: 'Đã hoàn thành Onboarding'
-    },
-    {
-      name: 'Jack Sparrow',
-      email: 'jacksparrow@the1ight.com',
-      role: 'Học viên',
-      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop',
-      desc: 'Thuyền trưởng tàu Ngọc Trai Đen'
     }
   ];
 
