@@ -267,7 +267,7 @@ interface DatabaseContextType {
   users: Profile[];
   updateProfile: (profileId: string, updates: Partial<Profile>) => void;
   isAuthenticated: boolean;
-  loginWithGmail: (email: string) => Profile | null;
+  loginWithGmail: (email: string, role?: UserRole) => Profile | null;
   logout: () => void;
   
   // Data lists
@@ -1245,7 +1245,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const loginWithGmail = (email: string): Profile | null => {
+  const loginWithGmail = (email: string, role: UserRole = 'student'): Profile | null => {
     const cleanEmail = email.trim().toLowerCase();
     const existingUser = profiles.find(p => p.gmail.toLowerCase() === cleanEmail);
     
@@ -1256,15 +1256,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem('lms_is_authenticated', 'true');
       return existingUser;
     } else {
-      // Create a new student profile
-      const newId = `profile-student-${Date.now()}`;
+      // Create a new profile with selected role
+      const newId = `profile-${role}-${Date.now()}`;
       const newProfile: Profile = {
         id: newId,
         full_name: email.split('@')[0], // default name from email prefix
         avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
-        role: 'student',
+        role: role,
         telegram_id: '',
-        bio: 'Thủy thủ mới gia nhập hải trình.',
+        bio: role === 'admin' ? 'Giảng viên / Quản trị viên mới.' : 'Thủy thủ mới gia nhập hải trình.',
         gmail: cleanEmail,
         phone_number: '',
         facebook_url: '',

@@ -48,7 +48,7 @@ function MainAppShell() {
     return <Login />;
   }
 
-  if (activeUser.role === 'student' && !activeUser.is_profile_completed) {
+  if (!activeUser.is_profile_completed) {
     return <OnboardingForm />;
   }
 
