@@ -1,0 +1,174 @@
+/* Application Main Shell */
+.app-shell {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--canvas-gray);
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: var(--canvas-gray);
+}
+
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(33, 76, 84, 0.2);
+  border-radius: 99px;
+}
+
+/* Typography Helpers */
+.text-primary { color: var(--primary-teal); }
+.text-dark { color: var(--dark-slate); }
+.text-muted { color: var(--muted-teal); }
+.text-gold { color: var(--deep-gold); }
+
+/* Common UI Components */
+.card {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(62, 94, 99, 0.15);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(33, 76, 84, 0.25);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--primary-teal);
+  color: var(--white);
+}
+.btn-primary:hover {
+  background-color: var(--dark-slate);
+}
+.btn-primary:disabled {
+  background-color: #D1D5DB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  border: 1.5px solid var(--muted-teal);
+  color: var(--muted-teal);
+  background-color: transparent;
+}
+.btn-secondary:hover {
+  background-color: rgba(62, 94, 99, 0.05);
+  border-color: var(--primary-teal);
+  color: var(--primary-teal);
+}
+
+.btn-accent {
+  background-color: var(--deep-gold);
+  color: var(--dark-slate);
+  box-shadow: 0 4px 14px 0 rgba(234, 179, 8, 0.39);
+}
+.btn-accent:hover {
+  background-color: var(--light-gold);
+  box-shadow: 0 6px 20px rgba(234, 179, 8, 0.23);
+  transform: translateY(-1px);
+}
+
+/* Badge States */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-success { background-color: rgba(16, 185, 129, 0.15); color: #047857; }
+.badge-warning { background-color: rgba(245, 158, 11, 0.15); color: #B45309; }
+.badge-danger { background-color: rgba(239, 68, 68, 0.15); color: #B91C1C; }
+.badge-info { background-color: rgba(33, 76, 84, 0.1); color: var(--primary-teal); }
+
+/* Form Fields */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted-teal);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(62, 94, 99, 0.2);
+  background-color: var(--white);
+  color: var(--dark-slate);
+  font-size: 0.9375rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-teal);
+  box-shadow: 0 0 0 3px rgba(33, 76, 84, 0.1);
+}
+
+.form-control::placeholder {
+  color: #9CA3AF;
+}
+
+/* Grid Layouts */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

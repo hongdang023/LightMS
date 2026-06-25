@@ -1,0 +1,45 @@
+Buổi,Tên buổi,Target dạy gì,Nội dung chính,Demo gợi ý,BTVN / Output,Ghi chú scope
+1,Mindset: Từ MVP đến product có thể scale,Giúp học viên hiểu gap giữa prototype/MVP và product hoặc workspace system đáng tin hơn.,"MVP vs scalable product vs internal workspace system
+Các điểm gãy sau prototype: codebase rối, data chưa rõ, auth/permission, deploy tạm, thiếu version control, khó debug, thiếu automation
+Tech literacy map cho non-tech: frontend, backend, database, API, auth, deploy, server, automation
+Cách học tech với AI: hỏi đúng, kiểm chứng output, không bị thuật ngữ kéo đi",So sánh một prototype đẹp nhưng mong manh với một product/workspace system có cấu trúc hơn.,MVP-to-Scale Gap Checklist cho project cá nhân; chọn project chính để đi xuyên suốt khóa.,Giữ tính mindset + framework. Không đi quá sâu vào từng công nghệ trong buổi này.
+2,PRD kỹ thuật & 4 Flow,Biến ý tưởng/product request thành spec đủ rõ để AI/IDE/agent build đúng hơn.,"PRD v2: problem, user, goal, success criteria, main use case, out-of-scope, user stories, acceptance criteria
+Main flow vs secondary flow vs edge case
+4 flow: User Flow, Business Flow, System Flow, Data Flow
+Cách dùng AI/skill để review PRD và phát hiện gap",Chuyển một app mẫu từ PRD thường sang PRD kỹ thuật; vẽ 4 flow bằng Mermaid/diagrams.net hoặc tool tương đương.,PRD v2 + 4 flow draft cho main use case của project.,Buổi này là nền để các buổi backend/deploy/automation không bị loạn.
+3,IDE + CLI Product Cockpit,"Dạy cách làm việc với IDE/CLI để AI build có kiểm soát thay vì sửa lung tung. (học cả Cursor, Antigravity, Codex & Claude Code). Riêng Claude code có thể tách 1 buổi nếu muốn","Cấu phần IDE: file tree, editor, agent panel, terminal, source control/diff
+Workflow giao việc cho agent: context, task breakdown, plan, diff review, accept/reject, run/test/debug
+Khi nào dùng IDE, khi nào dùng CLI
+Cách yêu cầu AI giải thích lỗi terminal/build log
+Cách giới hạn scope để agent không sửa quá rộng",Mở repo/app mẫu; yêu cầu agent thêm một feature nhỏ; review diff; chạy local; sửa lỗi; commit nháp.,Thêm hoặc sửa một feature nhỏ trong project bằng IDE/CLI workflow; ghi lại task/prompt và diff chính.,Chọn một IDE chính để demo. Các IDE khác chỉ overview.
+4,Skills for Product Building,"Dạy skill như playbook tái sử dụng để AI hỗ trợ brainstorm, scope, QA, review và cải thiện sản phẩm ổn định hơn.","Skill là gì, khác prompt thường ở đâu
+Skill cho brainstorm product, sharpen problem statement, MVP scoping, PRD review, acceptance criteria
+Skill cho QA app, browser testing, pitch review, build review checklist
+Ví dụ Superpowers hoặc MVP/product framework skill
+Cách gọi skill đúng lúc trong IDE/agent workflow",Dùng skill để review PRD v2; tạo test checklist; dùng browser/testing skill để kiểm tra một flow sản phẩm.,Dùng ít nhất 1 skill để cải thiện PRD/app; nộp before/after.,Nên tách riêng vì phần Skills khóa cũ bị dồn với MCP nên dễ quá tải.
+5,MCP for Product Building,Dạy MCP theo use case product: agent chạm vào tool/data/context để làm việc thật hơn.,"MCP trong bức tranh agent/tool
+MCP vs Skill vs API vs CLI vs Script
+MCP cho design/prototype, browser/app testing, database/schema/docs, repo/GitHub, file/workspace context
+Decision rule: khi nào MCP đáng dùng, khi nào không cần",Agent dùng browser để test flow; dùng database/docs context để đề xuất schema hoặc kiểm tra lỗi; đọc repo/context để trả lời câu hỏi product/technical.,"Chọn 1 MCP/MCP-like workflow để audit/test một phần project. Nếu setup nặng, dùng guided demo + worksheet.","Không đi sâu subagents, orchestration, remote agent setup. Các phần đó để workshop/khóa sau."
+6,GitHub & Version Control,"Dùng GitHub như hệ thống kiểm soát thay đổi, không chỉ là nơi lưu code.","Repo, commit, branch, pull request ở mức non-tech cần hiểu
+Issue -> change -> review -> commit -> deploy
+AI review code/change
+Rollback mindset
+Repo hygiene: README, env example, folder structure, issue template, changelog đơn giản",Tạo issue cho bug/feature; agent sửa code; review diff; commit/push; trigger deploy.,Một change trong project được track từ issue đến commit; repo có README hoặc project notes tối thiểu.,Không cần dạy Git command line sâu. Ưu tiên mental model + workflow thực dụng.
+7,Backend Decision Layer,"Giúp học viên biết chọn Google Sheets, Firebase, Supabase, hay backend thật theo nhu cầu sản phẩm.","Data layer trong app/product
+Khi nào dùng Google Sheets, Firebase, Supabase, backend/API custom, hoặc chưa cần backend thật
+So sánh theo độ dễ bắt đầu, realtime, auth, permission, SQL/noSQL, cost/free tier, scale, lock-in, AI/agent friendliness
+Schema, CRUD, auth, permission/RLS ở mức non-tech cần hiểu",Một use case đơn giản được triển khai hoặc mô phỏng bằng Google Sheets/Firebase/Supabase để thấy trade-off; chọn một path chính để demo kỹ.,Backend decision matrix + data model/schema draft cho main use case.,"Nên dạy decision-first, sau đó chọn một path demo chính để tránh quá rộng."
+8,Deploy & Infra Landscape,"Cho học viên hiểu bản đồ deploy/infra: Vercel, Cloudflare, VPS, Docker khác nhau ra sao và nên chọn gì.","Vercel: managed app hosting
+Cloudflare: DNS/CDN/security/Pages/Workers/Tunnel
+VPS: thuê server riêng, linh hoạt hơn nhưng phải tự chịu trách nhiệm
+Docker: đóng gói app/service để chạy ổn định giữa môi trường khác nhau
+SSH, env vars, secrets, domain, logs, local vs production
+Khi nào không nên tự host",Deploy app lên Vercel; giải thích/trỏ domain qua Cloudflare; demo SSH vào VPS hoặc mô phỏng flow; demo Docker chạy service đơn giản.,"Deployment plan cho project: platform, domain/DNS, env vars, rủi ro cần lưu ý.",Không biến thành Docker/VPS hardcore. Mục tiêu là hiểu bản đồ và biết chọn đường.
+9,Automation with n8n,Dùng automation để nối các mảnh sản phẩm/workspace và giảm việc lặp.,"Automation layer là gì
+n8n cho form -> sheet/database -> notification; app data -> report; file upload -> OCR/summary; feedback -> action list; daily/weekly digest
+Local n8n vs cloud/self-host/server n8n
+Webhook, trigger, credential, node, workflow
+Khi nào dùng n8n, khi nào dùng code/API/script",Workflow mẫu: input/form -> data store -> Telegram/email/Slack notification -> summary. Có thể nối với Personal Work OS Lite.,Một workflow n8n chạy được hoặc automation design đủ rõ nếu setup chưa kịp.,Core nên ưu tiên local/cloud demo; self-host/VPS để optional nếu lớp đủ nền.
+,,,,,,
+,Cần xác định build product gì ,,,,,

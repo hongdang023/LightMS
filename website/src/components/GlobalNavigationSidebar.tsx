@@ -1,0 +1,123 @@
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useDatabase } from '../context/DatabaseContext';
+import { BrandLogo } from './BrandLogo';
+import {
+  HomeIcon,
+  AboutIcon,
+  OnboardingIcon,
+  SyllabusIcon,
+  DiscussionsIcon,
+  ScheduleIcon,
+  LeaderboardIcon,
+  SupportIcon,
+  AnnouncementsIcon,
+  AdminDashboardIcon,
+  CourseBuilderIcon,
+  SpeedGraderIcon,
+  StudentsIcon,
+  InternalTeamIcon
+} from './Icons';
+
+interface GlobalNavigationSidebarProps {
+  currentPage: string;
+  onPageChange: (page: string) => void;
+}
+
+export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = ({ currentPage, onPageChange }) => {
+  const { activeUser } = useDatabase();
+  const isStudent = activeUser.role === 'student';
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+
+  // Navigation Items for Student Portal (using premium SVG icons)
+  const studentNav = [
+    { id: 'dashboard', label: 'Trang chủ', icon: HomeIcon },
+    { id: 'announcements', label: 'Thông báo', icon: AnnouncementsIcon },
+    { id: 'about', label: 'Giới thiệu', icon: AboutIcon },
+    { id: 'onboarding', label: 'Onboarding', icon: OnboardingIcon },
+    { id: 'syllabus', label: 'Lộ trình học', icon: SyllabusIcon },
+    { id: 'discussion', label: 'Phòng thảo luận', icon: DiscussionsIcon },
+    { id: 'calendar', label: 'Lịch học', icon: ScheduleIcon },
+    { id: 'walloffame', label: 'Bảng vinh danh', icon: LeaderboardIcon },
+    { id: 'help', label: 'Hỏi đáp & Hỗ trợ', icon: SupportIcon },
+  ];
+
+  // Navigation Items for Admin Portal (using premium SVG icons)
+  const adminNav = [
+    { id: 'admin-dashboard', label: 'Tổng quan hệ thống', icon: AdminDashboardIcon },
+    { id: 'admin-announcements', label: 'Thông báo', icon: AnnouncementsIcon },
+    { id: 'course-builder', label: 'Soạn lộ trình', icon: CourseBuilderIcon },
+    { id: 'admin-calendar', label: 'Lịch học', icon: ScheduleIcon },
+    { id: 'speedgrader', label: 'Chấm bài tập', icon: SpeedGraderIcon },
+    { id: 'student-mgmt', label: 'Quản lý học viên', icon: StudentsIcon },
+    { id: 'internal-team', label: 'Quản lý nhân sự', icon: InternalTeamIcon },
+  ];
+
+  const currentNav = isStudent ? studentNav : adminNav;
+
+  return (
+    <aside className={`relative bg-[#15333B] text-white flex flex-col h-screen border-r border-[#3E5E63]/30 select-none transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-72'}`}>
+      
+      {/* Floating Collapse Toggle */}
+      <button 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-[#15333B] hover:bg-[#214C54] border border-[#3E5E63] text-white flex items-center justify-center z-50 shadow-md transition-colors"
+        title={isCollapsed ? "Mở rộng thanh bên" : "Thu hẹp thanh bên"}
+      >
+        {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}
+      </button>
+
+      {/* Brand Logo Header */}
+      <div className={`border-b border-[#3E5E63]/20 flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center p-4' : 'p-6 gap-3'}`}>
+        <BrandLogo size={36} lighthouseColor="#FFFFFF" sunbeamColor="#FFC72C" waveColor="#00B2E2" />
+        {!isCollapsed && (
+          <div className="animate-fade-in">
+            <h1 className="font-extrabold text-lg tracking-wide bg-gradient-to-r from-white to-[#FFD94C] bg-clip-text text-transparent">
+              LightMS
+            </h1>
+            <p className="text-[10px] text-[#3E5E63] font-semibold tracking-widest uppercase">
+              {isStudent ? 'Student Portal' : 'Admin Portal'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation List */}
+      <nav className={`flex-1 overflow-y-auto py-6 space-y-1.5 custom-scrollbar transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+        {currentNav.map((item) => {
+          const isActive = currentPage === item.id;
+          const IconComponent = item.icon;
+          
+          return (
+            <button
+              key={item.id}
+              onClick={() => onPageChange(item.id)}
+              title={isCollapsed ? item.label : ''}
+              className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-200 group relative ${
+                isCollapsed ? 'justify-center py-3' : 'gap-3.5 px-4 py-3'
+              } ${
+                isActive 
+                  ? 'bg-[#214C54] text-[#FFD94C] shadow-md border-l-4 border-[#FFD94C]' 
+                  : 'text-gray-300 hover:bg-[#214C54]/30 hover:text-white'
+              }`}
+            >
+              <IconComponent 
+                active={isActive} 
+                className="w-5 h-5 flex-shrink-0" 
+              />
+              {!isCollapsed && <span className="animate-fade-in truncate">{item.label}</span>}
+              
+              {/* Highlight dot for active item */}
+              {isActive && !isCollapsed && (
+                <span className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[#FFD94C] animate-pulse" />
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+    </aside>
+  );
+};
+
+
