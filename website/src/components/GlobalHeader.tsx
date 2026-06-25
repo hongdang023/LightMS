@@ -163,13 +163,35 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
               {isAdmin && (
                 <button
                   onClick={() => {
-                    onPageChange('dashboard');
+                    const isAdminPage = [
+                      'admin-dashboard',
+                      'admin-announcements',
+                      'course-builder',
+                      'admin-calendar',
+                      'speedgrader',
+                      'student-mgmt',
+                      'internal-team'
+                    ].includes(currentPage);
+                    
+                    if (isAdminPage) {
+                      onPageChange('dashboard');
+                    } else {
+                      onPageChange('admin-dashboard');
+                    }
                     setDropdownOpen(false);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-[#214C54] hover:text-white transition-colors"
                 >
                   <LayoutDashboard className="w-4 h-4 text-[#FFD94C]" />
-                  Góc độ Học viên
+                  {[
+                    'admin-dashboard',
+                    'admin-announcements',
+                    'course-builder',
+                    'admin-calendar',
+                    'speedgrader',
+                    'student-mgmt',
+                    'internal-team'
+                  ].includes(currentPage) ? 'Góc độ Học viên' : 'Admin Portal'}
                 </button>
               )}
               {isStudent && (

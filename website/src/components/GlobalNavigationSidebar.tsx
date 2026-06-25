@@ -26,8 +26,19 @@ interface GlobalNavigationSidebarProps {
 
 export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = ({ currentPage, onPageChange }) => {
   const { activeUser } = useDatabase();
-  const isStudent = activeUser.role === 'student';
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+
+  const isAdminPage = [
+    'admin-dashboard',
+    'admin-announcements',
+    'course-builder',
+    'admin-calendar',
+    'speedgrader',
+    'student-mgmt',
+    'internal-team'
+  ].includes(currentPage);
+
+  const showAdminSidebar = activeUser.role === 'admin' && isAdminPage;
 
   // Navigation Items for Student Portal (using premium SVG icons)
   const studentNav = [
@@ -53,7 +64,7 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     { id: 'internal-team', label: 'Quản lý nhân sự', icon: InternalTeamIcon },
   ];
 
-  const currentNav = isStudent ? studentNav : adminNav;
+  const currentNav = showAdminSidebar ? adminNav : studentNav;
 
   return (
     <aside className={`relative bg-[#15333B] text-white flex flex-col h-screen border-r border-[#3E5E63]/30 select-none transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-72'}`}>
@@ -76,7 +87,7 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
               LightMS
             </h1>
             <p className="text-[10px] text-[#3E5E63] font-semibold tracking-widest uppercase">
-              {isStudent ? 'Student Portal' : 'Admin Portal'}
+              {showAdminSidebar ? 'Admin Portal' : 'Student Portal'}
             </p>
           </div>
         )}
