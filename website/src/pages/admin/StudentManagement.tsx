@@ -1,18 +1,71 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { Users } from 'lucide-react';
+import { Users, Mail, Award, CheckCircle, Search, Trophy, ShieldAlert } from 'lucide-react';
 
 export const StudentManagement: React.FC = () => {
-  const { users, submissions, masteryRecords, skills } = useDatabase();
+  const { users, submissions, lessons, assignments, onboardingDays, addNotification } = useDatabase();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding'>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Bulk email states
+  const [isBulkEmailModalOpen, setIsBulkEmailModalOpen] = useState(false);
+  const [bulkRecipientGroup, setBulkRecipientGroup] = useState<'all' | 'risk' | 'outstanding'>('all');
+  const [bulkSubject, setBulkSubject] = useState('');
+  const [bulkBody, setBulkBody] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const students = users.filter(u => u.role === 'student');
   const activeStudent = students.find(s => s.id === selectedStudentId);
 
-  const getCompletedCount = (studentId: string) => {
-    return submissions.filter(s => s.student_id === studentId && s.status === 'graded').length;
+  // Calculate live class assignments count
+  const liveClassAssignments = assignments.filter(a => {
+    const lesson = lessons.find(l => l.id === a.lesson_id);
+    return lesson && lesson.module_id !== 'mod-0';
+  });
+  const totalLiveClassCount = liveClassAssignments.length || 3;
+
+  // Helpers to get homework counts
+  const getOnboardingCompletedCount = (nauticalMiles: number) => {
+    // Deterministic progression based on nautical miles
+    return Math.min(7, Math.floor(nauticalMiles / 50));
   };
+
+  const getLiveClassCompletedCount = (studentId: string) => {
+    return submissions.filter(
+      s => s.student_id === studentId && 
+      liveClassAssignments.some(la => la.id === s.assignment_id) && 
+      (s.status === 'graded' || s.status === 'submitted')
+    ).length;
+  };
+
+  // Determine student status
+  const getStudentStatus = (student: typeof students[0]) => {
+    const onboardingDone = getOnboardingCompletedCount(student.nautical_miles);
+    const liveClassDone = getLiveClassCompletedCount(student.id);
+    const visits = student.visits || 1;
+
+    // At risk if live class progress is under 50% or visits < 4
+    const isAtRisk = (totalLiveClassCount > 0 && (liveClassDone / totalLiveClassCount) < 0.5) || visits < 4;
+    
+    // Outstanding if onboarding is complete, live class is 100% complete, and visits >= 8
+    const isOutstanding = onboardingDone === 7 && liveClassDone === totalLiveClassCount && visits >= 8;
+
+    if (isAtRisk) return 'risk';
+    if (isOutstanding) return 'outstanding';
+    return 'normal';
+  };
+
+  // Filter students based on active tab and search query
+  const filteredStudents = students.filter(student => {
+    const status = getStudentStatus(student);
+    const matchesTab = activeTab === 'all' || status === activeTab;
+    const matchesSearch = student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          student.gmail.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
 
   const getRankTitle = (miles: number) => {
     if (miles >= 5000) return 'Huyền thoại 👑';
@@ -22,161 +75,602 @@ export const StudentManagement: React.FC = () => {
     return 'Thủy thủ tập sự ⛵';
   };
 
+  // Commendation actions
+  const triggerCommendation = (name: string) => {
+    setToastMessage(`Đã gửi thư khen ngợi và tuyên dương học viên **${name}** xuất sắc! 🎉`);
+    addNotification('Tuyên dương học viên', `Học viên ${name} được vinh danh vì thành tích xuất sắc!`, 'system');
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const getMailtoLink = (student: typeof students[0]) => {
+    const emailSubject = encodeURIComponent(`[LightMS] Cảnh báo tiến độ học tập - Học viên ${student.full_name}`);
+    const emailBody = encodeURIComponent(
+      `Chào bạn ${student.full_name},\n\n` +
+      `Thầy cô thấy bạn đang gặp chút chậm trễ về tiến độ bài tập và lượt truy cập tương tác trên hệ thống học tập.\n\n` +
+      `Đừng ngần ngại nhắn tin trên nhóm hỗ trợ hoặc liên hệ trực tiếp để được Mentor hướng dẫn vượt qua khó khăn nhé!\n\n` +
+      `Thân ái,\n` +
+      `Ban vận hành LightMS`
+    );
+    return `mailto:${student.gmail}?subject=${emailSubject}&body=${emailBody}`;
+  };
+
+  const getBulkEmails = () => {
+    if (bulkRecipientGroup === 'risk') {
+      const riskStudents = students.filter(s => getStudentStatus(s) === 'risk');
+      return riskStudents.map(s => s.gmail).join(',');
+    }
+    if (bulkRecipientGroup === 'outstanding') {
+      const outstandingStudents = students.filter(s => getStudentStatus(s) === 'outstanding');
+      return outstandingStudents.map(s => s.gmail).join(',');
+    }
+    return students.map(s => s.gmail).join(',');
+  };
+
+  const updateEmailTemplate = (group: 'all' | 'risk' | 'outstanding') => {
+    setBulkRecipientGroup(group);
+    if (group === 'risk') {
+      setBulkSubject('[The1ight] Alo alo! Vẹt lắm mồm báo động đỏ hỗ trợ học tập đâyyy! 🦜🚨');
+      setBulkBody(
+        `Kẹt kẹt... Reng reng! 🦜\n\n` +
+        `Chào các đồng chí thủy thủ,\n\n` +
+        `Vẹt Lắm Mồm từ hạm đội The1ight bay qua và phát hiện ra hạm đội của chúng ta đang có một vài thành viên hơi "chìm" dưới sóng bài tập một chút nhé! (Tiến độ bài tập hoặc lượt tương tác đang hơi chậm rồi đấy nha, kẹt kẹt!).\n\n` +
+        `Thuyền trưởng Đặng Tuyết Hồng và Mentor đang lo sốt vó lên rồi đây này! Đừng sợ, có khó khăn hay rào cản gì cứ la lên để Vẹt truyền tin hoặc nhắn trực tiếp trên kênh hỗ trợ Light Support nhé. Hãy chủ động đặt lịch Office Hour ngay để Mentor kéo bạn lên thuyền đi tiếp nào!\n\n` +
+        `Giương buồm lên và lướt sóng thôi! Quyết tâm không để bị bỏ lại phía sau! 🦜⚓️`
+      );
+    } else if (group === 'outstanding') {
+      setBulkSubject('[The1ight] Loa loa loa! Vẹt lắm mồm vinh danh Thủy thủ xuất sắc đâyyy! 🦜🏆');
+      setBulkBody(
+        `Cục ta cục tác... Kẹt kẹt! 🦜\n\n` +
+        `Chào các siêu thủy thủ xuất sắc,\n\n` +
+        `Vẹt Lắm Mồm từ hạm đội The1ight xin được hét thật to vinh danh các chiến thần vì đã càn quét sạch sẽ toàn bộ thử thách bài tập vừa qua! Quá xuất sắc, quá đỉnh chóp!\n\n` +
+        `Thuyền trưởng Đặng Tuyết Hồng gửi ngàn tim và Mentor đang vỗ tay bôm bốp khen ngợi tinh thần giương buồm không mệt mỏi của bạn. Hãy tiếp tục giữ vững phong độ này để giật cup quán quân Hải trình Vibe Coding nhé!\n\n` +
+        `Bay cao bay xa cùng The1ight thôi nào! 🦜✨`
+      );
+    } else {
+      setBulkSubject('[The1ight] Vẹt lắm mồm từ hạm đội The1ight gửi lời chào thủy thủ đoàn! 🦜');
+      setBulkBody(
+        `Kẹt kẹt... Alo alo! 🦜\n\n` +
+        `Chào toàn thể thủy thủ đoàn hạm đội LightMS,\n\n` +
+        `Vẹt Lắm Mồm bay lượn vòng quanh hòn đảo học tập và muốn gửi lời chúc năng lượng siêu cấp đến tất cả các bạn! Dù đang đi nhanh hay đi chậm, chỉ cần chúng ta không dừng lại, đích đến chắc chắn sẽ ở ngay trước mắt.\n\n` +
+        `Đừng quên check lịch học, hoàn thành bài tập và hú hét trên kênh hỗ trợ khi cần nhé!\n\n` +
+        `Chúc cả nhà một tuần học tập rực rỡ! 🦜⚓️`
+      );
+    }
+  };
+
+  const getHtmlEmail = (subject: string, bodyText: string) => {
+    const formattedBody = bodyText
+      .split('\n\n')
+      .map(p => `<p style="margin: 0 0 12px; line-height: 1.6; color: #3E5E63;">${p.replace(/\n/g, '<br />')}</p>`)
+      .join('');
+
+    return `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FDF5DA; padding: 25px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1.5px solid #ffd94c;">
+  <div style="background-color: #15333B; padding: 15px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid #ffd94c;">
+    <h1 style="color: #ffd94c; margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
+      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
+    </h1>
+  </div>
+  <div style="background-color: #ffffff; padding: 25px; border-radius: 0 0 12px 12px; border-top: none; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+    <h2 style="color: #214C54; margin-top: 0; font-size: 15px; font-weight: 800; border-bottom: 2px solid #F0F0F0; padding-bottom: 8px;">
+      ${subject}
+    </h2>
+    ${formattedBody}
+    <div style="margin-top: 25px; padding-top: 15px; border-top: 2px solid #F0F0F0; text-align: center;">
+      <a href="http://localhost:5173" style="display: inline-block; background-color: #214C54; color: #ffffff; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 11px; box-shadow: 0 2px 4px rgba(33,76,84,0.2);">
+        VÀO HỆ THỐNG LIGHTMS 🚀
+      </a>
+    </div>
+  </div>
+  <div style="text-align: center; margin-top: 12px; font-size: 9px; color: #3E5E63; font-weight: 600;">
+    Bản tin được gửi từ hạm đội vận hành LightMS. Chúc các thủy thủ thuận buồm xuôi gió!
+  </div>
+</div>
+    `.trim();
+  };
+
+  const handleCopyHtml = () => {
+    const html = getHtmlEmail(bulkSubject, bulkBody);
+    navigator.clipboard.writeText(html);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const handleSendBulkEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    const emails = getBulkEmails();
+    if (!emails) {
+      alert('Không có người nhận trong nhóm này!');
+      return;
+    }
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${emails}&su=${encodeURIComponent(bulkSubject)}&body=${encodeURIComponent(bulkBody)}`;
+    window.open(gmailUrl, '_blank');
+    
+    let groupLabel = 'Tất cả học viên';
+    if (bulkRecipientGroup === 'risk') groupLabel = 'Học viên cần hỗ trợ';
+    if (bulkRecipientGroup === 'outstanding') groupLabel = 'Học viên cần vinh danh';
+
+    setToastMessage(`Đã mở Gmail gửi tới nhóm **${groupLabel}** thành công!`);
+    addNotification('Gửi mail hàng loạt', `Admin vừa gửi email hàng loạt cho nhóm ${groupLabel}.`, 'system');
+    
+    setIsBulkEmailModalOpen(false);
+    setBulkSubject('');
+    setBulkBody('');
+  };
+
+  const openBulkEmailModal = () => {
+    setIsBulkEmailModalOpen(true);
+    updateEmailTemplate('all');
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in select-none overflow-hidden space-y-6">
       <PageHeader
         title="Quản lý Học viên"
-        description="Xem danh sách, phân loại và quản lý tiến độ của toàn bộ học viên."
+        description="Theo dõi hoạt động, tiến độ bài tập, khen thưởng học viên xuất sắc hoặc cảnh báo học viên cần hỗ trợ."
         icon={<Users size={32} strokeWidth={1.5} />}
+        action={
+          <button
+            onClick={openBulkEmailModal}
+            className="btn btn-primary text-xs font-extrabold px-4 py-2 flex items-center gap-2 rounded-xl shadow-sm"
+          >
+            <Mail size={14} /> Gửi Email Hàng Loạt
+          </button>
+        }
       />
+
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-[#15333B] text-white px-5 py-3 rounded-2xl shadow-2xl border border-[#3E5E63] flex items-center gap-3 animate-scale-up">
+          <Trophy className="text-yellow-400 w-5 h-5 animate-bounce" />
+          <span className="text-xs font-bold" dangerouslySetInnerHTML={{ __html: toastMessage }}></span>
+          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2">✕</button>
+        </div>
+      )}
       
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         
-        {/* Left Column: Students directory (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider">Danh sách Thủy thủ đoàn (Batch 3)</h3>
-            <p className="text-[10px] text-[#3E5E63] font-semibold mt-0.5">Theo dõi hồ sơ năng lực và tích lũy hải lý.</p>
-          </div>
+        {/* Left Column: Students directory (8 cols) */}
+        <div className="lg:col-span-8 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          
+          {/* Filters & Search Header */}
+          <div className="p-4 bg-gray-50 border-b border-gray-200 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider">Danh sách học viên</h3>
+                <p className="text-[10px] text-[#3E5E63] font-semibold mt-0.5">Quản lý kết quả nộp bài tập và tần suất tương tác học tập.</p>
+              </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar">
-          {students.map((student) => {
-            const completedCount = getCompletedCount(student.id);
-            const isSelected = student.id === selectedStudentId;
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Tìm học viên..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-4 py-1.5 w-full sm:w-60 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#214C54] font-semibold text-[#15333B]"
+                />
+              </div>
+            </div>
 
-            return (
-              <div 
-                key={student.id}
-                onClick={() => setSelectedStudentId(student.id)}
-                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
-                  isSelected 
-                    ? 'bg-[#214C54]/5 border-[#214C54] shadow-sm' 
-                    : 'bg-white border-gray-100 hover:border-gray-300'
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 bg-gray-150 p-1 rounded-xl border border-gray-200 w-fit">
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  activeTab === 'all' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <img 
-                    src={student.avatar_url} 
-                    alt={student.full_name} 
-                    className="w-9 h-9 rounded-full object-cover border"
-                  />
-                  <div className="min-w-0">
-                    <span className="text-xs font-bold text-[#15333B] block leading-tight">{student.full_name}</span>
-                    <span className="text-[9px] text-[#3E5E63] font-bold block truncate mt-0.5">{student.gmail}</span>
-                    <span className="text-[8px] bg-gray-100 text-gray-500 font-extrabold px-1.5 py-0.5 rounded inline-block mt-1">
-                      {student.tech_level?.toUpperCase() || 'NON-TECH'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-5 text-right shrink-0 select-none">
-                  <div>
-                    <span className="text-[9px] text-gray-400 font-bold block">Chấp thuận bài</span>
-                    <span className="text-xs font-bold text-[#15333B]">{completedCount} bài</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-gray-400 font-bold block">Tổng Hải lý</span>
-                    <span className="text-sm font-black text-[#214C54]">⚓ {student.nautical_miles}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Right Column: Active Student Detailed Dossier (5 cols) */}
-      <div className="lg:col-span-5 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        {!activeStudent ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-            <span className="text-5xl">👤</span>
-            <div>
-              <h4 className="font-extrabold text-sm text-[#15333B]">Hồ sơ chi tiết thủy thủ</h4>
-              <p className="text-xs text-gray-400 max-w-xs mt-1">Chọn một học viên ở danh sách bên trái để kiểm tra mục tiêu sản phẩm, tech level và cam kết motivation bet.</p>
+                Tất cả ({students.length})
+              </button>
+              <button 
+                onClick={() => setActiveTab('risk')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                  activeTab === 'risk' ? 'bg-red-600 text-white shadow-sm' : 'text-red-600 hover:bg-red-50'
+                }`}
+              >
+                <ShieldAlert size={12} /> Cần hỗ trợ ({students.filter(s => getStudentStatus(s) === 'risk').length})
+              </button>
+              <button 
+                onClick={() => setActiveTab('outstanding')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                  activeTab === 'outstanding' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-600 hover:bg-amber-50'
+                }`}
+              >
+                <Trophy size={12} /> Khen thưởng ({students.filter(s => getStudentStatus(s) === 'outstanding').length})
+              </button>
             </div>
           </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
-            {/* Header info card */}
-            <div className="flex flex-col items-center text-center pb-4 border-b border-gray-100 space-y-2">
-              <img 
-                src={activeStudent.avatar_url} 
-                alt={activeStudent.full_name} 
-                className="w-16 h-16 rounded-full object-cover border-2 border-[#214C54]"
-              />
-              <div>
-                <h4 className="font-extrabold text-sm text-[#15333B]">{activeStudent.full_name}</h4>
-                <span className="text-xs text-gray-400 block">{activeStudent.gmail}</span>
-                <span className="text-[10px] text-[#214C54] font-bold block mt-1">
-                  ⚔️ {getRankTitle(activeStudent.nautical_miles)}
-                </span>
-              </div>
-            </div>
 
-            {/* Business fields from B2 Schema */}
-            <div className="space-y-4 text-xs">
-              <div>
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Mục tiêu sản phẩm số:</span>
-                <p className="p-3 bg-gray-50 border rounded-xl text-[#3E5E63] font-semibold leading-relaxed">
-                  {activeStudent.product_idea || 'Chưa thiết lập ý tưởng'}
-                </p>
+          {/* Students Table */}
+          <div className="flex-1 overflow-auto custom-scrollbar">
+            {filteredStudents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center text-gray-400">
+                <span className="text-4xl mb-2">🔍</span>
+                <p className="text-xs font-bold">Không tìm thấy học viên nào phù hợp.</p>
               </div>
+            ) : (
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-gray-200 text-gray-400 font-extrabold text-[10px] uppercase tracking-wider bg-gray-50/50 sticky top-0 z-10">
+                    <th className="py-3 px-4">Học Viên</th>
+                    <th className="py-3 px-4 text-center">BTVN Onboarding</th>
+                    <th className="py-3 px-4 text-center">BTVN Live Class</th>
+                    <th className="py-3 px-4 text-center">Visits</th>
+                    <th className="py-3 px-4">Trạng Thái</th>
+                    <th className="py-3 px-4 text-right">Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-150">
+                  {filteredStudents.map((student) => {
+                    const onboardingCount = getOnboardingCompletedCount(student.nautical_miles);
+                    const liveClassCount = getLiveClassCompletedCount(student.id);
+                    const visits = student.visits || 1;
+                    const status = getStudentStatus(student);
+                    const isSelected = student.id === selectedStudentId;
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Lĩnh vực hoạt động:</span>
-                  <span className="font-bold text-[#15333B] block">{activeStudent.industry || 'Chưa cập nhật'}</span>
-                </div>
-                <div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Chức vụ hiện tại:</span>
-                  <span className="font-bold text-[#15333B] block">{activeStudent.current_job || 'Chưa cập nhật'}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Telegram username:</span>
-                  <span className="font-mono text-[#15333B] block font-bold">{activeStudent.telegram_id}</span>
-                </div>
-                <div>
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Cam kết thời gian:</span>
-                  <span className="font-bold text-[#15333B] block">{activeStudent.weekly_hours_commitment || 0} giờ / tuần</span>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Motivation Bet (Đặt cược cam kết):</span>
-                <p className="p-3 bg-amber-50/50 border border-amber-200/50 rounded-xl text-amber-900 font-semibold leading-relaxed">
-                  {activeStudent.motivation_bet || 'Không đặt cược'}
-                </p>
-              </div>
-
-              {/* Mastery records checklist */}
-              <div className="border-t border-gray-100 pt-4 space-y-2">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Đánh giá năng lực hiện tại:</span>
-                <div className="space-y-1.5">
-                  {skills.map(skill => {
-                    const rec = masteryRecords.find(r => r.student_id === activeStudent.id && r.skill_id === skill.id);
-                    const lvl = rec ? rec.mastery_level : 'none';
                     return (
-                      <div key={skill.id} className="flex justify-between items-center bg-gray-50/50 p-2.5 rounded-lg border border-gray-100">
-                        <span className="font-bold text-[10px] text-[#15333B] truncate pr-4">{skill.name.split(' (')[0]}</span>
-                        <span className={`badge-pill text-[8px] font-black shrink-0 ${
-                          lvl === 'excellent' ? 'badge-success' : lvl === 'meets_expectations' ? 'badge-info' : 'badge-danger'
-                        }`}>
-                          {lvl === 'excellent' ? 'Lvl 5 (Excellent)' : lvl === 'meets_expectations' ? 'Lvl 3 (Meets)' : lvl === 'needs_improvement' ? 'Lvl 1.5 (Needs)' : 'Lvl 0 (None)'}
-                        </span>
-                      </div>
+                      <tr 
+                        key={student.id}
+                        onClick={() => setSelectedStudentId(student.id)}
+                        className={`transition-colors cursor-pointer group text-xs ${
+                          isSelected 
+                            ? 'bg-[#214C54]/5 font-semibold' 
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {/* Name & Avatar */}
+                        <td className="py-3.5 px-4 flex items-center gap-3 min-w-0">
+                          <img 
+                            src={student.avatar_url} 
+                            alt={student.full_name} 
+                            className="w-8 h-8 rounded-full object-cover border"
+                          />
+                          <div className="min-w-0">
+                            <span className="font-bold text-[#15333B] block leading-tight">{student.full_name}</span>
+                            <span className="text-[10px] text-gray-400 block mt-0.5 leading-none">{student.gmail}</span>
+                          </div>
+                        </td>
+
+                        {/* Onboarding Homework Progress */}
+                        <td className="py-3.5 px-4 text-center font-bold text-gray-700">
+                          <span className={onboardingCount === 7 ? 'text-green-600' : 'text-gray-500'}>
+                            {onboardingCount}/7
+                          </span>
+                        </td>
+
+                        {/* Live Class Homework Progress */}
+                        <td className="py-3.5 px-4 text-center font-bold text-gray-700">
+                          <span className={liveClassCount === totalLiveClassCount ? 'text-green-600' : liveClassCount === 0 ? 'text-red-500' : 'text-amber-600'}>
+                            {liveClassCount}/{totalLiveClassCount}
+                          </span>
+                        </td>
+
+                        {/* Visits count */}
+                        <td className="py-3.5 px-4 text-center font-extrabold text-gray-700">
+                          {visits}
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="py-3.5 px-4">
+                          {status === 'risk' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] bg-red-100 text-red-850 font-extrabold flex items-center gap-1 w-fit">
+                              <ShieldAlert size={10} /> Nguy cơ
+                            </span>
+                          )}
+                          {status === 'outstanding' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] bg-amber-100 text-amber-850 font-extrabold flex items-center gap-1 w-fit">
+                              <Trophy size={10} /> Xuất sắc
+                            </span>
+                          )}
+                          {status === 'normal' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] bg-green-100 text-green-800 font-extrabold flex items-center gap-1 w-fit">
+                              <CheckCircle size={10} /> Bình thường
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Quick Actions */}
+                        <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          {status === 'risk' && (
+                            <a 
+                              href={getMailtoLink(student)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-[10px] font-bold border border-red-200 transition-colors"
+                            >
+                              <Mail size={12} /> Hỗ trợ
+                            </a>
+                          )}
+                          {status === 'outstanding' && (
+                            <button 
+                              onClick={() => triggerCommendation(student.full_name)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 text-[10px] font-bold border border-amber-200 transition-colors"
+                            >
+                              <Award size={12} /> Tuyên dương
+                            </button>
+                          )}
+                          {status === 'normal' && (
+                            <button 
+                              onClick={() => setSelectedStudentId(student.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-100 text-[10px] font-bold border border-gray-200 transition-colors"
+                            >
+                              Chi tiết
+                            </button>
+                          )}
+                        </td>
+                      </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Active Student Detailed Dossier (4 cols) */}
+        <div className="lg:col-span-4 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          {!activeStudent ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
+              <span className="text-5xl">👤</span>
+              <div>
+                <h4 className="font-extrabold text-sm text-[#15333B]">Hồ sơ chi tiết học viên</h4>
+                <p className="text-xs text-gray-400 max-w-xs mt-1">Chọn một học viên từ bảng bên trái để kiểm tra mục tiêu sản phẩm, tech level và cam kết học tập.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+              {/* Header info card */}
+              <div className="flex flex-col items-center text-center pb-4 border-b border-gray-100 space-y-2">
+                <img 
+                  src={activeStudent.avatar_url} 
+                  alt={activeStudent.full_name} 
+                  className="w-16 h-16 rounded-full object-cover border-2 border-[#214C54]"
+                />
+                <div>
+                  <h4 className="font-extrabold text-sm text-[#15333B]">{activeStudent.full_name}</h4>
+                  <span className="text-xs text-gray-400 block">{activeStudent.gmail}</span>
+                  <span className="text-[10px] text-[#214C54] font-bold block mt-1">
+                    ⚔️ {getRankTitle(activeStudent.nautical_miles)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Business fields */}
+              <div className="space-y-4 text-xs">
+                <div>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Mục tiêu sản phẩm số:</span>
+                  <p className="p-3 bg-gray-50 border rounded-xl text-[#3E5E63] font-semibold leading-relaxed">
+                    {activeStudent.product_idea || 'Chưa thiết lập ý tưởng'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Lĩnh vực hoạt động:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.industry || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Chức vụ hiện tại:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.current_job || 'Chưa cập nhật'}</span>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Telegram username:</span>
+                  <span className="font-mono text-xs text-[#15333B] block font-bold">{activeStudent.telegram_id || 'Chưa cập nhật'}</span>
+                </div>
+
+                {/* Detailed Homework Progress Checklist */}
+                <div className="border-t border-gray-100 pt-4 space-y-2">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Tiến độ chi tiết bài tập:</span>
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                    {/* Onboarding Week Progress */}
+                    <div className="text-[9px] font-extrabold text-[#214C54] uppercase tracking-wider mb-1 mt-1">Chặng 1: Onboarding Week</div>
+                    {onboardingDays.map(day => {
+                      const onboardingCount = getOnboardingCompletedCount(activeStudent.nautical_miles);
+                      const isDayCompleted = day.day <= onboardingCount;
+                      
+                      const statusLabel = isDayCompleted ? "Đã xong" : "Chưa xong";
+                      const badgeColor = isDayCompleted ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400";
+                      
+                      return (
+                        <div key={`ob-${day.day}`} className="flex justify-between items-center bg-gray-50/50 p-2.5 rounded-lg border border-gray-100 text-[10px]">
+                          <span className="font-bold text-[#15333B] truncate pr-4">Ngày {day.day}: {day.title.split(': ')[1] || day.title}</span>
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold shrink-0 ${badgeColor}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                      );
+                    })}
+
+                    {/* Live Class Progress */}
+                    <div className="text-[9px] font-extrabold text-[#214C54] uppercase tracking-wider mb-1 mt-3">Chặng 2: Live Class</div>
+                    {lessons.map(lesson => {
+                      const asg = assignments.find(a => a.lesson_id === lesson.id);
+                      if (!asg) return null;
+                      const sub = submissions.find(s => s.student_id === activeStudent.id && s.assignment_id === asg.id);
+
+                      let statusLabel = "Chưa nộp";
+                      let badgeColor = "bg-gray-100 text-gray-400";
+                      if (sub) {
+                        if (sub.status === 'graded') {
+                          statusLabel = "Đã chấm";
+                          badgeColor = "bg-green-100 text-green-700";
+                        } else if (sub.status === 'submitted') {
+                          statusLabel = "Đã nộp";
+                          badgeColor = "bg-amber-100 text-amber-700";
+                        } else {
+                          statusLabel = "Nháp";
+                          badgeColor = "bg-blue-100 text-blue-700";
+                        }
+                      }
+
+                      return (
+                        <div key={lesson.id} className="flex justify-between items-center bg-gray-50/50 p-2.5 rounded-lg border border-gray-100 text-[10px]">
+                          <span className="font-bold text-[#15333B] truncate pr-4">{lesson.title}</span>
+                          <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold shrink-0 ${badgeColor}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
       </div>
 
-    </div>
+      {/* Bulk Email Modal */}
+      {isBulkEmailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col border border-gray-100 overflow-hidden animate-scale-up max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-teal-850">
+                <Mail className="w-5 h-5" />
+                <h4 className="text-sm font-black text-[#15333B] uppercase tracking-wider">Gửi Email Hàng Loạt</h4>
+              </div>
+              <button 
+                onClick={() => { setIsBulkEmailModalOpen(false); setBulkSubject(''); setBulkBody(''); }}
+                className="w-8 h-8 rounded-full bg-[#15333B]/5 hover:bg-[#15333B]/10 flex items-center justify-center text-[#15333B] transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Side-by-Side Content */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+              {/* Left Column: Form Editor */}
+              <form onSubmit={handleSendBulkEmail} className="flex-1 p-6 space-y-4 overflow-y-auto border-r border-gray-100">
+                {/* Recipient Group Selector */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#15333B] block">Gửi tới nhóm học viên:</label>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700">
+                      <input 
+                        type="radio" 
+                        name="recipientGroup" 
+                        value="all" 
+                        checked={bulkRecipientGroup === 'all'} 
+                        onChange={() => updateEmailTemplate('all')}
+                        className="text-[#214C54] focus:ring-[#214C54]"
+                      />
+                      <span>Tất cả ({students.length} người)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700">
+                      <input 
+                        type="radio" 
+                        name="recipientGroup" 
+                        value="risk" 
+                        checked={bulkRecipientGroup === 'risk'} 
+                        onChange={() => updateEmailTemplate('risk')}
+                        className="text-[#214C54] focus:ring-[#214C54]"
+                      />
+                      <span className="text-red-700">Cần hỗ trợ ({students.filter(s => getStudentStatus(s) === 'risk').length} người)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700">
+                      <input 
+                        type="radio" 
+                        name="recipientGroup" 
+                        value="outstanding" 
+                        checked={bulkRecipientGroup === 'outstanding'} 
+                        onChange={() => updateEmailTemplate('outstanding')}
+                        className="text-[#214C54] focus:ring-[#214C54]"
+                      />
+                      <span className="text-emerald-700">Tuyên dương ({students.filter(s => getStudentStatus(s) === 'outstanding').length} người)</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Subject Input */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#15333B] block">Tiêu đề Email (Subject):</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="Nhập tiêu đề email..."
+                    value={bulkSubject}
+                    onChange={(e) => setBulkSubject(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54]/20 transition-all font-bold text-[#15333B]"
+                  />
+                </div>
+
+                {/* Body Textarea */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-[#15333B] block">Nội dung Email (Body):</label>
+                  <textarea 
+                    required
+                    rows={8}
+                    placeholder="Nhập nội dung email gửi cho học viên..."
+                    value={bulkBody}
+                    onChange={(e) => setBulkBody(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs leading-relaxed focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54]/20 resize-none transition-all font-medium text-gray-700"
+                  />
+                </div>
+
+                {/* Left Column Actions */}
+                <div className="pt-4 border-t border-gray-100 flex justify-between gap-3">
+                  <button 
+                    type="button"
+                    onClick={handleCopyHtml}
+                    className="btn border border-teal-600 text-teal-850 hover:bg-teal-50/50 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5"
+                  >
+                    {copySuccess ? 'Đã sao chép! ✓' : 'Sao chép mã HTML 📋'}
+                  </button>
+                  
+                  <div className="flex gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => { setIsBulkEmailModalOpen(false); setBulkSubject(''); setBulkBody(''); }}
+                      className="btn border border-gray-300 text-gray-700 text-xs font-bold px-4 py-2 hover:bg-gray-50 rounded-xl"
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      type="submit"
+                      className="btn btn-primary text-xs font-extrabold px-4 py-2 flex items-center gap-1.5 rounded-xl shadow-md"
+                    >
+                      Gửi qua Gmail 🚀
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Right Column: Premium Styled Preview */}
+              <div className="hidden md:flex flex-1 flex-col bg-gray-50 p-6 overflow-y-auto">
+                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">Xem trước Email (Định dạng Brand Guidelines)</div>
+                <div className="bg-[#FDF5DA] p-6 rounded-2xl border border-[#ffd94c] flex-1 flex flex-col justify-start">
+                  <div className="bg-[#15333B] p-4 rounded-t-xl text-center border-b-4 border-[#ffd94c]">
+                    <span className="text-[#ffd94c] font-black text-xs tracking-wider block">
+                      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
+                    </span>
+                  </div>
+                  <div className="bg-white p-5 rounded-b-xl flex-1 shadow-sm">
+                    <h5 className="text-[#214C54] font-black text-xs border-b border-gray-150 pb-2 mb-3">
+                      {bulkSubject || '(Không có tiêu đề)'}
+                    </h5>
+                    <div className="text-[11px] text-gray-700 font-medium leading-relaxed space-y-3 whitespace-pre-line">
+                      {bulkBody || '(Không có nội dung)'}
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+                      <span className="inline-block bg-[#214C54] text-white text-[10px] font-black px-4 py-2 rounded-lg cursor-pointer">
+                        VÀO HỆ THỐNG LIGHTMS 🚀
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-center mt-3 text-[9px] text-[#3E5E63] font-bold">
+                    Bản tin được gửi từ hạm đội vận hành LightMS.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

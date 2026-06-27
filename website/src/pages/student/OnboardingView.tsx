@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { 
   BookOpen, Wrench, Bot, Compass, Palette, FlaskConical, Anchor, 
   ClipboardList, Target, Pin, CheckCircle2, MessageSquareWarning, Lock
@@ -267,6 +267,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
           label: trimmed.replace('- [ ]', '').trim(),
           key: `day-${dayData.day}-task-${taskIdx}`
         });
+      } else if (tasks.length > 0 && line.length > 0) {
+        tasks[tasks.length - 1].label += '\n' + line;
       }
     });
     return tasks;
@@ -363,32 +365,68 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
   };
 
   const parseInlineMarkdown = (text: string): React.ReactNode => {
-    const regex = /\[(.*?)\]\((.*?)\)|\*\*(.*?)\*\*/g;
+    // Strip styling spans/fonts generated automatically by browsers
+    let cleanText = text
+      .replace(/<span[^>]*>/gi, '')
+      .replace(/<\/span>/gi, '')
+      .replace(/<font[^>]*>/gi, '')
+      .replace(/<\/font>/gi, '');
+
+    // Regex matches: links (markdown & HTML), bold, italics, and underline HTML tags
+    const regex = /\[(.*?)\]\((.*?)\)|<a\s+(?:[^>]*?\s+)?href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>|\*\*(.*?)\*\*|\*(.*?)\*|<u>(.*?)<\/u>|<em[^>]*>(.*?)<\/em>/g;
     const parts = [];
     let lastIndex = 0;
     let match;
 
-    while ((match = regex.exec(text)) !== null) {
+    while ((match = regex.exec(cleanText)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
+        parts.push(cleanText.substring(lastIndex, match.index));
       }
       if (match[1] && match[2]) {
-        // It's a link
+        // Markdown Link
         parts.push(
           <a key={`link-${match.index}`} href={match[2]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors">
             {match[1]} <span className="text-[10px] inline-block ml-0.5">🔗</span>
           </a>
         );
-      } else if (match[3]) {
-        // It's bold - formatted as sub-headings for task list
-        const isTaskHeading = match[3].toLowerCase().startsWith('task ');
+      } else if (match[3] && match[4]) {
+        // HTML Link
+        parts.push(
+          <a key={`link-html-${match.index}`} href={match[3]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors">
+            {match[4]} <span className="text-[10px] inline-block ml-0.5">🔗</span>
+          </a>
+        );
+      } else if (match[5]) {
+        // Bold
+        const isTaskHeading = match[5].toLowerCase().startsWith('task ');
         parts.push(
           <strong 
             key={`bold-${match.index}`} 
             className={isTaskHeading ? "block text-base font-semibold text-[#214C54] mb-1" : "font-semibold text-[#214C54]"}
           >
-            {match[3]}
+            {match[5]}
           </strong>
+        );
+      } else if (match[6]) {
+        // Italic (Markdown style)
+        parts.push(
+          <em key={`italic-md-${match.index}`} className="italic">
+            {match[6]}
+          </em>
+        );
+      } else if (match[7]) {
+        // Underline HTML tag
+        parts.push(
+          <u key={`underline-${match.index}`} className="underline">
+            {match[7]}
+          </u>
+        );
+      } else if (match[8]) {
+        // Italic (em HTML tag)
+        parts.push(
+          <em key={`italic-html-${match.index}`} className="italic">
+            {match[8]}
+          </em>
         );
       }
       lastIndex = regex.lastIndex;
@@ -427,6 +465,173 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
   };
 
   const activeDayData = onboardingDays.find(d => d.day === selectedDay) || onboardingDays[0];
+
+  // Local state for visual task editor
+  const [editingTasks, setEditingTasks] = useState<{ id: string; label: string; isOptional: boolean }[]>([]);
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+
+  // Synchronize local task list when activeDayData or isEditMode changes
+  useEffect(() => {
+    if (isEditMode && activeDayData) {
+      const lines = activeDayData.checklist.split('\n');
+      const parsed: { id: string; label: string; isOptional: boolean }[] = [];
+      lines.forEach((line, index) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('- [ ]')) {
+          const rawLabel = trimmed.replace('- [ ]', '').trim();
+          const isOptional = rawLabel.toLowerCase().includes('(optional)');
+          parsed.push({
+            id: `task-${index}-${activeDayData.day}-${Date.now()}-${Math.random()}`,
+            label: rawLabel,
+            isOptional: isOptional
+          });
+        } else if (parsed.length > 0 && line.length > 0) {
+          parsed[parsed.length - 1].label += '\n' + line;
+        }
+      });
+      setEditingTasks(parsed);
+    }
+  }, [activeDayData.day, isEditMode]);
+
+  const saveTasks = (newTasks: { id: string; label: string; isOptional: boolean }[]) => {
+    setEditingTasks(newTasks);
+    const serialized = newTasks.map(t => {
+      let text = t.label;
+      const hasOptional = text.toLowerCase().includes('(optional)');
+      if (t.isOptional && !hasOptional) {
+        text = text + ' (Optional)';
+      } else if (!t.isOptional && hasOptional) {
+        text = text.replace(/\s*\(optional\)/i, '');
+      }
+      return `- [ ] ${text}`;
+    }).join('\n');
+    updateOnboardingDay(activeDayData.day, { checklist: serialized });
+  };
+
+  const handleTaskLabelChange = (id: string, newLabel: string) => {
+    const updated = editingTasks.map(t => t.id === id ? { ...t, label: newLabel } : t);
+    setEditingTasks(updated);
+    
+    // Auto-save immediately to database/context when typing for instant layout updates
+    const serialized = updated.map(t => {
+      let text = t.label;
+      const hasOptional = text.toLowerCase().includes('(optional)');
+      if (t.isOptional && !hasOptional) {
+        text = text + ' (Optional)';
+      } else if (!t.isOptional && hasOptional) {
+        text = text.replace(/\s*\(optional\)/i, '');
+      }
+      return `- [ ] ${text}`;
+    }).join('\n');
+    updateOnboardingDay(activeDayData.day, { checklist: serialized });
+  };
+
+  const handleTaskLabelBlur = (id: string, finalLabel: string) => {
+    const updated = editingTasks.map(t => t.id === id ? { ...t, label: finalLabel } : t);
+    saveTasks(updated);
+  };
+
+  const handleToggleOptional = (id: string) => {
+    const updated = editingTasks.map(t => {
+      if (t.id === id) {
+        const nextOptional = !t.isOptional;
+        let text = t.label;
+        const hasOptional = text.toLowerCase().includes('(optional)');
+        if (nextOptional && !hasOptional) {
+          text = text + ' (Optional)';
+        } else if (!nextOptional && hasOptional) {
+          text = text.replace(/\s*\(optional\)/i, '');
+        }
+        return { ...t, label: text, isOptional: nextOptional };
+      }
+      return t;
+    });
+    saveTasks(updated);
+  };
+
+  const handleAddTask = () => {
+    const newTasks = [
+      ...editingTasks,
+      {
+        id: `task-new-${Date.now()}-${Math.random()}`,
+        label: `**Task ${editingTasks.length + 1}:** Tên nhiệm vụ mới`,
+        isOptional: false
+      }
+    ];
+    saveTasks(newTasks);
+  };
+
+  const handleDeleteTask = (id: string) => {
+    const newTasks = editingTasks.filter(t => t.id !== id);
+    saveTasks(newTasks);
+  };
+
+  const handleMoveTask = (index: number, direction: 'up' | 'down') => {
+    const newTasks = [...editingTasks];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex >= 0 && targetIndex < newTasks.length) {
+      const temp = newTasks[index];
+      newTasks[index] = newTasks[targetIndex];
+      newTasks[targetIndex] = temp;
+      saveTasks(newTasks);
+    }
+  };
+
+  const applyFormatting = (taskId: string, format: 'bold' | 'italic' | 'underline' | 'ordered-list' | 'bullet-list' | 'link' | 'clear') => {
+    const editor = document.getElementById(`input-${taskId}`) as HTMLDivElement;
+    if (!editor) return;
+
+    editor.focus();
+
+    if (format === 'bold') {
+      document.execCommand('bold', false);
+    } else if (format === 'italic') {
+      document.execCommand('italic', false);
+    } else if (format === 'underline') {
+      document.execCommand('underline', false);
+    } else if (format === 'ordered-list') {
+      document.execCommand('insertOrderedList', false);
+    } else if (format === 'bullet-list') {
+      document.execCommand('insertUnorderedList', false);
+    } else if (format === 'link') {
+      const url = prompt('Nhập địa chỉ liên kết (URL):', 'https://');
+      if (url) {
+        document.execCommand('createLink', false, url);
+      }
+    } else if (format === 'clear') {
+      document.execCommand('removeFormat', false);
+    }
+
+    // Trigger onInput manually to sync state and save
+    const html = editor.innerHTML;
+    let markdown = html
+      .replace(/<span[^>]*>/gi, '')
+      .replace(/<\/span>/gi, '')
+      .replace(/<font[^>]*>/gi, '')
+      .replace(/<\/font>/gi, '')
+      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+      .replace(/<i>(.*?)<\/i>/gi, '*$1*')
+      .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+      .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
+      .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+      .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, p1) => {
+        let idx = 1;
+        // Clean inner li tags and make sure we have correct line endings
+        return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, () => `${idx++}. $1\n`).trim() + '\n';
+      })
+      .replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, p1) => {
+        return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, '- $1\n').trim() + '\n';
+      })
+      .replace(/<div><br><\/div>/gi, '\n')
+      .replace(/<div>(.*?)<\/div>/gi, '\n$1')
+      .replace(/<br>/gi, '\n')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+
+    handleTaskLabelChange(taskId, markdown);
+  };
+
   const dayTasks = getTasksForDay(activeDayData);
   const visual = DAY_VISUAL_STYLES[selectedDay] || DAY_VISUAL_STYLES[1];
 
@@ -628,15 +833,208 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
             
             <div className="space-y-3">
               {isEditMode ? (
-                <div className="space-y-2 w-full">
-                  <p className="text-xs text-amber-600 font-bold">💡 Bạn đang chỉnh sửa danh sách nhiệm vụ dưới dạng Markdown (mỗi dòng bắt đầu bằng `- [ ]`):</p>
-                  <EditableText
-                    value={activeDayData.checklist}
-                    onSave={(newValue) => updateOnboardingDay(activeDayData.day, { checklist: newValue })}
-                    className="font-mono text-xs text-[#3E5E63] w-full"
-                    minRows={8}
-                    mono
-                  />
+                <div className="space-y-4 w-full">
+                  <div className="space-y-3">
+                    {editingTasks.map((task, idx) => (
+                      <div key={task.id} className="flex flex-col gap-2 bg-white p-4 rounded-2xl border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all">
+                        {/* Formatting toolbar shown only when this task is active */}
+                        {focusedTaskId === task.id && (
+                          <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-inner">
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'bold');
+                              }}
+                              className="w-7 h-7 flex items-center justify-center text-sm font-extrabold hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+                              title="In đậm (Bold)"
+                            >
+                              B
+                            </button>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'italic');
+                              }}
+                              className="w-7 h-7 flex items-center justify-center text-sm italic hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+                              title="In nghiêng (Italic)"
+                            >
+                              I
+                            </button>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'underline');
+                              }}
+                              className="w-7 h-7 flex items-center justify-center text-sm underline hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+                              title="Gạch chân (Underline)"
+                            >
+                              U
+                            </button>
+                            <div className="w-px h-5 bg-gray-300 mx-1"></div>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'ordered-list');
+                              }}
+                              className="px-2 h-7 flex items-center justify-center text-[10px] font-black hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+                              title="Danh sách số"
+                            >
+                              1.2.3.
+                            </button>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'bullet-list');
+                              }}
+                              className="px-2 h-7 flex items-center justify-center text-xs hover:bg-white rounded-lg text-[#214C54] transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+                              title="Danh sách điểm"
+                            >
+                              •••
+                            </button>
+                            <div className="w-px h-5 bg-gray-300 mx-1"></div>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'link');
+                              }}
+                              className="px-2.5 h-7 flex items-center justify-center text-xs hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm gap-1"
+                              title="Gắn link"
+                            >
+                              🔗 Link
+                            </button>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyFormatting(task.id, 'clear');
+                              }}
+                              className="w-7 h-7 flex items-center justify-center text-sm hover:bg-white rounded-lg text-rose-600 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+                              title="Xóa định dạng"
+                            >
+                              Tx
+                            </button>
+                            <span className="text-[9px] text-gray-400 ml-auto italic hidden sm:inline pr-1">Nhấn Enter để xuống dòng</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-start gap-3">
+                          {/* Reordering */}
+                          <div className="flex flex-col gap-1 shrink-0 pt-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveTask(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                              title="Di chuyển lên"
+                            >
+                              <ArrowUp size={14} className="text-[#3E5E63]" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveTask(idx, 'down')}
+                              disabled={idx === editingTasks.length - 1}
+                              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                              title="Di chuyển xuống"
+                            >
+                              <ArrowDown size={14} className="text-[#3E5E63]" />
+                            </button>
+                          </div>
+
+                          {/* Task Text Area (WYSIWYG contentEditable) */}
+                          <div className="flex-1 min-w-0">
+                            <div
+                              id={`input-${task.id}`}
+                              contentEditable
+                              suppressContentEditableWarning
+                              onInput={(e) => {
+                                const target = e.currentTarget;
+                                // Convert visual HTML layout to markdown to save state
+                                let html = target.innerHTML;
+                                
+                                // Standardize HTML tags to markdown
+                                let markdown = html
+                                  .replace(/<span[^>]*>/gi, '')
+                                  .replace(/<\/span>/gi, '')
+                                  .replace(/<font[^>]*>/gi, '')
+                                  .replace(/<\/font>/gi, '')
+                                  .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                                  .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                                  .replace(/<i>(.*?)<\/i>/gi, '*$1*')
+                                  .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+                                  .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
+                                  .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+                                  .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, p1) => {
+                                    let idx = 1;
+                                    return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, () => `${idx++}. $1\n`).trim() + '\n';
+                                  })
+                                  .replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, p1) => {
+                                    return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, '- $1\n').trim() + '\n';
+                                  })
+                                  .replace(/<div><br><\/div>/gi, '\n')
+                                  .replace(/<div>(.*?)<\/div>/gi, '\n$1')
+                                  .replace(/<br>/gi, '\n')
+                                  .replace(/&nbsp;/g, ' ')
+                                  .trim();
+                                
+                                handleTaskLabelChange(task.id, markdown);
+                              }}
+                              onBlur={() => {
+                                handleTaskLabelBlur(task.id, task.label);
+                                setTimeout(() => setFocusedTaskId(null), 200);
+                              }}
+                              onFocus={() => {
+                                setFocusedTaskId(task.id);
+                              }}
+                              className="w-full bg-transparent focus:outline-none py-1 px-1.5 text-sm text-[#15333B] font-semibold border-b border-transparent focus:border-slate-200 min-h-[2em]"
+                              dangerouslySetInnerHTML={{
+                                __html: task.label
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                  .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
+                                  .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-sky-650 hover:underline">$1</a>')
+                                  .split('\n').join('<br>')
+                              }}
+                            />
+                          </div>
+
+                          {/* Optional toggle */}
+                          <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0 border border-gray-100 rounded-xl p-2 bg-gray-50 hover:bg-gray-100 transition-colors mt-0.5">
+                            <input
+                              type="checkbox"
+                              checked={task.isOptional}
+                              onChange={() => handleToggleOptional(task.id)}
+                              className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                            />
+                            <span className="text-xs font-bold text-[#3E5E63]">Tùy chọn</span>
+                          </label>
+
+                          {/* Delete */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0 mt-0.5"
+                            title="Xóa nhiệm vụ"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddTask}
+                    className="w-full py-3 border-2 border-dashed border-[#214C54]/30 hover:border-[#214C54]/80 text-[#214C54] hover:bg-[#214C54]/5 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Plus size={14} /> Thêm Nhiệm Vụ Mới
+                  </button>
                 </div>
               ) : (
                 dayTasks.map((task) => {

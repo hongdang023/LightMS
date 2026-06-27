@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 // ==========================================
 // Database TypeScript Schemas
@@ -27,6 +28,7 @@ export interface Profile {
   motivation_bet?: string;
   is_profile_completed: boolean;
   nautical_miles: number;
+  visits: number;
   created_at: string;
 }
 
@@ -68,6 +70,7 @@ export interface Lesson {
   has_materials?: boolean;
   slide_url?: string;
   study_note_url?: string;
+  key_concepts?: string[];
 }
 
 export interface Skill {
@@ -99,10 +102,11 @@ export interface Assignment {
   id: string;
   lesson_id: string;
   description: string;
-  rubric_checklist: { item: string; checked: boolean }[];
-  scaffolding: {
+  rubric_checklist: { item: string; checked: boolean; is_optional?: boolean }[];
+  scaffolding?: {
     template_url?: string;
     reference_link?: string;
+    items?: { label: string; url: string }[];
   };
 }
 
@@ -268,6 +272,7 @@ interface DatabaseContextType {
   updateProfile: (profileId: string, updates: Partial<Profile>) => void;
   isAuthenticated: boolean;
   loginWithGmail: (email: string, role?: UserRole) => Profile | null;
+  loginWithSupabaseGoogle: () => Promise<void>;
   logout: () => void;
   
   // Data lists
@@ -324,6 +329,7 @@ interface DatabaseContextType {
   updateAssignment: (id: string, updates: Partial<Assignment>) => void;
   updateModule: (id: string, updates: Partial<Module>) => void;
   addLesson: (lesson: Lesson) => void;
+  incrementVisits: (userId: string) => void;
 }
 
 const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
@@ -752,51 +758,35 @@ const SEED_PROFILES: Profile[] = [
     facebook_url: 'https://facebook.com/dangtuyethong2324',
     is_profile_completed: true,
     nautical_miles: 0,
+    visits: 1,
     created_at: new Date('2024-09-01').toISOString()
   },
   {
-    id: 'profile-student-tuyethong',
-    full_name: 'Tuyết Hồng',
-    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
+    id: 'profile-student-thongdang',
+    full_name: 'thongdang.upyouth',
+    avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=thongdang.upyouth',
     role: 'student',
-    telegram_id: '@tuyethong_cym',
-    bio: 'Thủy thủ say mê học Vibe Coding để hiện thực hóa ý tưởng Product đầu tay.',
-    gmail: 'tuyethong.cym@gmail.com',
-    phone_number: '0987654321',
-    facebook_url: 'https://facebook.com/tuyethong.cym',
-    industry: 'Business Operations',
-    current_job: 'Operations Executive',
-    tech_level: 'low-code',
-    product_idea: 'Một hệ thống LMS mini chuyên biệt cho trẻ em tự học kỹ năng mềm',
-    weekly_hours_commitment: 10,
-    motivation_bet: 'Nếu nộp bài trễ 1 buổi, tôi sẽ mời cả nhóm Batch 3 trà sữa!',
-    is_profile_completed: true,
-    nautical_miles: 320, // Preloaded with some points
-    created_at: new Date('2024-09-05').toISOString()
+    telegram_id: '',
+    bio: 'Thủy thủ mới gia nhập hải trình.',
+    gmail: 'thongdang.upyouth@gmail.com',
+    phone_number: '',
+    facebook_url: '',
+    industry: '',
+    current_job: '',
+    tech_level: 'non-tech',
+    product_idea: '',
+    weekly_hours_commitment: 0,
+    motivation_bet: '',
+    is_profile_completed: false,
+    nautical_miles: 0,
+    visits: 1,
+    created_at: new Date().toISOString()
   }
 ];
 
-const SEED_MASTERY_RECORDS: MasteryRecord[] = [
-  { student_id: 'profile-student-tuyethong', skill_id: 'skill-problem', mastery_level: 'meets_expectations', last_updated: new Date('2024-09-15').toISOString() },
-  { student_id: 'profile-student-tuyethong', skill_id: 'skill-lean', mastery_level: 'needs_improvement', last_updated: new Date('2024-09-18').toISOString() },
-  { student_id: 'profile-student-tuyethong', skill_id: 'skill-ai', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() },
-  { student_id: 'profile-student-tuyethong', skill_id: 'skill-ui', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() },
-  { student_id: 'profile-student-tuyethong', skill_id: 'skill-ux', mastery_level: 'none', last_updated: new Date('2024-09-05').toISOString() }
-];
+const SEED_MASTERY_RECORDS: MasteryRecord[] = [];
 
-const SEED_SUBMISSIONS: Submission[] = [
-  {
-    id: 'sub-tuyethong-les4',
-    assignment_id: 'asg-les-4',
-    batch_id: 'batch-3',
-    student_id: 'profile-student-tuyethong',
-    content: 'https://docs.google.com/document/d/tuyethong-prd-draft\n\nEm gửi bản nháp PRD cho dự án LightMS ạ. Em đang tập trung tối ưu hóa luồng User Flow và phân cấp màu sắc theo Design System. Mong chị Hồng góp ý giúp em!',
-    status: 'submitted',
-    created_at: new Date('2024-09-20T20:30:00Z').toISOString(),
-    upvotes_count: 1,
-    upvoted_by: ['profile-admin-hong']
-  }
-];
+const SEED_SUBMISSIONS: Submission[] = [];
 
 const SEED_TOPICS: DiscussionTopic[] = [
   {
@@ -822,116 +812,17 @@ const SEED_TOPICS: DiscussionTopic[] = [
   }
 ];
 
-const SEED_POSTS: DiscussionPost[] = [
-  {
-    id: 'post-help-1',
-    topic_id: 'topic-light-support',
-    author_id: 'profile-student-sparrow',
-    title: 'Lỗi git push bị từ chối (Updates were rejected)',
-    content: 'Tôi đang push code lên nhánh main của repo bài tập thì bị báo lỗi: [rejected] - non-fast-forward. Ai biết cách xử lý lỗi này mà không làm mất lịch sử commit không? Tôi xin cảm ơn!',
-    tags: ['Buổi 6: GitHub & Version Control', 'Git'],
-    created_at: new Date('2024-09-22T10:00:00Z').toISOString(),
-    upvotes_count: 3,
-    upvoted_by: ['profile-student-tuyethong', 'profile-admin-hong']
-  },
-  {
-    id: 'post-general-1',
-    topic_id: 'topic-general',
-    author_id: 'profile-student-tuyethong',
-    title: 'Chia sẻ một số phím tắt cực hay trên Cursor và VS Code',
-    content: 'Sau 3 buổi học với IDE, mình phát hiện ra một số phím tắt giúp viết code nhanh hơn rất nhiều:\n1. Ctrl + L / Cmd + L: Đưa vùng chọn vào Chat panel của Cursor.\n2. Ctrl + I / Cmd + I: Mở inline edit của Cursor ngay tại dòng code.\n3. Alt + Click: Đặt nhiều con trỏ để sửa nhanh nhiều vị trí.\nHy vọng giúp ích cho mọi người!',
-    tags: ['Buổi 3: IDE + CLI Product Cockpit', 'Cursor', 'Tips'],
-    created_at: new Date('2024-09-23T14:30:00Z').toISOString(),
-    upvotes_count: 8,
-    upvoted_by: ['profile-student-sparrow', 'profile-admin-hong']
-  }
-];
+const SEED_POSTS: DiscussionPost[] = [];
 
-const SEED_COMMENTS: Comment[] = [
-  {
-    id: 'comm-tuyethong-sparrow',
-    submission_id: 'sub-sparrow-les4',
-    batch_id: 'batch-3',
-    author_id: 'profile-student-tuyethong',
-    content: 'Ý tưởng định vị kho báu rất hay nha anh Jack! Để giải quyết bài toán Feasibility cho AI, anh có thể tích hợp API của các trạm phao hải văn hoặc các cảm biến độ sâu thử xem.',
-    upvotes_count: 5,
-    is_verified: false,
-    created_at: new Date('2024-09-21T08:15:00Z').toISOString(),
-    upvoted_by: ['profile-student-sparrow']
-  },
-  {
-    id: 'comm-help-1-reply',
-    submission_id: 'post-help-1',
-    batch_id: 'batch-3',
-    author_id: 'profile-admin-hong',
-    content: 'Chào Jack, lỗi này xảy ra do repo local của bạn chưa cập nhật các commit mới nhất trên remote. Bạn hãy chạy lệnh `git pull origin main` trước nhé. Nếu có conflict thì giải quyết xong rồi mới push lại được.',
-    upvotes_count: 2,
-    is_verified: true,
-    created_at: new Date('2024-09-22T10:15:00Z').toISOString(),
-    upvoted_by: ['profile-student-sparrow']
-  },
-  {
-    id: 'comm-general-1-reply',
-    submission_id: 'post-general-1',
-    batch_id: 'batch-3',
-    author_id: 'profile-student-sparrow',
-    content: 'Cảm ơn Tuyết Hồng nhé! Cái Cmd + L đúng là cứu cánh, trước toàn copy-paste mỏi cả tay.',
-    upvotes_count: 1,
-    is_verified: false,
-    created_at: new Date('2024-09-23T15:00:00Z').toISOString(),
-    upvoted_by: ['profile-student-tuyethong']
-  }
-];
+const SEED_COMMENTS: Comment[] = [];
 
-const SEED_TRANSACTIONS: NauticalMilesTransaction[] = [
-  { id: 'tx-1', student_id: 'profile-student-tuyethong', amount: 50, action_type: 'profile_completion', description: 'Đã hoàn thành 100% Hồ sơ cá nhân - Khởi tạo thẻ căn cước', created_at: new Date('2024-09-06').toISOString() },
-  { id: 'tx-2', student_id: 'profile-student-tuyethong', amount: 200, action_type: 'comment_verified', description: 'Bình luận giải đáp hữu ích cho đồng đội được Mentor duyệt tích xanh', created_at: new Date('2024-09-12').toISOString() },
-  { id: 'tx-3', student_id: 'profile-student-tuyethong', amount: 50, action_type: 'lesson_complete', description: 'Hoàn thành Buổi 1: Tư duy sản phẩm', created_at: new Date('2024-09-13').toISOString() },
-  { id: 'tx-4', student_id: 'profile-student-tuyethong', amount: 20, action_type: 'comment_upvoted', description: 'Nhận được 2 lượt Upvotes trên bình luận bài nộp', created_at: new Date('2024-09-21').toISOString() }
-];
+const SEED_TRANSACTIONS: NauticalMilesTransaction[] = [];
 
-const SEED_PROFILE_BADGES: ProfileBadge[] = [
-  { student_id: 'profile-student-tuyethong', badge_id: 'badge-profile-card', unlocked_at: new Date('2024-09-06').toISOString() }
-];
+const SEED_PROFILE_BADGES: ProfileBadge[] = [];
 
-const SEED_NOTIFICATIONS: NotificationLog[] = [
-  { id: 'ntf-1', title: 'Thông báo Kick-off', message: 'Hải trình Vibe Coding 101 chính thức giương buồm! Đọc kỹ phần Onboarding nhé các thủy thủ!', type: 'telegram', created_at: new Date('2024-09-06T12:00:00Z').toISOString() },
-  { id: 'ntf-2', title: 'Tích xanh cộng đồng', message: 'Tuyết Hồng vừa được Đặng Tuyết Hồng tặng Tích Xanh cho bình luận giải quyết vấn đề rủi ro!', type: 'telegram', created_at: new Date('2024-09-12T15:20:00Z').toISOString() }
-];
+const SEED_NOTIFICATIONS: NotificationLog[] = [];
 
-const SEED_ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: 'ann-1',
-    title: 'Chào mừng các bạn đến với LightMS!',
-    author: 'Admin Team',
-    created_by: 'profile-admin-hong',
-    send_email: true,
-    sent_email_at: new Date('2026-06-20T12:00:00Z').toISOString(),
-    content: 'Chào mừng các bạn đến với LightMS - Nền tảng học tập mới của chúng ta. Hệ thống được thiết kế đặc biệt để giúp các bạn có trải nghiệm học tập tốt nhất với giao diện trực quan và dễ sử dụng.\n\nCác bạn hãy vào mục Onboarding để bắt đầu làm quen với hệ thống nhé!\n\nChúc các bạn học tập thật tốt!',
-    created_at: new Date('2026-06-20T12:00:00Z').toISOString(),
-    isNew: true
-  },
-  {
-    id: 'ann-2',
-    title: 'Lịch nghỉ Tết Nguyên Đán 2027',
-    author: 'Academic Dept',
-    created_by: 'profile-admin-hong',
-    send_email: false,
-    content: 'Kính gửi các bạn học viên,\n\nLớp chúng ta sẽ nghỉ Tết Nguyên Đán bắt đầu từ ngày 28 âm lịch đến hết mùng 5 âm lịch. Các bài tập có deadline trong thời gian này sẽ được tự động dời sang tuần tiếp theo.\n\nChúc các bạn và gia đình một năm mới an khang thịnh vượng!',
-    created_at: new Date('2026-06-22T09:00:00Z').toISOString(),
-    isNew: false
-  },
-  {
-    id: 'ann-3',
-    title: 'Cập nhật tài liệu môn học tuần 3',
-    author: 'Mentor Team',
-    created_by: 'profile-admin-hong',
-    send_email: false,
-    content: 'Chào các bạn,\n\nTài liệu học tập và bài giảng slide cho Tuần 3 đã có sẵn trong mục Syllabus. Các bạn nhớ đọc kỹ tài liệu trước khi lên lớp để chuẩn bị tốt cho buổi thảo luận nhé.\n\nNếu có thắc mắc, các bạn có thể đặt câu hỏi trong phòng Thảo luận.',
-    created_at: new Date('2026-06-23T15:30:00Z').toISOString(),
-    isNew: false
-  }
-];
+const SEED_ANNOUNCEMENTS: Announcement[] = [];
 
 const SEED_ONBOARDING_DAYS: OnboardingDay[] = [
   {
@@ -1042,7 +933,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v4';
+  const DB_VERSION = 'lms_v5';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference
@@ -1055,7 +946,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Load initial states from LocalStorage or use preloaded seed data
   const [activeUserId, setActiveUserId] = useState<string>(() => {
-    return localStorage.getItem('lms_active_user_id') || 'profile-student-tuyethong';
+    return localStorage.getItem('lms_active_user_id') || 'profile-student-thongdang';
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -1233,15 +1124,174 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('lms_assignments', JSON.stringify(assignments));
   }, [assignments]);
 
+  // ── Supabase Auth Synchronization ────────────────────────────────────────
+  useEffect(() => {
+    // Check for active session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSupabaseSession(session);
+    });
+
+    // Listen to authentication changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      handleSupabaseSession(session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // ── Sync Database State from Supabase ──────────────────────────────────
+  const fetchDatabaseState = async () => {
+    try {
+      console.log('Bắt đầu tải dữ liệu thực tế từ Supabase...');
+      
+      const [
+        resProfiles,
+        resModules,
+        resLessons,
+        resAssignments,
+        resSubmissions,
+        resFeedbacks,
+        resComments,
+        resNauticalMiles,
+        resProfileBadges,
+        resAnnouncements,
+        resCalendarEvents,
+        resOnboardingDays,
+        resUnlockSchedules,
+      ] = await Promise.all([
+        supabase.from('profiles').select('*'),
+        supabase.from('modules').select('*').order('order_index', { ascending: true }),
+        supabase.from('lessons').select('*').order('order_index', { ascending: true }),
+        supabase.from('assignments').select('*'),
+        supabase.from('submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('feedbacks').select('*'),
+        supabase.from('comments').select('*').order('created_at', { ascending: true }),
+        supabase.from('nautical_miles_transactions').select('*').order('created_at', { ascending: false }),
+        supabase.from('profile_badges').select('*'),
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }),
+        supabase.from('calendar_events').select('*'),
+        supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
+        supabase.from('onboarding_unlock_schedules').select('*').order('day', { ascending: true }),
+      ]);
+
+      if (resProfiles.data && resProfiles.data.length > 0) setProfiles(resProfiles.data);
+      if (resModules.data && resModules.data.length > 0) setModules(resModules.data);
+      if (resLessons.data && resLessons.data.length > 0) setLessons(resLessons.data);
+      if (resAssignments.data && resAssignments.data.length > 0) setAssignments(resAssignments.data);
+      
+      // Submissions, feedbacks, comments can be empty array if no student worked yet
+      if (resSubmissions.data) setSubmissions(resSubmissions.data);
+      if (resFeedbacks.data) setFeedbacks(resFeedbacks.data);
+      if (resComments.data) setComments(resComments.data);
+      if (resNauticalMiles.data) setNauticalTransactions(resNauticalMiles.data);
+      if (resProfileBadges.data) setProfileBadges(resProfileBadges.data);
+      if (resAnnouncements.data) setAnnouncements(resAnnouncements.data);
+      if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
+      if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
+      if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
+
+      console.log('Đã tải xong toàn bộ dữ liệu thực tế từ Supabase.');
+    } catch (e) {
+      console.error('Lỗi khi tải dữ liệu từ Supabase:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDatabaseState();
+    }
+  }, [isAuthenticated]);
+
+  const handleSupabaseSession = async (session: any) => {
+    if (session?.user) {
+      const user = session.user;
+      const userEmail = user.email || '';
+      const userId = user.id;
+
+      // Check if profile exists on Supabase Database
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      let activeProfile: Profile;
+
+      if (error || !profile) {
+        // Create new profile locally & on Supabase
+        const newProfile: Profile = {
+          id: userId,
+          full_name: user.user_metadata?.full_name || userEmail.split('@')[0],
+          avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userEmail)}`,
+          role: 'student',
+          telegram_id: '',
+          bio: 'Thủy thủ mới gia nhập hải trình từ Supabase.',
+          gmail: userEmail,
+          phone_number: '',
+          facebook_url: '',
+          is_profile_completed: false,
+          nautical_miles: 0,
+          visits: 1,
+          created_at: new Date().toISOString()
+        };
+
+        // Attempt to insert into Supabase
+        const { data: insertedData, error: insertError } = await supabase
+          .from('profiles')
+          .insert([newProfile])
+          .select()
+          .maybeSingle();
+
+        if (insertError) {
+          console.error('Lỗi khi lưu profile mới lên Supabase:', insertError);
+          activeProfile = newProfile;
+        } else {
+          activeProfile = (insertedData as Profile) || newProfile;
+        }
+      } else {
+        activeProfile = profile as Profile;
+      }
+
+      // Sync React State
+      setProfiles(prev => {
+        const exists = prev.some(p => p.id === activeProfile.id);
+        if (exists) {
+          return prev.map(p => p.id === activeProfile.id ? activeProfile : p);
+        }
+        return [...prev, activeProfile];
+      });
+
+      setActiveUserId(activeProfile.id);
+      setIsAuthenticated(true);
+      localStorage.setItem('lms_active_user_id', activeProfile.id);
+      localStorage.setItem('lms_is_authenticated', 'true');
+    }
+  };
+
+  const loginWithSupabaseGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      console.error('Lỗi Supabase signInWithOAuth:', error.message);
+      throw error;
+    }
+  };
+
   // Derived Active User object
-  const activeUser = profiles.find(p => p.id === activeUserId) || profiles[1];
+  const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
 
   // Switch role action helper
   const switchUser = (role: UserRole) => {
     if (role === 'admin' || role === 'mentor') {
       setActiveUserId('profile-admin-hong');
     } else {
-      setActiveUserId('profile-student-tuyethong');
+      setActiveUserId('profile-student-thongdang');
     }
   };
 
@@ -1270,6 +1320,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         facebook_url: '',
         is_profile_completed: false,
         nautical_miles: 0,
+        visits: 1,
         created_at: new Date().toISOString()
       };
       
@@ -1282,19 +1333,20 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
     localStorage.removeItem('lms_is_authenticated');
   };
 
   // Profile management
-  const updateProfile = (profileId: string, updates: Partial<Profile>) => {
+  const updateProfile = async (profileId: string, updates: Partial<Profile>) => {
     setProfiles(prev => prev.map(p => {
       if (p.id === profileId) {
         const updated = { ...p, ...updates };
         
         // Rules Engine check: profile completion
-        if (!p.is_profile_completed && updated.gmail && updated.phone_number && updated.facebook_url && updated.industry && updated.current_job && updated.product_idea && updated.weekly_hours_commitment && updated.motivation_bet) {
+        if (!p.is_profile_completed && updated.gmail && updated.phone_number && updated.facebook_url && updated.industry && updated.current_job && updated.product_idea) {
           updated.is_profile_completed = true;
           
           // Award miles
@@ -1308,10 +1360,20 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       return p;
     }));
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', profileId);
+      if (error) console.error('Lỗi khi cập nhật profile lên Supabase:', error);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Helper to add Nautical Miles
-  const addNauticalMiles = (studentId: string, amount: number, actionType: NauticalMilesTransaction['action_type'], description: string, referenceId?: string) => {
+  const addNauticalMiles = async (studentId: string, amount: number, actionType: NauticalMilesTransaction['action_type'], description: string, referenceId?: string) => {
     // Add transaction
     const newTx: NauticalMilesTransaction = {
       id: `tx-${Math.random().toString(36).substr(2, 9)}`,
@@ -1328,14 +1390,34 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setProfiles(prev => prev.map(p => {
       if (p.id === studentId) {
         const newMiles = p.nautical_miles + amount;
+        
+        // Cập nhật nốt nautical_miles của profile lên Supabase
+        supabase.from('profiles').update({ nautical_miles: newMiles }).eq('id', studentId).then(({ error }) => {
+          if (error) console.error('Lỗi khi cập nhật nautical_miles của profile:', error);
+        });
+
         return { ...p, nautical_miles: newMiles };
       }
       return p;
     }));
+
+    try {
+      const { error } = await supabase
+        .from('nautical_miles_transactions')
+        .insert([newTx]);
+      if (error) console.error('Lỗi khi lưu nautical miles transaction lên Supabase:', error);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Helper to unlock badge
-  const unlockBadge = (studentId: string, badgeId: string) => {
+  const unlockBadge = async (studentId: string, badgeId: string) => {
+    const alreadyUnlocked = profileBadges.some(pb => pb.student_id === studentId && pb.badge_id === badgeId);
+    if (alreadyUnlocked) return;
+
+    const newPB = { student_id: studentId, badge_id: badgeId, unlocked_at: new Date().toISOString() };
+
     setProfileBadges(prev => {
       const exists = prev.some(pb => pb.student_id === studentId && pb.badge_id === badgeId);
       if (exists) return prev;
@@ -1355,8 +1437,17 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'telegram'
       );
 
-      return [...prev, { student_id: studentId, badge_id: badgeId, unlocked_at: new Date().toISOString() }];
+      return [...prev, newPB];
     });
+
+    try {
+      const { error } = await supabase
+        .from('profile_badges')
+        .insert([newPB]);
+      if (error) console.error('Lỗi khi lưu profile badge lên Supabase:', error);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Helper to add notification log
@@ -1395,7 +1486,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSubmissions(prev => [newSubmission, ...prev]);
       
       // Award Nautical Miles
-      addNauticalMiles(activeUserId, 50, 'assignment_submitted', 'Nộp bài tập đúng hạn', id);
+      addNauticalMiles(activeUserId, 5, 'assignment_submitted', 'Nộp bài tập đúng hạn', id);
       
       // Rules Engine check: Iron Anchor Streak
       const studentSubs = [...submissions, newSubmission]
@@ -1419,6 +1510,19 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'telegram'
       );
     }
+
+    // Upsert lên Supabase
+    supabase.from('submissions').upsert({
+      id,
+      assignment_id: assignmentId,
+      batch_id: 'batch-3',
+      student_id: activeUserId,
+      content,
+      status: 'submitted',
+      created_at: newSubmission.created_at
+    }).then(({ error }) => {
+      if (error) console.error('Lỗi khi nộp bài tập lên Supabase:', error.message);
+    });
   };
 
   const completeLesson = (lessonId: string) => {
@@ -1582,6 +1686,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       `🏆 MASTERY UPDATE: Thủy thủ ${studentObj?.full_name} (${studentObj?.gmail}) vừa đạt chứng nhận **${grade === 'excellent' ? 'Xuất sắc (Mastery)' : 'Đạt (Meets Expectations)'}** cho thử thách PRD/Automation! Được thưởng +${amount} Hải lý!`,
       'telegram'
     );
+
+    // Lưu feedback lên Supabase và cập nhật status của submission
+    supabase.from('feedbacks').insert([newFeedback]).then(({ error }) => {
+      if (error) console.error('Lỗi khi lưu feedback lên Supabase:', error.message);
+    });
+    supabase.from('submissions').update({ status: 'graded' }).eq('id', submissionId).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật status của submission trên Supabase:', error.message);
+    });
   };
 
   const verifyComment = (commentId: string) => {
@@ -1606,6 +1718,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           `🛟 CỨU NÉT THÀNH CÔNG: Thủy thủ ${authorObj?.full_name} (${authorObj?.gmail}) vừa nhận Tích Xanh lá cờ hiệu từ Mentor Đặng Tuyết Hồng vì pha giải cứu đồng đội xuất sắc!`,
           'telegram'
         );
+
+        // Cập nhật trạng thái is_verified lên Supabase
+        supabase.from('comments').update({ is_verified: true }).eq('id', commentId).then(({ error }) => {
+          if (error) console.error('Lỗi khi lưu verify comment lên Supabase:', error.message);
+        });
 
         return { ...c, is_verified: true };
       }
@@ -1705,6 +1822,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           addNauticalMiles(s.student_id, 15, 'submission_kudos', 'Nhận Kudos từ bạn học cho bài nộp', s.id);
         }
 
+        // Cập nhật lên Supabase
+        supabase.from('submissions').update({
+          upvotes_count: newUpvotes,
+          upvoted_by: newList
+        }).eq('id', submissionId).then(({ error }) => {
+          if (error) console.error('Lỗi khi cập nhật upvote submission lên Supabase:', error.message);
+        });
+
         return { ...s, upvotes_count: newUpvotes, upvoted_by: newList };
       }
       return s;
@@ -1739,6 +1864,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'telegram'
       );
     }
+
+    // Lưu lên Supabase
+    supabase.from('announcements').insert([newAnn]).then(({ error }) => {
+      if (error) console.error('Lỗi khi lưu thông báo lên Supabase:', error.message);
+    });
   };
 
   const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
@@ -1760,11 +1890,21 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return a;
     }));
     addNotification('Cập nhật thông báo', 'Thông báo đã được chỉnh sửa thành công', 'system');
+
+    // Cập nhật lên Supabase
+    supabase.from('announcements').update(updates).eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật thông báo trên Supabase:', error.message);
+    });
   };
 
   const deleteAnnouncement = (id: string) => {
     setAnnouncements(prev => prev.filter(a => a.id !== id));
     addNotification('Xóa thông báo', 'Đã gỡ bỏ thông báo', 'system');
+
+    // Xóa trên Supabase
+    supabase.from('announcements').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi xóa thông báo trên Supabase:', error.message);
+    });
   };
 
   const addCalendarEvent = (event: Omit<CalendarEvent, 'id'>) => {
@@ -1774,16 +1914,31 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     setCalendarEvents(prev => [...prev, newEvent]);
     addNotification('Thêm lịch sự kiện', `Sự kiện "${event.title}" đã được thêm vào lịch trình`, 'system');
+
+    // Lưu lên Supabase
+    supabase.from('calendar_events').insert([newEvent]).then(({ error }) => {
+      if (error) console.error('Lỗi khi lưu sự kiện lịch lên Supabase:', error.message);
+    });
   };
 
   const updateCalendarEvent = (id: string, updates: Partial<CalendarEvent>) => {
     setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
     addNotification('Cập nhật lịch sự kiện', 'Lịch trình sự kiện đã được điều chỉnh', 'system');
+
+    // Cập nhật lên Supabase
+    supabase.from('calendar_events').update(updates).eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật sự kiện lịch trên Supabase:', error.message);
+    });
   };
 
   const deleteCalendarEvent = (id: string) => {
     setCalendarEvents(prev => prev.filter(e => e.id !== id));
     addNotification('Xóa lịch sự kiện', 'Đã gỡ bỏ sự kiện khỏi lịch trình', 'system');
+
+    // Xóa trên Supabase
+    supabase.from('calendar_events').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi xóa sự kiện lịch trên Supabase:', error.message);
+    });
   };
 
   const shiftCalendarEvents = (startDateStr: string, daysToShift: number) => {
@@ -1849,11 +2004,31 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateOnboardingDay = (dayNumber: number, updates: Partial<OnboardingDay>) => {
     setOnboardingDays(prev => prev.map(d => d.day === dayNumber ? { ...d, ...updates } : d));
     addNotification('Cập nhật Onboarding', `Đã cập nhật thông tin Ngày ${dayNumber}`, 'system');
+
+    // Cập nhật trên Supabase
+    supabase.from('onboarding_days').update(updates).eq('day', dayNumber).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật onboarding_day trên Supabase:', error.message);
+    });
   };
 
-  const updateOnboardingUnlockSchedule = (dayNumber: number, scheduledAt: string) => {
+  const updateOnboardingUnlockSchedule = async (dayNumber: number, scheduledAt: string) => {
     setOnboardingUnlockSchedules(prev => prev.map(s => s.day === dayNumber ? { ...s, scheduled_at: scheduledAt, unlock_email_sent: false } : s));
     addNotification('Hẹn giờ mở khóa', `Đã đặt lịch mở khóa Ngày ${dayNumber} vào lúc ${new Date(scheduledAt).toLocaleString()}`, 'system');
+    
+    try {
+      const { error } = await supabase
+        .from('onboarding_unlock_schedules')
+        .upsert({
+          day: dayNumber,
+          scheduled_at: scheduledAt,
+          unlock_email_sent: false
+        });
+      if (error) {
+        console.error('Lỗi khi lưu lịch mở khóa lên Supabase:', error.message);
+      }
+    } catch (e) {
+      console.error('Lỗi kết nối Supabase khi lưu lịch mở khóa:', e);
+    }
   };
 
   const updateAboutContent = (updates: Partial<AboutContent>) => {
@@ -1864,12 +2039,21 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateLesson = (id: string, updates: Partial<Lesson>) => {
     setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
     addNotification('Cập nhật bài học', 'Nội dung bài học đã được cập nhật', 'system');
+
+    // Cập nhật trên Supabase
+    supabase.from('lessons').update(updates).eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật lesson trên Supabase:', error.message);
+    });
   };
 
   const updateAssignment = (id: string, updates: Partial<Assignment>) => {
     setAssignments(prev => {
       const exists = prev.some(a => a.id === id);
       if (exists) {
+        // Cập nhật trên Supabase
+        supabase.from('assignments').update(updates).eq('id', id).then(({ error }) => {
+          if (error) console.error('Lỗi khi cập nhật assignment trên Supabase:', error.message);
+        });
         return prev.map(a => a.id === id ? { ...a, ...updates } : a);
       } else {
         // If not exists (e.g. dynamic lesson additions), create it
@@ -1880,6 +2064,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           rubric_checklist: updates.rubric_checklist || [],
           scaffolding: updates.scaffolding || {}
         };
+        // Lưu lên Supabase
+        supabase.from('assignments').insert([newAssignment]).then(({ error }) => {
+          if (error) console.error('Lỗi khi thêm assignment mới trên Supabase:', error.message);
+        });
         return [...prev, newAssignment];
       }
     });
@@ -1889,11 +2077,21 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateModule = (id: string, updates: Partial<Module>) => {
     setModules(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
     addNotification('Cập nhật chương học', 'Thông tin chương học đã được cập nhật', 'system');
+
+    // Cập nhật trên Supabase
+    supabase.from('modules').update(updates).eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật module trên Supabase:', error.message);
+    });
   };
 
   const addLesson = (lesson: Lesson) => {
     setLessons(prev => [...prev, lesson]);
     addNotification('Thêm bài giảng', `Bài giảng "${lesson.title}" đã được thêm thành công`, 'system');
+
+    // Lưu bài giảng lên Supabase
+    supabase.from('lessons').insert([lesson]).then(({ error }) => {
+      if (error) console.error('Lỗi khi thêm bài giảng lên Supabase:', error.message);
+    });
   };
 
   // ==========================================
@@ -1925,6 +2123,17 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               'telegram'
             );
             
+            // Đồng bộ trạng thái đã gửi email lên Supabase
+            supabase
+              .from('onboarding_unlock_schedules')
+              .update({ unlock_email_sent: true })
+              .eq('day', s.day)
+              .then(({ error }) => {
+                if (error) {
+                  console.error('Lỗi khi cập nhật unlock_email_sent trên Supabase:', error.message);
+                }
+              });
+
             return { ...s, unlock_email_sent: true };
           }
           return s;
@@ -1940,6 +2149,19 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => clearInterval(checkInterval);
   }, [onboardingDays, profiles]);
 
+  const incrementVisits = (userId: string) => {
+    setProfiles(prev => prev.map(p => {
+      if (p.id === userId) {
+        const newVisits = (p.visits || 0) + 1;
+        supabase.from('profiles').update({ visits: newVisits }).eq('id', userId).then(({ error }) => {
+          if (error) console.error('Lỗi khi cập nhật visits trên Supabase:', error);
+        });
+        return { ...p, visits: newVisits };
+      }
+      return p;
+    }));
+  };
+
   return (
     <DatabaseContext.Provider value={{
       activeUser,
@@ -1948,6 +2170,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateProfile,
       isAuthenticated,
       loginWithGmail,
+      loginWithSupabaseGoogle,
       logout,
       courses: SEED_COURSES,
       batches: SEED_BATCHES,
@@ -1995,7 +2218,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateLesson,
       updateAssignment,
       updateModule,
-      addLesson
+      addLesson,
+      incrementVisits
     }}>
       {children}
     </DatabaseContext.Provider>

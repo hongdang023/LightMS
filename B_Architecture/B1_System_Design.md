@@ -65,7 +65,7 @@ Dựa vào triết lý **Outcome-based Mastery** và **Action-Oriented**, hệ t
 - `discussion_topics`: Các chủ đề thảo luận chung (như Light Support, Assignments) do Admin quản lý.
 - `discussion_posts`: Các bài viết thảo luận trong từng chủ đề, hỗ trợ tag bài tập, lượt upvote, và bình luận.
 - `comments`: Bình luận và thảo luận chéo giữa học viên trên bài viết hoặc bài nộp bài tập. Số lượng Upvotes và trạng thái Verified (Tích xanh cho lên Top).
-- **Tracking Tiến độ (Progress Tracking):** Hệ thống đánh giá tiến độ và tính điểm của học viên hoàn toàn dựa trên mức độ hoàn thành bài tập về nhà (`submissions` có status = `submitted` hoặc `graded`), thay vì đo lường qua hệ thống kỹ năng phức tạp.
+- **Tracking Tiến độ (Progress Tracking):** Hệ thống đánh giá tiến độ và tính điểm của học viên hoàn toàn dựa trên mức độ hoàn thành bài tập về nhà (`submissions` có status = `submitted` hoặc `graded`).
 
 ### 3.5. Gamification & Rewards (Hệ thống phần thưởng)
 - `nautical_miles_transactions`: Lưu lịch sử giao dịch cộng/trừ điểm Hải lý của học viên (ngày, lý do, số lượng).

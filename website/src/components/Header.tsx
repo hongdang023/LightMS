@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
 
   // Calculate learning progress (completed lessons)
   const completedLessons = nauticalTransactions
-    .filter(t => t.student_id === 'profile-student-tuyethong' && t.action_type === 'lesson_complete')
+    .filter(t => t.student_id === activeUser.id && t.action_type === 'lesson_complete')
     .map(t => t.reference_id || '');
     
   // Deduplicate
@@ -79,40 +79,42 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
       )}
 
       {/* Role Switcher Floating Controls */}
-      <div className="flex items-center gap-3">
-        <span className="text-xs text-gray-500 font-bold hidden sm:inline">Phân vai thử nghiệm:</span>
-        <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
-          <button
-            onClick={() => {
-              switchUser('student');
-              onPageChange('dashboard');
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-              activeUser.role === 'student'
-                ? 'bg-[#214C54] text-white shadow'
-                : 'text-[#3E5E63] hover:text-[#15333B]'
-            }`}
-          >
-            <span>👤</span>
-            <span>Học viên</span>
-          </button>
-          
-          <button
-            onClick={() => {
-              switchUser('admin');
-              onPageChange('admin-dashboard');
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-              activeUser.role === 'admin'
-                ? 'bg-[#EAB308] text-[#15333B] shadow'
-                : 'text-[#3E5E63] hover:text-[#15333B]'
-            }`}
-          >
-            <span>🛡️</span>
-            <span>Mentor / Admin</span>
-          </button>
+      {(import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-500 font-bold hidden sm:inline">Phân vai thử nghiệm:</span>
+          <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
+            <button
+              onClick={() => {
+                switchUser('student');
+                onPageChange('dashboard');
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                activeUser.role === 'student'
+                  ? 'bg-[#214C54] text-white shadow'
+                  : 'text-[#3E5E63] hover:text-[#15333B]'
+              }`}
+            >
+              <span>👤</span>
+              <span>Học viên</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                switchUser('admin');
+                onPageChange('admin-dashboard');
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                activeUser.role === 'admin'
+                  ? 'bg-[#EAB308] text-[#15333B] shadow'
+                  : 'text-[#3E5E63] hover:text-[#15333B]'
+              }`}
+            >
+              <span>🛡️</span>
+              <span>Mentor / Admin</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

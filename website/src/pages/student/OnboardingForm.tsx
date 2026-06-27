@@ -16,10 +16,7 @@ export const OnboardingForm: React.FC = () => {
     facebook_url: activeUser.facebook_url || '',
     industry: activeUser.industry || '',
     current_job: activeUser.current_job || '',
-    tech_level: (activeUser.tech_level as 'non-tech' | 'low-code' | 'coder') || 'non-tech',
     product_idea: activeUser.product_idea || '',
-    weekly_hours_commitment: activeUser.weekly_hours_commitment || 10,
-    motivation_bet: activeUser.motivation_bet || '',
     bio: activeUser.bio || 'Thủy thủ mới gia nhập hải trình.'
   });
 
@@ -28,8 +25,8 @@ export const OnboardingForm: React.FC = () => {
   // Mascot quotes per step
   const mascotQuotes = [
     'Ahoy! Ta cần danh tính của ngươi để ghi chép vào sổ thủy thủ đoàn. Điền đầy đủ thông tin liên hệ nhé! 🦜',
-    'Ngươi ở đâu trên bản đồ kỹ năng thế? Cho ta biết trình độ và ngành nghề để giảng viên dễ dàng hỗ trợ! 🦜',
-    'Đây là phần quan trọng nhất! Khai báo ý tưởng sản phẩm số của ngươi và đặt cược động lực danh dự đi nào! 🦜'
+    'Cho ta biết ngành nghề và lĩnh vực của ngươi để giảng viên dễ dàng hỗ trợ! 🦜',
+    'Đây là phần quan trọng nhất! Khai báo ý tưởng sản phẩm số của ngươi để bắt đầu! 🦜'
   ];
 
   const validateStep = () => {
@@ -45,8 +42,6 @@ export const OnboardingForm: React.FC = () => {
       if (!formData.current_job.trim()) newErrors.current_job = 'Công việc hiện tại không được để trống';
     } else if (step === 3) {
       if (!formData.product_idea.trim()) newErrors.product_idea = 'Ý tưởng sản phẩm không được để trống';
-      if (!formData.motivation_bet.trim()) newErrors.motivation_bet = 'Lời cam kết/đặt cược không được để trống';
-      if (Number(formData.weekly_hours_commitment) <= 0) newErrors.weekly_hours_commitment = 'Số giờ cam kết phải lớn hơn 0';
     }
 
     setErrors(newErrors);
@@ -288,19 +283,6 @@ export const OnboardingForm: React.FC = () => {
                     {errors.current_job && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.current_job}</span>}
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Trình độ công nghệ hiện tại</label>
-                  <select
-                    value={formData.tech_level}
-                    onChange={(e) => setFormData({ ...formData, tech_level: e.target.value as 'non-tech' | 'low-code' | 'coder' })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold bg-white transition-all"
-                  >
-                    <option value="non-tech">Non-tech (Không rành công nghệ, chưa từng viết code)</option>
-                    <option value="low-code">Low-code / No-code (Đã sử dụng các tool kéo thả, tự động hóa cơ bản)</option>
-                    <option value="coder">Coder (Đã có tư duy viết mã, lập trình vững chắc)</option>
-                  </select>
-                </div>
               </div>
             )}
 
@@ -318,34 +300,6 @@ export const OnboardingForm: React.FC = () => {
                     placeholder="VD: Một ứng dụng theo dõi chi tiêu mini kết nối Google Sheet..."
                   />
                   {errors.product_idea && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.product_idea}</span>}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Số giờ cam kết tự học mỗi tuần</label>
-                    <select
-                      value={formData.weekly_hours_commitment}
-                      onChange={(e) => setFormData({ ...formData, weekly_hours_commitment: Number(e.target.value) })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold bg-white transition-all"
-                    >
-                      <option value={5}>5 tiếng / tuần</option>
-                      <option value={10}>10 tiếng / tuần (Khuyên dùng)</option>
-                      <option value={15}>15 tiếng / tuần (Tập trung cao)</option>
-                      <option value={20}>20+ tiếng / tuần (Đột phá nhanh)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Lời cam kết & đặt cược động lực</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.motivation_bet}
-                      onChange={(e) => setFormData({ ...formData, motivation_bet: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                      placeholder="VD: Nếu trễ bài nộp, xin khao cả lớp trà sữa!"
-                    />
-                    {errors.motivation_bet && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.motivation_bet}</span>}
-                  </div>
                 </div>
               </div>
             )}

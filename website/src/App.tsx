@@ -30,11 +30,12 @@ import { CalendarManagement as AdminCalendarManagement } from './pages/admin/Cal
 import './App.css';
 
 function MainAppShell() {
-  const { isAuthenticated, activeUser } = useDatabase();
+  const { isAuthenticated, activeUser, incrementVisits } = useDatabase();
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
 
   useEffect(() => {
     if (isAuthenticated) {
+      incrementVisits(activeUser.id);
       if (activeUser.role === 'admin') {
         setCurrentPage('admin-dashboard');
       } else {

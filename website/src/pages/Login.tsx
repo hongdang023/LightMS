@@ -4,7 +4,7 @@ import { BrandLogo } from '../components/BrandLogo';
 import { Shield, User, ArrowRight, X, Lock, BookOpen, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { loginWithGmail } = useDatabase();
+  const { loginWithGmail, loginWithSupabaseGoogle } = useDatabase();
   
   // Auth flow states: 'role-select' | 'admin-password' | 'google-login'
   const [flowState, setFlowState] = useState<'role-select' | 'admin-password' | 'google-login'>('role-select');
@@ -31,11 +31,11 @@ export const Login: React.FC = () => {
       desc: 'Founder & Giảng viên'
     },
     {
-      name: 'Tuyết Hồng',
-      email: 'tuyethong.cym@gmail.com',
+      name: 'thongdang.upyouth',
+      email: 'thongdang.upyouth@gmail.com',
       role: 'Học viên',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
-      desc: 'Đã hoàn thành Onboarding'
+      avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=thongdang.upyouth',
+      desc: 'Tài khoản học viên chính thức'
     }
   ];
 
@@ -254,13 +254,13 @@ export const Login: React.FC = () => {
             </div>
 
             <button
-              onClick={() => {
-                setShowChooser(true);
-                setParrotText(
-                  selectedRole === 'admin' 
-                    ? 'Đăng nhập để vào bảng điều khiển Admin thôi nào! 🦜'
-                    : 'Click vào tài khoản Gmail để bắt đầu đi học nhé thủy thủ! 🦜'
-                );
+              onClick={async () => {
+                try {
+                  setParrotText('Đang chuyển hướng sang cổng xác thực Google của Supabase... 🦜');
+                  await loginWithSupabaseGoogle();
+                } catch (err: any) {
+                  setError('Không thể kết nối đến Supabase. Vui lòng kiểm tra cấu hình trong file .env.');
+                }
               }}
               className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-700 font-black py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group cursor-pointer"
             >
@@ -284,6 +284,23 @@ export const Login: React.FC = () => {
               </svg>
               Đăng nhập bằng Google
             </button>
+
+            {(import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowChooser(true);
+                  setParrotText(
+                    selectedRole === 'admin'
+                      ? 'Đăng nhập để vào bảng điều khiển Admin thôi nào! 🦜'
+                      : 'Chọn tài khoản học viên thử nghiệm để đăng nhập! 🦜'
+                  );
+                }}
+                className="w-full mt-1 text-xs font-bold text-[#FFD94C] hover:text-white underline cursor-pointer bg-transparent border-0 outline-none"
+              >
+                Sử dụng Tài khoản Thử nghiệm (Local Mock)
+              </button>
+            )}
 
             {/* Brand footer inside card */}
             <div className="flex items-center justify-center gap-2 text-[11px] text-white/40">

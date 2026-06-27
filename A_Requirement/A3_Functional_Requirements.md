@@ -33,7 +33,6 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 ### 1.5. Hồ sơ cá nhân (My Profile)
 
-- **FR-STU-14 (Skill Mastery Tracker):** Hiển thị biểu đồ phân tích mức độ thành thạo các kỹ năng cốt lõi (Outcome-based) thay vì chỉ hiển thị điểm số.
 - **FR-STU-15 (Badges & Achievements):** Cấp phát và lưu trữ huy hiệu tự động khi học viên đạt được các mốc thành tựu nhất định.
 
 ---

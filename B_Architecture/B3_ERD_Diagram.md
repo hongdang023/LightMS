@@ -1,6 +1,6 @@
 # The1ight LMS - B3: Entity Relationship Diagram (ERD)
 
-Dưới đây là sơ đồ thực thể liên kết (ERD) trực quan hóa cấu trúc dữ liệu của The1ight LMS. Sơ đồ này thể hiện rõ mối quan hệ giữa hệ thống Khóa học, Học viên, và đặc biệt là hệ thống Đánh giá theo Kỹ năng (Outcome-based).
+Dưới đây là sơ đồ thực thể liên kết (ERD) trực quan hóa cấu trúc dữ liệu của The1ight LMS. Sơ đồ này thể hiện rõ mối quan hệ giữa hệ thống Khóa học, Học viên, và Tiến trình học tập (Outcome-based).
 
 ```mermaid
 erDiagram

@@ -194,7 +194,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
                   ].includes(currentPage) ? 'Góc độ Học viên' : 'Admin Portal'}
                 </button>
               )}
-              {isStudent && (
+              {isStudent && (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
                 <button
                   onClick={() => {
                     switchUser('admin');

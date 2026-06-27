@@ -32,19 +32,8 @@ const getStudentLevel = (miles: number): LevelDef => {
 };
 
 // ─── Mock Classmates to make Leaderboard active & alive ───────────────────────
-const MOCK_CLASSMATES = [
-  { id: 'mock-1', full_name: 'Andrew Dunn', avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 5240 },
-  { id: 'mock-2', full_name: 'Molli Lou Hollows', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 3450 },
-  { id: 'mock-3', full_name: 'Juliet Dreamhunter', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 2880 },
-  { id: 'mock-4', full_name: 'Simon Wild', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 2150 },
-  { id: 'mock-5', full_name: 'Chris Jackson', avatar_url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 1780 },
-  { id: 'mock-6', full_name: 'Scott Kimberly', avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 1390 },
-  { id: 'mock-7', full_name: 'Evander Nelson', avatar_url: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 980 },
-  { id: 'mock-8', full_name: 'Stace Larson', avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 850 },
-  { id: 'mock-9', full_name: 'Michael Poeschl', avatar_url: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 620 },
-  { id: 'mock-10', full_name: 'Julian Lankstead', avatar_url: 'https://images.unsplash.com/photo-1489980508314-941910ded1f4?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 410 },
-  { id: 'mock-11', full_name: 'Greg Ferris', avatar_url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=150&auto=format&fit=crop', role: 'student', nautical_miles: 250 },
-];
+const MOCK_CLASSMATES: { id: string; full_name: string; avatar_url: string; role: string; nautical_miles: number }[] = [];
+
 
 // ─── Points Helper (Deterministic scaling) ──────────────────────────────────
 const getPointsForType = (student: { id: string; nautical_miles: number }, type: 'daily' | '7day' | 'alltime'): number => {

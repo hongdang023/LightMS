@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import type { TechLevel } from '../../context/DatabaseContext';
 
 export const ProfileView: React.FC = () => {
   const { activeUser, updateProfile, badges, profileBadges, nauticalTransactions, addNotification } = useDatabase();
@@ -9,16 +8,12 @@ export const ProfileView: React.FC = () => {
   // Form states
   const [fullName, setFullName] = useState(activeUser.full_name);
   const [telegramId, setTelegramId] = useState(activeUser.telegram_id);
-  const [bio, setBio] = useState(activeUser.bio || '');
   const [gmail, setGmail] = useState(activeUser.gmail || '');
   const [phone, setPhone] = useState(activeUser.phone_number || '');
   const [fbUrl, setFbUrl] = useState(activeUser.facebook_url || '');
   const [industry, setIndustry] = useState(activeUser.industry || '');
   const [job, setJob] = useState(activeUser.current_job || '');
-  const [techLevel, setTechLevel] = useState<TechLevel>(activeUser.tech_level || 'low-code');
   const [idea, setIdea] = useState(activeUser.product_idea || '');
-  const [hours, setHours] = useState(activeUser.weekly_hours_commitment || 10);
-  const [bet, setBet] = useState(activeUser.motivation_bet || '');
 
   // Save changes
   const handleSave = (e: React.FormEvent) => {
@@ -27,16 +22,12 @@ export const ProfileView: React.FC = () => {
     updateProfile(activeUser.id, {
       full_name: fullName,
       telegram_id: telegramId,
-      bio,
-      gmail,
+      gmail: gmail,
       phone_number: phone,
       facebook_url: fbUrl,
-      industry,
+      industry: industry,
       current_job: job,
-      tech_level: techLevel,
-      product_idea: idea,
-      weekly_hours_commitment: Number(hours),
-      motivation_bet: bet
+      product_idea: idea
     });
 
     addNotification('Cập nhật thành công', 'Thông tin hồ sơ thủy thủ của bạn đã được cập nhật!', 'system');
@@ -153,32 +144,6 @@ export const ProfileView: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">Trình độ kỹ thuật</label>
-              <select
-                value={techLevel}
-                onChange={(e) => setTechLevel(e.target.value as TechLevel)}
-                className="form-control text-xs font-semibold"
-              >
-                <option value="non-tech">Non-Tech (Hoàn toàn chưa biết code)</option>
-                <option value="low-code">Low-code/No-code (Đã biết dùng tool tự động hóa)</option>
-                <option value="coder">Coder (Lập trình viên truyền thống)</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Số giờ tự học cam kết / tuần</label>
-              <input
-                type="number"
-                value={hours}
-                onChange={(e) => setHours(Number(e.target.value))}
-                className="form-control text-xs font-semibold"
-                min="1"
-              />
-            </div>
-          </div>
-
           <div className="form-group">
             <label className="form-label">Ý tưởng sản phẩm dự kiến</label>
             <input
@@ -187,26 +152,6 @@ export const ProfileView: React.FC = () => {
               onChange={(e) => setIdea(e.target.value)}
               className="form-control text-xs font-semibold"
               placeholder="Ví dụ: Một trang portfolio cá nhân, hay app quản lý phòng khám..."
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Motivation Bet (Đặt cược cá nhân tạo động lực)</label>
-            <textarea
-              value={bet}
-              onChange={(e) => setBet(e.target.value)}
-              className="form-control h-20 text-xs font-semibold resize-none"
-              placeholder="Ví dụ: Nếu trễ bài tập quá 2 lần, tôi xin donate 500k vào quỹ học bổng của lớp..."
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Tiểu sử cá nhân (Bio)</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              className="form-control h-20 text-xs font-semibold resize-none"
-              placeholder="Chia sẻ ngắn gọn về bản thân..."
             />
           </div>
 
