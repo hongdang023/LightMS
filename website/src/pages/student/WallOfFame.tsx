@@ -11,15 +11,11 @@ interface LevelDef {
 }
 
 const LEVELS: LevelDef[] = [
-  { level: 1, name: 'Thủy Thủ Tập Sự', minMiles: 0, perk: 'Gia nhập thủy thủ đoàn' },
-  { level: 2, name: 'Tập Sự Cứng Cáp', minMiles: 100, perk: 'Được phép đăng bài thảo luận' },
-  { level: 3, name: 'Bác Sĩ Tàu', minMiles: 300, perk: 'Mở khóa Kudos & Nhận xét' },
-  { level: 4, name: 'Hoa Tiêu Học Việc', minMiles: 600, perk: 'Xem Lịch hoạt động lớp học' },
-  { level: 5, name: 'Hoa Tiêu Chính', minMiles: 1000, perk: 'Mở khóa Kho tài nguyên VIP' },
-  { level: 6, name: 'Thuyền Phó', minMiles: 1500, perk: 'Được quyền duyệt bài viết nhanh' },
-  { level: 7, name: 'Thuyền Trưởng', minMiles: 2500, perk: 'Cơ hội làm Mentor trợ giảng' },
-  { level: 8, name: 'Thuyền Trưởng Vĩ Đại', minMiles: 4000, perk: 'Tặng 1 buổi 1-on-1 Coaching' },
-  { level: 9, name: 'Huyền Thoại Biển Cả', minMiles: 6000, perk: 'Vinh danh Bảng Vàng vĩnh viễn' },
+  { level: 1, name: 'Thủy thủ tập sự', minMiles: 0, perk: 'Gia nhập thủy thủ đoàn' },
+  { level: 2, name: 'Hoa tiêu', minMiles: 501, perk: 'Xem Lịch hoạt động lớp học & Mở khóa Kho tài nguyên' },
+  { level: 3, name: 'Thuyền phó', minMiles: 1501, perk: 'Được quyền duyệt bài viết nhanh' },
+  { level: 4, name: 'Thuyền trưởng', minMiles: 3001, perk: 'Cơ hội làm Mentor trợ giảng' },
+  { level: 5, name: 'Huyền thoại biển cả', minMiles: 5000, perk: 'Vinh danh Bảng Vàng vĩnh viễn' },
 ];
 
 const getStudentLevel = (miles: number): LevelDef => {

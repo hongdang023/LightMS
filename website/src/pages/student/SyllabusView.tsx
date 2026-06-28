@@ -22,7 +22,7 @@ export const SyllabusView: React.FC<{
     updateAssignment
   } = useDatabase();
 
-  const [selectedLessonId, setSelectedLessonId] = useState<string>('les-0');
+  const [selectedLessonId, setSelectedLessonId] = useState<string>('de000000-0000-0000-0000-000000000000');
   const [submissionText, setSubmissionText] = useState('');
   const [rubricSelfCheck, setRubricSelfCheck] = useState<{ [key: string]: boolean }>({});
   const [toastMsg, setToastMsg] = useState<string | null>(null);

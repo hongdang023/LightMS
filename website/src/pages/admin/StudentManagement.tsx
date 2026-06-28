@@ -23,7 +23,7 @@ export const StudentManagement: React.FC = () => {
   // Calculate live class assignments count
   const liveClassAssignments = assignments.filter(a => {
     const lesson = lessons.find(l => l.id === a.lesson_id);
-    return lesson && lesson.module_id !== 'mod-0';
+    return lesson && lesson.module_id !== '00000000-0000-0000-0000-000000000000';
   });
   const totalLiveClassCount = liveClassAssignments.length || 3;
 
@@ -68,7 +68,7 @@ export const StudentManagement: React.FC = () => {
   });
 
   const getRankTitle = (miles: number) => {
-    if (miles >= 5000) return 'Huyền thoại 👑';
+    if (miles >= 5000) return 'Huyền thoại biển cả 👑';
     if (miles >= 3001) return 'Thuyền trưởng 🧭';
     if (miles >= 1501) return 'Thuyền phó ⚔️';
     if (miles >= 501) return 'Hoa tiêu 🗺️';

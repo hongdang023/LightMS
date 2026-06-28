@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 // ==========================================
 // Database TypeScript Schemas
 // ==========================================
@@ -410,11 +421,25 @@ const SEED_BADGES: Badge[] = [
     condition: 'Hoàn thành hồ sơ cá nhân với đầy đủ các trường thông tin.'
   },
   {
+    id: 'badge-level-1',
+    name: 'Huy hiệu: Thủy thủ tập sự',
+    icon: '⛵',
+    description: 'Mốc khởi đầu hải trình vượt biển lớn của The1ight.',
+    condition: 'Tích lũy từ 0 Hải lý trở lên (Có sẵn khi tham gia).'
+  },
+  {
     id: 'badge-full-sail',
     name: 'Cánh Buồm No Gió',
-    icon: '⛵',
+    icon: '💨',
     description: 'Khởi đầu thuận lợi. Tự động nhận được khi hoàn thành xuất sắc toàn bộ bài tập của Tuần lễ Onboarding.',
     condition: 'Đạt điểm "Meets Expectations" hoặc "Excellent" cho các bài tập thuộc Module 0.'
+  },
+  {
+    id: 'badge-level-2',
+    name: 'Huy hiệu: Hoa tiêu',
+    icon: '🗺️',
+    description: 'Mốc Hải trình thứ hai. Hoa tiêu có khả năng định vị trên đại dương.',
+    condition: 'Tích lũy từ 501 Hải lý trở lên.'
   },
   {
     id: 'badge-iron-anchor',
@@ -424,6 +449,13 @@ const SEED_BADGES: Badge[] = [
     condition: 'Có 3 bài nộp liên tiếp ở trạng thái "submitted" hoặc "graded" và được ghi nhận trước hạn chót.'
   },
   {
+    id: 'badge-level-3',
+    name: 'Huy hiệu: Thuyền phó',
+    icon: '⚔️',
+    description: 'Mốc Hải trình thứ ba. Thuyền phó thiện chiến, quản lý thủy thủ đoàn.',
+    condition: 'Tích lũy từ 1501 Hải lý trở lên.'
+  },
+  {
     id: 'badge-lifebuoy',
     name: 'Phao Cứu Sinh',
     icon: '🛟',
@@ -431,11 +463,25 @@ const SEED_BADGES: Badge[] = [
     condition: 'Tích lũy 50 upvotes từ các comment hữu ích trên các bài nộp khác.'
   },
   {
+    id: 'badge-level-4',
+    name: 'Huy hiệu: Thuyền trưởng',
+    icon: '🧭',
+    description: 'Mốc Hải trình thứ tư. Làm chủ hải trình, dẫn dắt con tàu.',
+    condition: 'Tích lũy từ 3001 Hải lý trở lên.'
+  },
+  {
     id: 'badge-lighthouse',
     name: 'Ngọn Hải Đăng',
     icon: '🗼',
     description: 'Dành cho sự xuất sắc. Nhận được khi bài nộp đạt điểm "Excellent" và được Mentor "Verified" (ghim) lên top Discussion.',
     condition: 'Đạt điểm "Excellent" ở bất kỳ bài tập nào và được ghim/verified.'
+  },
+  {
+    id: 'badge-level-5',
+    name: 'Huy hiệu: Huyền thoại biển cả',
+    icon: '👑',
+    description: 'Cột mốc tối thượng. Một huyền thoại vĩ đại được cả đại dương kính nể.',
+    condition: 'Tích lũy từ 5000 Hải lý trở lên.'
   },
   {
     id: 'badge-treasure-map',
@@ -452,7 +498,7 @@ const SEED_BADGES: Badge[] = [
 
 const SEED_COURSES: Course[] = [
   {
-    id: 'course-vibe-101',
+    id: 'a0c00000-0000-0000-0000-000000000101',
     title: 'Vibe Coding 201: Build scalable product with AI',
     description: 'Vibe Coding 201 là khóa học 9 buổi nâng cao giúp bạn học cách xây dựng sản phẩm có khả năng scale, thiết lập PRD kỹ thuật, làm chủ IDE/CLI, thiết kế MCP và xây dựng hệ thống automation kết hợp n8n.',
     cover_image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop'
@@ -461,29 +507,29 @@ const SEED_COURSES: Course[] = [
 
 const SEED_BATCHES: Batch[] = [
   {
-    id: 'batch-3',
-    course_id: 'course-vibe-101',
+    id: 'b0000003-0000-0000-0000-000000000003',
+    course_id: 'a0c00000-0000-0000-0000-000000000101',
     name: 'Batch 3',
     // We set start date to a future date so the class has not started yet
     start_date: '2026-07-01',
     end_date: '2026-08-31',
-    mentor_id: 'profile-admin-hong'
+    mentor_id: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a'
   }
 ];
 
 const SEED_MODULES: Module[] = [
-  { id: 'mod-0', course_id: 'course-vibe-101', title: 'Phần 0: Onboarding & Kick-off', order_index: 1 },
-  { id: 'mod-1', course_id: 'course-vibe-101', title: 'Phần 1: Tư duy Sản phẩm & Vấn đề', order_index: 2 },
-  { id: 'mod-2', course_id: 'course-vibe-101', title: 'Phần 2: IDE, CLI & MCP Product Building', order_index: 3 },
-  { id: 'mod-3', course_id: 'course-vibe-101', title: 'Phần 3: Version Control & Backend Decision', order_index: 4 },
-  { id: 'mod-4', course_id: 'course-vibe-101', title: 'Phần 4: Deployment & Automation Workspace', order_index: 5 }
+  { id: '00000000-0000-0000-0000-000000000000', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 0: Onboarding & Kick-off', order_index: 1 },
+  { id: '00000000-0000-0000-0000-000000000001', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 1: Tư duy Sản phẩm & Vấn đề', order_index: 2 },
+  { id: '00000000-0000-0000-0000-000000000002', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 2: IDE, CLI & MCP Product Building', order_index: 3 },
+  { id: '00000000-0000-0000-0000-000000000003', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 3: Version Control & Backend Decision', order_index: 4 },
+  { id: '00000000-0000-0000-0000-000000000004', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 4: Deployment & Automation Workspace', order_index: 5 }
 ];
 
 const SEED_LESSONS: Lesson[] = [
   // Phần 0
   {
-    id: 'les-0',
-    module_id: 'mod-0',
+    id: 'de000000-0000-0000-0000-000000000000',
+    module_id: '00000000-0000-0000-0000-000000000000',
     title: 'Buổi 0: Kick-off Meeting',
     type: 'video',
     content: 'Tìm hiểu về khóa học Vibe Coding 201, giảng viên và văn hóa học tập chủ động. Định vị lộ trình Onboarding.',
@@ -498,8 +544,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 1
   {
-    id: 'les-1',
-    module_id: 'mod-1',
+    id: 'de000000-0000-0000-0000-000000000001',
+    module_id: '00000000-0000-0000-0000-000000000001',
     title: 'Buổi 1: Mindset: Từ MVP đến product có thể scale',
     type: 'video',
     content: 'MVP vs scalable product vs internal workspace system. Các điểm gãy sau prototype: codebase rối, data chưa rõ, auth/permission, deploy tạm, thiếu version control, khó debug, thiếu automation. Tech literacy map cho non-tech: frontend, backend, database, API, auth, deploy, server, automation. Cách học tech với AI: hỏi đúng, kiểm chứng output, không bị thuật ngữ kéo đi.',
@@ -512,8 +558,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false // Class hasn't started, no materials yet
   },
   {
-    id: 'les-2',
-    module_id: 'mod-1',
+    id: 'de000000-0000-0000-0000-000000000002',
+    module_id: '00000000-0000-0000-0000-000000000001',
     title: 'Buổi 2: PRD kỹ thuật & 4 Flow',
     type: 'video',
     content: 'PRD v2: problem, user, goal, success criteria, main use case, out-of-scope, user stories, acceptance criteria. Main flow vs secondary flow vs edge case. 4 flow: User Flow, Business Flow, System Flow, Data Flow. Cách dùng AI/skill để review PRD và phát hiện gap.',
@@ -528,8 +574,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 2
   {
-    id: 'les-3',
-    module_id: 'mod-2',
+    id: 'de000000-0000-0000-0000-000000000003',
+    module_id: '00000000-0000-0000-0000-000000000002',
     title: 'Buổi 3: IDE + CLI Product Cockpit',
     type: 'video',
     content: 'Cấu phần IDE: file tree, editor, agent panel, terminal, source control/diff. Workflow giao việc cho agent: context, task breakdown, plan, diff review, accept/reject, run/test/debug. Khi nào dùng IDE, khi nào dùng CLI. Cách yêu cầu AI giải thích lỗi terminal/build log. Cách giới hạn scope để agent không sửa quá rộng.',
@@ -542,8 +588,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'les-4',
-    module_id: 'mod-2',
+    id: 'de000000-0000-0000-0000-000000000004',
+    module_id: '00000000-0000-0000-0000-000000000002',
     title: 'Buổi 4: Skills for Product Building',
     type: 'video',
     content: 'Skill là gì, khác prompt thường ở đâu. Skill cho brainstorm product, sharpen problem statement, MVP scoping, PRD review, acceptance criteria. Skill cho QA app, browser testing, pitch review, build review checklist. Ví dụ Superpowers hoặc MVP/product framework skill. Cách gọi skill đúng lúc trong IDE/agent workflow.',
@@ -556,8 +602,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'les-5',
-    module_id: 'mod-2',
+    id: 'de000000-0000-0000-0000-000000000005',
+    module_id: '00000000-0000-0000-0000-000000000002',
     title: 'Buổi 5: MCP for Product Building',
     type: 'video',
     content: 'MCP trong bức tranh agent/tool. MCP vs Skill vs API vs CLI vs Script. MCP cho design/prototype, browser/app testing, database/schema/docs, repo/GitHub, file/workspace context. Decision rule: khi nào MCP đáng dùng, khi nào không cần.',
@@ -572,8 +618,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 3
   {
-    id: 'les-6',
-    module_id: 'mod-3',
+    id: 'de000000-0000-0000-0000-000000000006',
+    module_id: '00000000-0000-0000-0000-000000000003',
     title: 'Buổi 6: GitHub & Version Control',
     type: 'video',
     content: 'Repo, commit, branch, pull request ở mức non-tech cần hiểu. Issue -> change -> review -> commit -> deploy. AI review code/change. Rollback mindset. Repo hygiene: README, env example, folder structure, issue template, changelog đơn giản.',
@@ -586,8 +632,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'les-7',
-    module_id: 'mod-3',
+    id: 'de000000-0000-0000-0000-000000000007',
+    module_id: '00000000-0000-0000-0000-000000000003',
     title: 'Buổi 7: Backend Decision Layer',
     type: 'video',
     content: 'Data layer trong app/product. Khi nào dùng Google Sheets, Firebase, Supabase, backend/API custom, hoặc chưa cần backend thật. So sánh theo độ dễ bắt đầu, realtime, auth, permission, SQL/noSQL, cost/free tier, scale, lock-in, AI/agent friendliness. Schema, CRUD, auth, permission/RLS ở mức non-tech cần hiểu.',
@@ -602,8 +648,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 4
   {
-    id: 'les-8',
-    module_id: 'mod-4',
+    id: 'de000000-0000-0000-0000-000000000008',
+    module_id: '00000000-0000-0000-0000-000000000004',
     title: 'Buổi 8: Deploy & Infra Landscape',
     type: 'video',
     content: 'Vercel: managed app hosting. Cloudflare: DNS/CDN/security/Pages/Workers/Tunnel. VPS: thuê server riêng, linh hoạt hơn nhưng phải tự chịu trách nhiệm. Docker: đóng gói app/service để chạy ổn định giữa môi trường khác nhau. SSH, env vars, secrets, domain, logs, local vs production. Khi nào không nên tự host.',
@@ -616,8 +662,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'les-9',
-    module_id: 'mod-4',
+    id: 'de000000-0000-0000-0000-000000000009',
+    module_id: '00000000-0000-0000-0000-000000000004',
     title: 'Buổi 9: Automation with n8n',
     type: 'video',
     content: 'Automation layer là gì. n8n cho form -> sheet/database -> notification; app data -> report; file upload -> OCR/summary; feedback -> action list; daily/weekly digest. Local n8n vs cloud/self-host/server n8n. Webhook, trigger, credential, node, workflow. Khi nào dùng n8n, khi nào dùng code/API/script.',
@@ -632,21 +678,21 @@ const SEED_LESSONS: Lesson[] = [
 ];
 
 const SEED_LESSON_SKILLS: LessonSkill[] = [
-  { lesson_id: 'les-1', skill_id: 'skill-problem' },
-  { lesson_id: 'les-2', skill_id: 'skill-problem' },
-  { lesson_id: 'les-3', skill_id: 'skill-ai' },
-  { lesson_id: 'les-4', skill_id: 'skill-ai' },
-  { lesson_id: 'les-5', skill_id: 'skill-ai' },
-  { lesson_id: 'les-6', skill_id: 'skill-ui' },
-  { lesson_id: 'les-7', skill_id: 'skill-ui' },
-  { lesson_id: 'les-8', skill_id: 'skill-ui' },
-  { lesson_id: 'les-9', skill_id: 'skill-ai' }
+  { lesson_id: 'de000000-0000-0000-0000-000000000001', skill_id: 'skill-problem' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000002', skill_id: 'skill-problem' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000003', skill_id: 'skill-ai' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000004', skill_id: 'skill-ai' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000005', skill_id: 'skill-ai' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000006', skill_id: 'skill-ui' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000007', skill_id: 'skill-ui' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000008', skill_id: 'skill-ui' },
+  { lesson_id: 'de000000-0000-0000-0000-000000000009', skill_id: 'skill-ai' }
 ];
 
 const SEED_ASSIGNMENTS: Assignment[] = [
   {
-    id: 'asg-les-1',
-    lesson_id: 'les-1',
+    id: 'ae000000-0000-0000-0000-000000000001',
+    lesson_id: 'de000000-0000-0000-0000-000000000001',
     description: 'Hoàn thành bảng MVP-to-Scale Gap Checklist cho dự án cá nhân bạn chọn để theo suốt khóa học.',
     rubric_checklist: [
       { item: 'Xác định rõ ràng 3 rủi ro kỹ thuật chính của dự án', checked: false },
@@ -657,8 +703,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     }
   },
   {
-    id: 'asg-les-2',
-    lesson_id: 'les-2',
+    id: 'ae000000-0000-0000-0000-000000000002',
+    lesson_id: 'de000000-0000-0000-0000-000000000002',
     description: 'Viết tài liệu PRD v2 và phác thảo 4 luồng dữ liệu/vận hành (User Flow, Business Flow, System Flow, Data Flow) cho main use case của dự án.',
     rubric_checklist: [
       { item: 'PRD v2 bao gồm đầy đủ Problem, User, Goal, Success Criteria, User Stories', checked: false },
@@ -669,8 +715,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     }
   },
   {
-    id: 'asg-les-3',
-    lesson_id: 'les-3',
+    id: 'ae000000-0000-0000-0000-000000000003',
+    lesson_id: 'de000000-0000-0000-0000-000000000003',
     description: 'Thêm hoặc sửa một feature nhỏ trong project của bạn bằng quy trình IDE/CLI workflow; ghi lại câu lệnh/prompt và phần diff chính.',
     rubric_checklist: [
       { item: 'Sử dụng thành công IDE hoặc CLI (Cursor, Claude Code, Antigravity...) để thay đổi code', checked: false },
@@ -680,8 +726,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     scaffolding: {}
   },
   {
-    id: 'asg-les-4',
-    lesson_id: 'les-4',
+    id: 'ae000000-0000-0000-0000-000000000004',
+    lesson_id: 'de000000-0000-0000-0000-000000000004',
     description: 'Sử dụng ít nhất 1 skill (như brainstorm, sharpen problem, MVP scoping, PRD review, QA app) để cải thiện tài liệu PRD hoặc ứng dụng của bạn và nộp kết quả before/after.',
     rubric_checklist: [
       { item: 'Chọn được ít nhất 1 skill phù hợp để cải thiện sản phẩm', checked: false },
@@ -690,8 +736,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     scaffolding: {}
   },
   {
-    id: 'asg-les-5',
-    lesson_id: 'les-5',
+    id: 'ae000000-0000-0000-0000-000000000005',
+    lesson_id: 'de000000-0000-0000-0000-000000000005',
     description: 'Chọn 1 MCP/MCP-like workflow (ví dụ browser testing, DB context, GitHub repo context) để audit/test hoặc hỗ trợ xây dựng một tính năng trong project của bạn.',
     rubric_checklist: [
       { item: 'Xác định đúng use case cần dùng MCP và cấu hình thành công công cụ bổ trợ', checked: false },
@@ -700,8 +746,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     scaffolding: {}
   },
   {
-    id: 'asg-les-6',
-    lesson_id: 'les-6',
+    id: 'ae000000-0000-0000-0000-000000000006',
+    lesson_id: 'de000000-0000-0000-0000-000000000006',
     description: 'Thực hiện thay đổi trong dự án và theo dõi quy trình quản lý: tạo Issue -> tạo Branch -> tạo Pull Request/Commit -> Merge. Đảm bảo kho lưu trữ (Repo) có tài liệu README hoặc Project Notes tối thiểu.',
     rubric_checklist: [
       { item: 'Tạo Issue mô tả tính năng/bug và liên kết với branch/PR tương ứng', checked: false },
@@ -711,8 +757,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     scaffolding: {}
   },
   {
-    id: 'asg-les-7',
-    lesson_id: 'les-7',
+    id: 'ae000000-0000-0000-0000-000000000007',
+    lesson_id: 'de000000-0000-0000-0000-000000000007',
     description: 'Lập bảng phân tích quyết định Backend (Backend Decision Matrix) và phác thảo mô hình dữ liệu (Data model/schema draft) cho các luồng chính của dự án.',
     rubric_checklist: [
       { item: 'Có bảng so sánh trade-off giữa các phương án Backend (Sheets, Firebase, Supabase, API custom...)', checked: false },
@@ -721,8 +767,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     scaffolding: {}
   },
   {
-    id: 'asg-les-8',
-    lesson_id: 'les-8',
+    id: 'ae000000-0000-0000-0000-000000000008',
+    lesson_id: 'de000000-0000-0000-0000-000000000008',
     description: 'Xây dựng kế hoạch triển khai (Deployment Plan) cho dự án cá nhân: lựa chọn nền tảng, cấu hình tên miền/DNS qua Cloudflare, quản lý biến môi trường (.env) và liệt kê các rủi ro cần lưu ý.',
     rubric_checklist: [
       { item: 'Xác định rõ platform deploy (Vercel, Cloudflare Pages, VPS...) phù hợp với tech stack', checked: false },
@@ -732,8 +778,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
     scaffolding: {}
   },
   {
-    id: 'asg-les-9',
-    lesson_id: 'les-9',
+    id: 'ae000000-0000-0000-0000-000000000009',
+    lesson_id: 'de000000-0000-0000-0000-000000000009',
     description: 'Thiết lập hoặc phác thảo một quy trình tự động hóa (Automation workflow) bằng n8n kết nối các mảnh sản phẩm/workspace để tối ưu hóa quy trình vận hành.',
     rubric_checklist: [
       { item: 'Xác định rõ Trigger node và các Action nodes trong quy trình', checked: false },
@@ -747,7 +793,7 @@ const SEED_ASSIGNMENTS: Assignment[] = [
 // Seed profiles
 const SEED_PROFILES: Profile[] = [
   {
-    id: 'profile-admin-hong',
+    id: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
     full_name: 'Đặng Tuyết Hồng',
     avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150&auto=format&fit=crop',
     role: 'admin',
@@ -762,7 +808,7 @@ const SEED_PROFILES: Profile[] = [
     created_at: new Date('2024-09-01').toISOString()
   },
   {
-    id: 'profile-student-thongdang',
+    id: 'f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e',
     full_name: 'thongdang.upyouth',
     avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=thongdang.upyouth',
     role: 'student',
@@ -793,21 +839,21 @@ const SEED_TOPICS: DiscussionTopic[] = [
     id: 'topic-light-support',
     name: 'Light Support',
     description: 'Nơi đăng bài nhờ đồng đội hoặc Mentor hỗ trợ giải quyết khó khăn, gỡ lỗi code hoặc làm rõ spec.',
-    created_by: 'profile-admin-hong',
+    created_by: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
     created_at: new Date('2024-09-01T00:00:00Z').toISOString()
   },
   {
     id: 'topic-assignments',
     name: 'Assignments',
     description: 'Nơi showcase bài tập về nhà của cả lớp. Nhớ Kudos (Upvote) và bình luận đóng góp ý kiến cho đồng đội!',
-    created_by: 'profile-admin-hong',
+    created_by: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
     created_at: new Date('2024-09-01T00:00:00Z').toISOString()
   },
   {
     id: 'topic-general',
     name: 'Thảo luận chung',
     description: 'Nơi giao lưu, chia sẻ kinh nghiệm, cập nhật tin tức và thảo luận tự do ngoài lề bài học.',
-    created_by: 'profile-admin-hong',
+    created_by: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
     created_at: new Date('2024-09-01T00:00:00Z').toISOString()
   }
 ];
@@ -933,7 +979,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v5';
+  const DB_VERSION = 'lms_v6';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference
@@ -946,7 +992,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Load initial states from LocalStorage or use preloaded seed data
   const [activeUserId, setActiveUserId] = useState<string>(() => {
-    return localStorage.getItem('lms_active_user_id') || 'profile-student-thongdang';
+    return localStorage.getItem('lms_active_user_id') || 'f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e';
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -1286,12 +1332,30 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Derived Active User object
   const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
 
+  // Auto unlock current level badges on activeUser changes (silently on load)
+  useEffect(() => {
+    if (!activeUser || !activeUser.id) return;
+    
+    // Auto-unlock silently based on profile completion
+    if (activeUser.is_profile_completed) {
+      unlockBadge(activeUser.id, 'badge-profile-card', true);
+    }
+
+    const miles = activeUser.nautical_miles || 0;
+    // Auto-unlock silently based on miles
+    if (miles >= 5000) unlockBadge(activeUser.id, 'badge-level-5', true);
+    if (miles >= 3001) unlockBadge(activeUser.id, 'badge-level-4', true);
+    if (miles >= 1501) unlockBadge(activeUser.id, 'badge-level-3', true);
+    if (miles >= 501) unlockBadge(activeUser.id, 'badge-level-2', true);
+    if (miles >= 0) unlockBadge(activeUser.id, 'badge-level-1', true);
+  }, [activeUser?.id, activeUser?.nautical_miles, activeUser?.is_profile_completed]);
+
   // Switch role action helper
   const switchUser = (role: UserRole) => {
     if (role === 'admin' || role === 'mentor') {
-      setActiveUserId('profile-admin-hong');
+      setActiveUserId('c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a');
     } else {
-      setActiveUserId('profile-student-thongdang');
+      setActiveUserId('f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e');
     }
   };
 
@@ -1306,8 +1370,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem('lms_is_authenticated', 'true');
       return existingUser;
     } else {
-      // Create a new profile with selected role
-      const newId = `profile-${role}-${Date.now()}`;
+      // Create a new profile with selected role (UUID format)
+      const newId = generateUUID();
       const newProfile: Profile = {
         id: newId,
         full_name: email.split('@')[0], // default name from email prefix
@@ -1376,7 +1440,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addNauticalMiles = async (studentId: string, amount: number, actionType: NauticalMilesTransaction['action_type'], description: string, referenceId?: string) => {
     // Add transaction
     const newTx: NauticalMilesTransaction = {
-      id: `tx-${Math.random().toString(36).substr(2, 9)}`,
+      id: generateUUID(),
       student_id: studentId,
       amount,
       action_type: actionType,
@@ -1396,6 +1460,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (error) console.error('Lỗi khi cập nhật nautical_miles của profile:', error);
         });
 
+        // Auto unlock level milestone badges (with notification)
+        if (newMiles >= 5000) unlockBadge(studentId, 'badge-level-5', false);
+        else if (newMiles >= 3001) unlockBadge(studentId, 'badge-level-4', false);
+        else if (newMiles >= 1501) unlockBadge(studentId, 'badge-level-3', false);
+        else if (newMiles >= 501) unlockBadge(studentId, 'badge-level-2', false);
+        else if (newMiles >= 0) unlockBadge(studentId, 'badge-level-1', false);
+
         return { ...p, nautical_miles: newMiles };
       }
       return p;
@@ -1412,7 +1483,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // Helper to unlock badge
-  const unlockBadge = async (studentId: string, badgeId: string) => {
+  const unlockBadge = async (studentId: string, badgeId: string, silent: boolean = false) => {
     const alreadyUnlocked = profileBadges.some(pb => pb.student_id === studentId && pb.badge_id === badgeId);
     if (alreadyUnlocked) return;
 
@@ -1423,19 +1494,22 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (exists) return prev;
       
       const badge = SEED_BADGES.find(b => b.id === badgeId);
-      addNotification(
-        'Huy hiệu được mở khóa!',
-        `Chúc mừng bạn đã mở khóa huy hiệu ${badge?.icon} "${badge?.name}"!`,
-        'system'
-      );
+      
+      if (!silent) {
+        addNotification(
+          'Huy hiệu được mở khóa!',
+          `Chúc mừng bạn đã mở khóa huy hiệu ${badge?.icon} "${badge?.name}"!`,
+          'system'
+        );
 
-      // Telegram notification mimic
-      const student = profiles.find(p => p.id === studentId);
-      addNotification(
-        '📢 Telegram Wall of Fame Bot',
-        `⚓ THÀNH TỰU HẢI TRÌNH: Thủy thủ ${student?.full_name} (${student?.gmail}) vừa xuất sắc thu về Huy hiệu ${badge?.icon} **${badge?.name}**! Gió đang thổi căng buồm!`,
-        'telegram'
-      );
+        // Telegram notification mimic
+        const student = profiles.find(p => p.id === studentId);
+        addNotification(
+          '📢 Telegram Wall of Fame Bot',
+          `⚓ THÀNH TỰU HẢI TRÌNH: Thủy thủ ${student?.full_name} (${student?.gmail}) vừa xuất sắc thu về Huy hiệu ${badge?.icon} **${badge?.name}**! Gió đang thổi căng buồm!`,
+          'telegram'
+        );
+      }
 
       return [...prev, newPB];
     });
@@ -1468,12 +1542,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const submitAssignment = (assignmentId: string, content: string) => {
     const existingIndex = submissions.findIndex(s => s.assignment_id === assignmentId && s.student_id === activeUserId);
-    const id = existingIndex >= 0 ? submissions[existingIndex].id : `sub-${Math.random().toString(36).substr(2, 9)}`;
+    const id = existingIndex >= 0 ? submissions[existingIndex].id : generateUUID();
     
     const newSubmission: Submission = {
       id,
       assignment_id: assignmentId,
-      batch_id: 'batch-3',
+      batch_id: 'b0000003-0000-0000-0000-000000000003',
       student_id: activeUserId,
       content,
       status: 'submitted',
@@ -1486,7 +1560,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSubmissions(prev => [newSubmission, ...prev]);
       
       // Award Nautical Miles
-      addNauticalMiles(activeUserId, 5, 'assignment_submitted', 'Nộp bài tập đúng hạn', id);
+      addNauticalMiles(activeUserId, 50, 'assignment_submitted', 'Nộp bài tập đúng hạn', id);
       
       // Rules Engine check: Iron Anchor Streak
       const studentSubs = [...submissions, newSubmission]
@@ -1515,7 +1589,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     supabase.from('submissions').upsert({
       id,
       assignment_id: assignmentId,
-      batch_id: 'batch-3',
+      batch_id: 'b0000003-0000-0000-0000-000000000003',
       student_id: activeUserId,
       content,
       status: 'submitted',
@@ -1539,9 +1613,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addComment = (submissionId: string, commentText: string) => {
     const newComment: Comment = {
-      id: `comm-${Math.random().toString(36).substr(2, 9)}`,
+      id: generateUUID(),
       submission_id: submissionId,
-      batch_id: 'batch-3',
+      batch_id: 'b0000003-0000-0000-0000-000000000003',
       author_id: activeUserId,
       content: commentText,
       upvotes_count: 0,
@@ -2153,9 +2227,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setProfiles(prev => prev.map(p => {
       if (p.id === userId) {
         const newVisits = (p.visits || 0) + 1;
-        supabase.from('profiles').update({ visits: newVisits }).eq('id', userId).then(({ error }) => {
-          if (error) console.error('Lỗi khi cập nhật visits trên Supabase:', error);
-        });
         return { ...p, visits: newVisits };
       }
       return p;
