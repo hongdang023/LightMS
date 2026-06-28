@@ -49,7 +49,7 @@ function MainAppShell() {
     return <Login />;
   }
 
-  if (!activeUser.is_profile_completed) {
+  if (activeUser.role !== 'admin' && !activeUser.is_profile_completed) {
     return <OnboardingForm />;
   }
 
