@@ -191,10 +191,12 @@ export const DiscussionBoard: React.FC = () => {
 
   // Filter by Search Query
   filteredThreads = filteredThreads.filter(t => {
+    const query = searchQuery.toLowerCase().trim();
     const matchesSearch = 
-      (t.author?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.content || '').toLowerCase().includes(searchQuery.toLowerCase());
+      (t.author?.full_name || '').toLowerCase().includes(query) ||
+      (t.author?.gmail || '').toLowerCase().includes(query) ||
+      (t.title || '').toLowerCase().includes(query) ||
+      (t.content || '').toLowerCase().includes(query);
       
     let matchesLesson = true;
     if (selectedLessonId !== 'all') {

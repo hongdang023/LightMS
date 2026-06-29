@@ -5,6 +5,7 @@ import { GlobalHeader } from './components/GlobalHeader';
 import { ParrotMascot } from './components/ParrotMascot';
 import { Login } from './pages/Login';
 import { OnboardingForm } from './pages/student/OnboardingForm';
+import { ProductTour } from './components/ProductTour';
 
 // Pages
 import { StudentDashboard } from './pages/student/StudentDashboard';
@@ -103,6 +104,9 @@ function MainAppShell() {
 
   return (
     <div className="app-shell">
+      {/* Product Onboarding Tour */}
+      <ProductTour />
+
       {/* Global Navigation Sidebar */}
       <GlobalNavigationSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
 

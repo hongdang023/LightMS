@@ -283,7 +283,7 @@ interface DatabaseContextType {
   updateProfile: (profileId: string, updates: Partial<Profile>) => void;
   isAuthenticated: boolean;
   loginWithGmail: (email: string, role?: UserRole) => Profile | null;
-  loginWithSupabaseGoogle: () => Promise<void>;
+  loginWithSupabaseGoogle: (role?: UserRole) => Promise<void>;
   logout: () => void;
   
   // Data lists
@@ -806,27 +806,6 @@ const SEED_PROFILES: Profile[] = [
     nautical_miles: 0,
     visits: 1,
     created_at: new Date('2024-09-01').toISOString()
-  },
-  {
-    id: 'f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e',
-    full_name: 'thongdang.upyouth',
-    avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=thongdang.upyouth',
-    role: 'student',
-    telegram_id: '',
-    bio: 'Thủy thủ mới gia nhập hải trình.',
-    gmail: 'thongdang.upyouth@gmail.com',
-    phone_number: '',
-    facebook_url: '',
-    industry: '',
-    current_job: '',
-    tech_level: 'non-tech',
-    product_idea: '',
-    weekly_hours_commitment: 0,
-    motivation_bet: '',
-    is_profile_completed: false,
-    nautical_miles: 0,
-    visits: 1,
-    created_at: new Date().toISOString()
   }
 ];
 
@@ -976,6 +955,27 @@ const SEED_ABOUT_CONTENT: AboutContent = {
 // ==========================================
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Clear legacy mock data cache from LocalStorage for Supabase version
+  useEffect(() => {
+    const isCleared = localStorage.getItem('lms_cache_cleared_v2');
+    if (!isCleared) {
+      const keysToRemove = [
+        'lms_profiles', 
+        'lms_submissions', 
+        'lms_comments', 
+        'lms_feedbacks', 
+        'lms_discussion_posts', 
+        'lms_discussion_topics', 
+        'lms_nautical_transactions',
+        'lms_profile_badges',
+        'lms_active_user_id',
+        'lms_is_authenticated'
+      ];
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      localStorage.setItem('lms_cache_cleared_v2', 'true');
+      window.location.reload();
+    }
+  }, []);
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
@@ -1206,6 +1206,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         resCalendarEvents,
         resOnboardingDays,
         resUnlockSchedules,
+        resTopics,
+        resDiscussionPosts,
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('modules').select('*').order('order_index', { ascending: true }),
@@ -1220,9 +1222,32 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         supabase.from('calendar_events').select('*'),
         supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
         supabase.from('onboarding_unlock_schedules').select('*').order('day', { ascending: true }),
+        supabase.from('discussion_topics').select('*').order('created_at', { ascending: true }),
+        supabase.from('discussion_posts').select('*').order('created_at', { ascending: false }),
       ]);
 
-      if (resProfiles.data && resProfiles.data.length > 0) setProfiles(resProfiles.data);
+      if (resProfiles.data && resProfiles.data.length > 0) {
+        setProfiles(prev => {
+          const fetchedProfiles = resProfiles.data as Profile[];
+          const newProfiles = fetchedProfiles.map(dbP => {
+            const existing = prev.find(p => p.id === dbP.id);
+            // Nếu local đang lưu là admin (được cấp quyền ở quá trình đăng nhập) thì bảo toàn quyền admin
+            if (existing && existing.role === 'admin' && dbP.role !== 'admin') {
+              return { ...dbP, role: 'admin' };
+            }
+            return dbP;
+          });
+          
+          // Giữ lại profile đang được active ở local (nhưng do lỗi insert chưa kịp lên DB)
+          prev.forEach(p => {
+            if (!newProfiles.some(np => np.id === p.id)) {
+              newProfiles.push(p);
+            }
+          });
+          
+          return newProfiles;
+        });
+      }
       if (resModules.data && resModules.data.length > 0) setModules(resModules.data);
       if (resLessons.data && resLessons.data.length > 0) setLessons(resLessons.data);
       if (resAssignments.data && resAssignments.data.length > 0) setAssignments(resAssignments.data);
@@ -1237,6 +1262,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
       if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
       if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
+      if (resTopics.data && resTopics.data.length > 0) setTopics(resTopics.data);
+      if (resDiscussionPosts.data) setDiscussionPosts(resDiscussionPosts.data);
 
       console.log('Đã tải xong toàn bộ dữ liệu thực tế từ Supabase.');
     } catch (e) {
@@ -1265,15 +1292,27 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       let activeProfile: Profile;
 
+      // Check admin emails list
+      const adminEmails = ['dangtuyethong2324@gmail.com'];
+      const isAdminEmail = adminEmails.includes(userEmail.toLowerCase());
+
+      // Read requested role from localStorage
+      const preferredRole = localStorage.getItem('lms_signing_in_role') as UserRole || 'student';
+      if (localStorage.getItem('lms_signing_in_role')) {
+        localStorage.removeItem('lms_signing_in_role');
+      }
+
+      const finalRoleRequested = (isAdminEmail || preferredRole === 'admin') ? 'admin' : 'student';
+
       if (error || !profile) {
         // Create new profile locally & on Supabase
         const newProfile: Profile = {
           id: userId,
           full_name: user.user_metadata?.full_name || userEmail.split('@')[0],
           avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userEmail)}`,
-          role: 'student',
+          role: finalRoleRequested,
           telegram_id: '',
-          bio: 'Thủy thủ mới gia nhập hải trình từ Supabase.',
+          bio: finalRoleRequested === 'admin' ? 'Giảng viên / Quản trị viên mới từ Supabase.' : 'Thủy thủ mới gia nhập hải trình từ Supabase.',
           gmail: userEmail,
           phone_number: '',
           facebook_url: '',
@@ -1298,6 +1337,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       } else {
         activeProfile = profile as Profile;
+        // Automatically upgrade/sync role if requested role is admin
+        if (activeProfile.role !== finalRoleRequested && finalRoleRequested === 'admin') {
+          activeProfile.role = 'admin'; // Override in memory immediately for correct routing
+          // Try to sync with DB
+          await supabase
+            .from('profiles')
+            .update({ role: 'admin' })
+            .eq('id', userId);
+        }
       }
 
       // Sync React State
@@ -1316,7 +1364,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const loginWithSupabaseGoogle = async () => {
+  const loginWithSupabaseGoogle = async (role: UserRole = 'student') => {
+    localStorage.setItem('lms_signing_in_role', role);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -1611,7 +1660,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const addComment = (submissionId: string, commentText: string) => {
+  const addComment = async (submissionId: string, commentText: string) => {
     const newComment: Comment = {
       id: generateUUID(),
       submission_id: submissionId,
@@ -1625,12 +1674,17 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     setComments(prev => [...prev, newComment]);
+
+    const { error } = await supabase.from('comments').insert([newComment]);
+    if (error) console.error('Lỗi khi lưu comment lên Supabase:', error.message);
     
     // Reward for active crew collaboration
     addNauticalMiles(activeUserId, 5, 'comment_added', 'Bình luận thảo luận chéo bài nộp đồng đội', newComment.id);
   };
 
-  const upvoteComment = (commentId: string) => {
+  const upvoteComment = async (commentId: string) => {
+    let updatedComment: Comment | null = null;
+    
     setComments(prev => prev.map(c => {
       if (c.id === commentId) {
         const upvotedByList = c.upvoted_by || [];
@@ -1660,10 +1714,22 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         }
 
-        return { ...c, upvotes_count: newUpvotes, upvoted_by: newList };
+        updatedComment = { ...c, upvotes_count: newUpvotes, upvoted_by: newList };
+        return updatedComment;
       }
       return c;
     }));
+
+    if (updatedComment) {
+      const { error } = await supabase
+        .from('comments')
+        .update({
+          upvotes_count: (updatedComment as Comment).upvotes_count,
+          upvoted_by: (updatedComment as Comment).upvoted_by
+        })
+        .eq('id', commentId);
+      if (error) console.error('Lỗi khi cập nhật upvote comment lên Supabase:', error.message);
+    }
   };
 
   // ==========================================
@@ -1804,7 +1870,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
   };
 
-  const addTopic = (name: string, description: string) => {
+  const addTopic = async (name: string, description: string) => {
     const newTopic: DiscussionTopic = {
       id: `topic-${Math.random().toString(36).substr(2, 9)}`,
       name,
@@ -1813,6 +1879,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       created_at: new Date().toISOString()
     };
     setTopics(prev => [...prev, newTopic]);
+
+    const { error } = await supabase.from('discussion_topics').insert([newTopic]);
+    if (error) console.error('Lỗi khi thêm topic lên Supabase:', error.message);
+
     addNotification(
       'Thêm chủ đề thảo luận mới',
       `Mentor ${activeUser.full_name} đã tạo chủ đề thảo luận: "${name}"`,
@@ -1820,7 +1890,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
-  const addDiscussionPost = (topicId: string, title: string, content: string, tags: string[] = []) => {
+  const addDiscussionPost = async (topicId: string, title: string, content: string, tags: string[] = []) => {
     const newPost: DiscussionPost = {
       id: `post-${Math.random().toString(36).substr(2, 9)}`,
       topic_id: topicId,
@@ -1834,6 +1904,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     setDiscussionPosts(prev => [newPost, ...prev]);
 
+    const { error } = await supabase.from('discussion_posts').insert([newPost]);
+    if (error) console.error('Lỗi khi thêm bài viết thảo luận lên Supabase:', error.message);
+
     // Reward for active crew collaboration: +10 Nautical Miles
     addNauticalMiles(activeUserId, 10, 'post_created', `Đăng bài thảo luận mới: "${title}"`, newPost.id);
 
@@ -1844,7 +1917,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
-  const upvoteDiscussionPost = (postId: string) => {
+  const upvoteDiscussionPost = async (postId: string) => {
+    let updatedPost: DiscussionPost | null = null;
+
     setDiscussionPosts(prev => prev.map(p => {
       if (p.id === postId) {
         const upvotedByList = p.upvoted_by || [];
@@ -1867,10 +1942,22 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           addNauticalMiles(p.author_id, 10, 'post_upvoted', 'Bài đăng nhận được 1 Upvote từ đồng đội', p.id);
         }
 
-        return { ...p, upvotes_count: newUpvotes, upvoted_by: newList };
+        updatedPost = { ...p, upvotes_count: newUpvotes, upvoted_by: newList };
+        return updatedPost;
       }
       return p;
     }));
+
+    if (updatedPost) {
+      const { error } = await supabase
+        .from('discussion_posts')
+        .update({
+          upvotes_count: (updatedPost as DiscussionPost).upvotes_count,
+          upvoted_by: (updatedPost as DiscussionPost).upvoted_by
+        })
+        .eq('id', postId);
+      if (error) console.error('Lỗi khi cập nhật upvote bài viết lên Supabase:', error.message);
+    }
   };
 
   const upvoteSubmission = (submissionId: string) => {

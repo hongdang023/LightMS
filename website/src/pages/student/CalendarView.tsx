@@ -236,14 +236,16 @@ export const CalendarView: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleAddGoogleCalendar}
-              className="btn bg-white text-[#15333B] border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm text-xs font-extrabold flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+              className="border-0 shadow-md text-xs font-black flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer transform active:scale-95 hover:brightness-105"
+              style={{ backgroundColor: '#FFD94C', color: '#15333B' }}
             >
               <span className="text-base">📅</span>
               <span>Google Calendar</span>
             </button>
             <button
               onClick={handleAddAppleCalendar}
-              className="btn bg-[#15333B] text-white hover:bg-[#0c1f24] shadow-sm text-xs font-extrabold flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+              className="border-0 shadow-md text-xs font-black flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer transform active:scale-95 hover:brightness-105"
+              style={{ backgroundColor: '#214C54', color: '#FFFFFF' }}
             >
               <span className="text-base">🍎</span>
               <span>Apple Calendar</span>

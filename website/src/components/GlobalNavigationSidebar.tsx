@@ -102,6 +102,7 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
           return (
             <button
               key={item.id}
+              id={`nav-item-${item.id}`}
               onClick={() => onPageChange(item.id)}
               title={isCollapsed ? item.label : ''}
               className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-200 group relative ${

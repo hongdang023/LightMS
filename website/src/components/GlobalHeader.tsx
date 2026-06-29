@@ -104,6 +104,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
       {/* RIGHT: Avatar Dropdown */}
       <div className="relative" ref={dropdownRef}>
         <button
+          id="header-profile-dropdown"
           onClick={() => setDropdownOpen(prev => !prev)}
           className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
         >

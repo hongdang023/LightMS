@@ -221,6 +221,47 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
     return saved === 'true';
   })();
 
+  // Batch Unlock Setup States
+  const [bulkStartDate, setBulkStartDate] = useState<string>(() => {
+    const saved = localStorage.getItem('lms_onboarding_start_date');
+    if (saved) return saved;
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  });
+  const [bulkUnlockTime, setBulkUnlockTime] = useState<string>('09:00');
+
+  const handleApplyBulkUnlockSchedule = async () => {
+    const dateParts = bulkStartDate.split('-');
+    const timeParts = bulkUnlockTime.split(':');
+    if (dateParts.length !== 3 || timeParts.length !== 2) {
+      alert('Vui lòng điền đúng định dạng ngày và giờ.');
+      return;
+    }
+
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1;
+    const day = parseInt(dateParts[2]);
+    const hour = parseInt(timeParts[0]);
+    const minute = parseInt(timeParts[1]);
+
+    const baseDate = new Date(year, month, day, hour, minute, 0, 0);
+
+    if (isNaN(baseDate.getTime())) {
+      alert('Ngày giờ không hợp lệ.');
+      return;
+    }
+
+    // Update schedules for 7 consecutive days
+    for (let d = 1; d <= 7; d++) {
+      const scheduledDate = new Date(baseDate.getTime());
+      scheduledDate.setDate(baseDate.getDate() + (d - 1));
+      await updateOnboardingUnlockSchedule(d, scheduledDate.toISOString());
+    }
+
+    localStorage.setItem('lms_onboarding_start_date', bulkStartDate);
+    alert('Đã cập nhật lịch mở khóa tự động cho cả 7 ngày Onboarding thành công!');
+  };
+
   // Track selected Day view and current view mode
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [viewMode, setViewMode] = useState<'grid' | 'detail'>('grid');
@@ -279,7 +320,10 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
     if (!dayData) return false;
     const tasks = getTasksForDay(dayData);
     if (tasks.length === 0) return true;
-    return tasks.every(t => checkedTasks[t.key]);
+    // Only check required tasks (non-optional ones)
+    const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional'));
+    if (requiredTasks.length === 0) return true;
+    return requiredTasks.every(t => checkedTasks[t.key]);
   };
 
   // Helper to determine if a day is unlocked based on date AND previous day completion
@@ -654,6 +698,44 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
             <p className="text-sm text-amber-800 leading-relaxed font-semibold">
               "{lockedAlert.msg}"
             </p>
+          </div>
+        </div>
+      )}
+
+      {isEditMode && viewMode === 'grid' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm mb-6 animate-fade-in select-text">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-2xl text-amber-600">📅</span>
+            <div>
+              <span className="text-sm font-bold text-amber-800 block">Thiết lập Lịch mở khóa hàng loạt (Onboarding Week)</span>
+              <span className="text-xs text-amber-600">Cấu hình nhanh ngày mở khóa cho cả 7 ngày học liên tiếp thay vì cài đặt từng ngày</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-amber-700 uppercase block">Ngày bắt đầu (Day 1)</label>
+              <input
+                type="date"
+                className="border border-amber-300 rounded-xl px-4 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold"
+                value={bulkStartDate}
+                onChange={(e) => setBulkStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-amber-700 uppercase block">Giờ mở khóa hàng ngày</label>
+              <input
+                type="time"
+                className="border border-amber-300 rounded-xl px-4 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold"
+                value={bulkUnlockTime}
+                onChange={(e) => setBulkUnlockTime(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={handleApplyBulkUnlockSchedule}
+              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer border-0"
+            >
+              Áp dụng cho 7 ngày Onboarding
+            </button>
           </div>
         </div>
       )}

@@ -163,23 +163,25 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
       <div className="dashboard-grid">
         {/* Left Column: Tasks & Assignments (Requirement 1) */}
         <div className="space-y-6">
-          <div className="card h-full flex flex-col justify-between">
+          
+          {/* Card: Bài tập về nhà Live Class */}
+          <div className="card p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
                 <h3 className="font-extrabold text-lg text-[#15333B] flex items-center gap-2">
-                  🎯 Bài Tập Chưa Hoàn Thành
+                  🎯 Bài Tập Live Class Chưa Hoàn Tất
                 </h3>
-                <span className="badge-pill badge-warning text-[10px]">
+                <span className={`badge-pill text-[10px] font-extrabold ${pendingAssignments.length === 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'badge-warning'}`}>
                   {pendingAssignments.length} bài tập còn lại
                 </span>
               </div>
 
               {pendingAssignments.length === 0 ? (
-                <div className="text-center py-16 space-y-4">
-                  <span className="text-6xl block">island 🏝️</span>
-                  <h4 className="font-bold text-[#15333B] text-lg">Hải trình sóng yên biển lặng!</h4>
-                  <p className="text-sm text-[#3E5E63] max-w-md mx-auto">
-                    Bạn đã hoàn thành xuất sắc tất cả bài tập hiện tại. Hãy nghỉ ngơi, chuẩn bị tinh thần cho những hải trình tiếp theo!
+                <div className="bg-emerald-50/50 border-2 border-emerald-100 rounded-3xl p-8 text-center space-y-4">
+                  <span className="text-5xl block">🎉</span>
+                  <h4 className="font-extrabold text-[#065f46] text-lg">Rất tốt! Không còn bài tập Live Class nào chưa nộp!</h4>
+                  <p className="text-sm text-[#047857] max-w-md mx-auto font-medium leading-relaxed">
+                    Bạn đã hoàn thành xuất sắc tất cả bài tập hiện tại. Hãy nghỉ ngơi, chuẩn bị tinh thần cho những hải trình tiếp theo! ⚓
                   </p>
                 </div>
               ) : (
@@ -202,8 +204,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                         <p className="text-xs text-[#3E5E63] pl-8 leading-relaxed line-clamp-2">
                           {assignment.desc}
                         </p>
-                        
-                        {/* Onboarding progress bar indicator is removed from here as it has a dedicated right-column card */}
                       </div>
 
                       {/* Due Date Indicator & Action Button */}
@@ -227,13 +227,69 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
               <div className="pt-4 border-t border-gray-100 mt-6 text-center">
                 <button 
                   onClick={() => onPageChange('syllabus')}
-                  className="text-xs text-[#214C54] hover:text-[#15333B] font-extrabold"
+                  className="text-xs text-[#214C54] hover:text-[#15333B] font-extrabold bg-transparent border-0 cursor-pointer"
                 >
                   Xem toàn bộ danh sách Syllabus ➔
                 </button>
               </div>
             )}
           </div>
+
+          {/* Card: Tuần Onboarding */}
+          {onboardingProgress.isCompleted ? (
+            <div className="card bg-purple-50/50 border-2 border-purple-100 rounded-3xl p-8 text-center space-y-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-200/10 rounded-full blur-3xl pointer-events-none" />
+              <span className="text-5xl block">👑</span>
+              <h4 className="font-extrabold text-[#581c87] text-lg">Rất tốt! Thử thách Onboarding Week đã hoàn tất!</h4>
+              <p className="text-sm text-[#6b21a8] max-w-md mx-auto font-medium leading-relaxed">
+                Bạn đã xuất sắc vượt qua 100% nhiệm vụ của tuần Onboarding. Trận chiến thực sự sắp bắt đầu, hãy chuẩn bị buồm sẵn sàng! ⛵
+              </p>
+              <div className="pt-2">
+                <button 
+                  onClick={() => onPageChange('onboarding')}
+                  className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-extrabold rounded-xl shadow-md transition-all cursor-pointer border-0"
+                >
+                  Xem lại Bản Đồ Onboarding ➔
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="card bg-white border border-gray-100 shadow-sm relative overflow-hidden p-6">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#EAB308]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+              
+              <h3 className="font-extrabold text-lg text-[#15333B] border-b border-gray-100 pb-3 mb-4 flex items-center gap-1.5 uppercase tracking-wider relative z-10">
+                <Target size={18} className="text-[#EAB308]" /> Tiến Độ Tuần Onboarding
+              </h3>
+
+              <div className="space-y-4 relative z-10">
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tỉ lệ hoàn thành Onboarding</span>
+                    <span className="text-sm font-black text-[#214C54]">{onboardingProgress.percent}% ({onboardingProgress.completed}/{onboardingProgress.total} nhiệm vụ)</span>
+                  </div>
+                  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#214C54] to-[#EAB308] transition-all duration-500 rounded-full"
+                      style={{ width: `${onboardingProgress.percent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <p className="text-sm text-[#3E5E63] font-medium leading-relaxed">
+                  Hoàn thành các nhiệm vụ Onboarding để kích hoạt tư duy chiến binh, thiết lập môi trường build sản phẩm và thu thập các Hải lý đầu tiên.
+                </p>
+
+                <button 
+                  onClick={() => onPageChange('onboarding')}
+                  className="w-full btn btn-primary text-xs font-extrabold py-3 rounded-xl shadow-sm transition-all flex justify-center items-center gap-1.5 group border-0 cursor-pointer"
+                >
+                  <span>Tiếp tục thực hiện Onboarding</span>
+                  <span className="group-hover:translate-x-1 transition-transform">➔</span>
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Right Column: Nearest Session & Progress Info */}
@@ -290,44 +346,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
               </div>
             )}
           </div>
-
-          {/* Card: Tuần Onboarding */}
-          {!onboardingProgress.isCompleted && (
-            <div className="card bg-white border border-gray-100 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#EAB308]/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-              
-              <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-100 pb-3 mb-4 flex items-center gap-1.5 uppercase tracking-wider relative z-10">
-                <Target size={16} className="text-[#EAB308]" /> Tuần Onboarding
-              </h3>
-
-              <div className="space-y-4 relative z-10">
-                <div>
-                  <div className="flex justify-between items-end mb-1.5">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tiến độ hoàn thành</span>
-                    <span className="text-sm font-black text-[#214C54]">{onboardingProgress.percent}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                    <div 
-                      className="h-full bg-gradient-to-r from-[#214C54] to-[#EAB308] transition-all duration-500"
-                      style={{ width: `${onboardingProgress.percent}%` }}
-                    />
-                  </div>
-                </div>
-
-                <p className="text-xs text-[#3E5E63] font-medium leading-relaxed">
-                  Hoàn thành các nhiệm vụ Onboarding để kích hoạt tư duy chiến binh và thu thập Hải lý đầu tiên.
-                </p>
-
-                <button 
-                  onClick={() => onPageChange('onboarding')}
-                  className="w-full btn btn-primary text-xs font-bold py-2.5 rounded-lg shadow-sm transition-all flex justify-center items-center gap-1.5 group"
-                >
-                  <span>Tiếp tục Onboarding</span>
-                  <span className="group-hover:translate-x-1 transition-transform">➔</span>
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Card: Giải đấu hiện tại & Bảng vinh danh */}
           <div className="card p-0 overflow-hidden bg-white shadow-sm border border-gray-100">

@@ -257,7 +257,7 @@ export const Login: React.FC = () => {
               onClick={async () => {
                 try {
                   setParrotText('Đang chuyển hướng sang cổng xác thực Google của Supabase... 🦜');
-                  await loginWithSupabaseGoogle();
+                  await loginWithSupabaseGoogle(selectedRole);
                 } catch (err: any) {
                   setError('Không thể kết nối đến Supabase. Vui lòng kiểm tra cấu hình trong file .env.');
                 }
