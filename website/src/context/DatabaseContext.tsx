@@ -1233,7 +1233,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const existing = prev.find(p => p.id === dbP.id);
             // Nếu local đang lưu là admin (được cấp quyền ở quá trình đăng nhập) thì bảo toàn quyền admin
             if (existing && existing.role === 'admin' && dbP.role !== 'admin') {
-              return { ...dbP, role: 'admin' };
+              return { ...dbP, role: 'admin' as UserRole };
             }
             return dbP;
           });
