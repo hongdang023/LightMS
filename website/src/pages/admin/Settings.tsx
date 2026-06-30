@@ -128,7 +128,7 @@ export const Settings: React.FC = () => {
     <div className="space-y-6 select-text text-slate-800">
       <PageHeader 
         title="Cài Đặt Hệ Thống" 
-        subtitle="Quản lý ngày khai giảng lớp học và cấu hình các tác vụ gửi email tự động"
+        description="Quản lý ngày khai giảng lớp học và cấu hình các tác vụ gửi email tự động"
         icon={<SettingsIcon className="w-6 h-6 text-[#214C54]" />}
       />
 

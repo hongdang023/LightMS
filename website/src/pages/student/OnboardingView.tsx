@@ -199,7 +199,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
     onboardingUnlockSchedules,
     updateOnboardingDay,
     updateOnboardingUnlockSchedule,
-    profiles
+    users: profiles
   } = useDatabase();
 
   // Email template config modal states
