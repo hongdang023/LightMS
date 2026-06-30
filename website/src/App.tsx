@@ -27,6 +27,7 @@ import { StudentManagement } from './pages/admin/StudentManagement';
 import { InternalTeam } from './pages/admin/InternalTeam';
 import { Announcements as AdminAnnouncements } from './pages/admin/Announcements';
 import { CalendarManagement as AdminCalendarManagement } from './pages/admin/CalendarManagement';
+import { Settings as AdminSettings } from './pages/admin/Settings';
 
 import './App.css';
 
@@ -96,6 +97,8 @@ function MainAppShell() {
         return <StudentManagement />;
       case 'internal-team':
         return <InternalTeam />;
+      case 'admin-settings':
+        return <AdminSettings />;
 
       default:
         return <StudentDashboard onPageChange={setCurrentPage} />;

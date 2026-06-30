@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useDatabase } from '../context/DatabaseContext';
 import { BrandLogo } from './BrandLogo';
 import {
@@ -35,7 +35,8 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     'admin-calendar',
     'speedgrader',
     'student-mgmt',
-    'internal-team'
+    'internal-team',
+    'admin-settings'
   ].includes(currentPage);
 
   const showAdminSidebar = activeUser.role === 'admin' && isAdminPage;
@@ -62,6 +63,7 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     { id: 'speedgrader', label: 'Chấm bài tập', icon: SpeedGraderIcon },
     { id: 'student-mgmt', label: 'Quản lý học viên', icon: StudentsIcon },
     { id: 'internal-team', label: 'Quản lý nhân sự', icon: InternalTeamIcon },
+    { id: 'admin-settings', label: 'Cài đặt', icon: Settings },
   ];
 
   const currentNav = showAdminSidebar ? adminNav : studentNav;

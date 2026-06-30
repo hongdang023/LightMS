@@ -227,6 +227,8 @@ export interface OnboardingDay {
   objective: string;
   checklist: string;
   takeaway: string;
+  email_subject?: string;
+  email_body?: string;
 }
 
 export interface OnboardingUnlockSchedule {
@@ -339,6 +341,7 @@ interface DatabaseContextType {
   updateLesson: (id: string, updates: Partial<Lesson>) => void;
   updateAssignment: (id: string, updates: Partial<Assignment>) => void;
   updateModule: (id: string, updates: Partial<Module>) => void;
+  updateBatch: (id: string, updates: Partial<Batch>) => void;
   addLesson: (lesson: Lesson) => void;
   incrementVisits: (userId: string) => void;
 }
@@ -1093,6 +1096,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeParse('lms_about_content', SEED_ABOUT_CONTENT)
   );
 
+  const [batches, setBatches] = useState<Batch[]>(() => 
+    safeParse('lms_batches', SEED_BATCHES)
+  );
+
   // Sync to local storage
   useEffect(() => {
     localStorage.setItem('lms_active_user_id', activeUserId);
@@ -1141,6 +1148,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem('lms_nautical_transactions', JSON.stringify(nauticalTransactions));
   }, [nauticalTransactions]);
+
+  useEffect(() => {
+    localStorage.setItem('lms_batches', JSON.stringify(batches));
+  }, [batches]);
 
   useEffect(() => {
     localStorage.setItem('lms_profile_badges', JSON.stringify(profileBadges));
@@ -1208,6 +1219,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         resUnlockSchedules,
         resTopics,
         resDiscussionPosts,
+        resBatches,
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('modules').select('*').order('order_index', { ascending: true }),
@@ -1224,6 +1236,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         supabase.from('onboarding_unlock_schedules').select('*').order('day', { ascending: true }),
         supabase.from('discussion_topics').select('*').order('created_at', { ascending: true }),
         supabase.from('discussion_posts').select('*').order('created_at', { ascending: false }),
+        supabase.from('batches').select('*'),
       ]);
 
       if (resProfiles.data && resProfiles.data.length > 0) {
@@ -1264,6 +1277,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
       if (resTopics.data && resTopics.data.length > 0) setTopics(resTopics.data);
       if (resDiscussionPosts.data) setDiscussionPosts(resDiscussionPosts.data);
+      if (resBatches.data && resBatches.data.length > 0) setBatches(resBatches.data);
 
       console.log('Đã tải xong toàn bộ dữ liệu thực tế từ Supabase.');
     } catch (e) {
@@ -2245,6 +2259,16 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const updateBatch = (id: string, updates: Partial<Batch>) => {
+    setBatches(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+    addNotification('Cập nhật lớp học', 'Đã cập nhật ngày khai giảng/kết thúc lớp học', 'system');
+
+    // Cập nhật trên Supabase
+    supabase.from('batches').update(updates).eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật batch trên Supabase:', error.message);
+    });
+  };
+
   const addLesson = (lesson: Lesson) => {
     setLessons(prev => [...prev, lesson]);
     addNotification('Thêm bài giảng', `Bài giảng "${lesson.title}" đã được thêm thành công`, 'system');
@@ -2331,7 +2355,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       loginWithSupabaseGoogle,
       logout,
       courses: SEED_COURSES,
-      batches: SEED_BATCHES,
+      batches,
       modules,
       lessons,
       skills: SEED_SKILLS,
@@ -2376,6 +2400,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateLesson,
       updateAssignment,
       updateModule,
+      updateBatch,
       addLesson,
       incrementVisits
     }}>

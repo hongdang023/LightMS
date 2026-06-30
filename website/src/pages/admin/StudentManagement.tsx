@@ -169,10 +169,22 @@ export const StudentManagement: React.FC = () => {
     `.trim();
   };
 
-  const handleCopyHtml = () => {
+  const handleCopyHtml = async () => {
     const html = getHtmlEmail(bulkSubject, bulkBody);
-    navigator.clipboard.writeText(html);
-    setCopySuccess(true);
+    try {
+      const blobHtml = new Blob([html], { type: 'text/html' });
+      const blobText = new Blob([bulkBody], { type: 'text/plain' });
+      const item = new ClipboardItem({
+        'text/html': blobHtml,
+        'text/plain': blobText
+      });
+      await navigator.clipboard.write([item]);
+      setCopySuccess(true);
+    } catch (err) {
+      // Fallback to raw HTML copy if ClipboardItem is not supported
+      navigator.clipboard.writeText(html);
+      setCopySuccess(true);
+    }
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
@@ -618,7 +630,7 @@ export const StudentManagement: React.FC = () => {
                     onClick={handleCopyHtml}
                     className="btn border border-teal-600 text-teal-850 hover:bg-teal-50/50 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5"
                   >
-                    {copySuccess ? 'Đã sao chép! ✓' : 'Sao chép mã HTML 📋'}
+                    {copySuccess ? 'Đã sao chép! ✓' : 'Sao chép định dạng 📋'}
                   </button>
                   
                   <div className="flex gap-2">
