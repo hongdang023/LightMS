@@ -1337,9 +1337,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         };
 
         // Attempt to insert into Supabase
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { visits, ...profileToInsert } = newProfile;
         const { data: insertedData, error: insertError } = await supabase
           .from('profiles')
-          .insert([newProfile])
+          .insert([profileToInsert])
           .select()
           .maybeSingle();
 

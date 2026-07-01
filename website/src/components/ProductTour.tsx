@@ -164,11 +164,38 @@ export const ProductTour: React.FC = () => {
 
   return (
     <div className="absolute inset-0 z-[999] pointer-events-none">
-      <div 
-        className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-[2px] transition-opacity duration-300 pointer-events-auto"
-        onClick={handleSkip}
-        style={{ zIndex: 998 }}
-      />
+      {/* SVG overlay mask to highlight target element */}
+      <svg className="fixed inset-0 w-full h-full pointer-events-auto" style={{ zIndex: 998 }}>
+        <defs>
+          <mask id="tour-mask">
+            {/* White color keeps opacity (shows the dark mask overlay) */}
+            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+            {/* Black color cuts out of the mask (reveals the highlighted element underneath) */}
+            {coords && (
+              <rect
+                x={coords.left - 6}
+                y={coords.top - 6 - window.scrollY}
+                width={coords.width + 12}
+                height={coords.height + 12}
+                rx="12"
+                fill="black"
+              />
+            )}
+          </mask>
+        </defs>
+        {/* The overlay background with transparency and blur applied via CSS, masked by the SVG mask */}
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="100%"
+          fill="#0f172a"
+          fillOpacity="0.7"
+          mask="url(#tour-mask)"
+          onClick={handleSkip}
+          className="cursor-pointer"
+        />
+      </svg>
 
       {coords && (
         <div 
@@ -178,8 +205,7 @@ export const ProductTour: React.FC = () => {
             left: coords.left - 6,
             width: coords.width + 12,
             height: coords.height + 12,
-            zIndex: 999,
-            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+            zIndex: 999
           }}
         />
       )}
