@@ -73,8 +73,48 @@ export const SpeedGrader: React.FC = () => {
     if (!activeSub || !feedbackText.trim()) return;
 
     gradeSubmission(activeSub.id, feedbackText, masteryLevel);
-    
     addNotification('Chấm bài hoàn tất', 'Kết quả đánh giá và tích lũy hải lý đã được gửi tới học viên.', 'system');
+  };
+
+  const renderSubmissionContent = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && (parsed.url || parsed.reflection)) {
+        return (
+          <div className="space-y-4 font-sans text-xs">
+            {parsed.url && (
+              <div>
+                <span className="text-[10px] text-[#15333B] font-black uppercase tracking-wider block mb-1.5">Đường link sản phẩm:</span>
+                <a 
+                  href={parsed.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center gap-1.5 text-[#214C54] hover:text-[#15333B] hover:underline font-extrabold bg-[#214C54]/5 px-3.5 py-2 rounded-xl border border-[#214C54]/10 transition-colors"
+                >
+                  🔗 {parsed.url}
+                </a>
+              </div>
+            )}
+            {parsed.reflection && (
+              <div>
+                <span className="text-[10px] text-[#15333B] font-black uppercase tracking-wider block mb-1.5">Suy ngẫm & phản hồi (Reflection):</span>
+                <p className="text-xs text-[#3E5E63] font-semibold leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-150 whitespace-pre-line">
+                  {parsed.reflection}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      }
+    } catch (e) {
+      // Not JSON
+    }
+
+    return (
+      <div className="text-xs text-[#3E5E63] font-mono leading-relaxed bg-gray-50 border border-gray-150 p-4 rounded-xl whitespace-pre-line break-all">
+        {content}
+      </div>
+    );
   };
 
   return (
@@ -87,20 +127,19 @@ export const SpeedGrader: React.FC = () => {
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
       
-      {/* Left Column: Submissions queue (5 cols) */}
-      <div className="lg:col-span-5 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+      {/* Left Column: Submissions queue (4 cols - narrower) */}
+      <div className="lg:col-span-4 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
         
         {/* Header Controls */}
         <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-4">
           <div>
-            <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider">Hộp bài nộp chấm điểm</h3>
-            <p className="text-[10px] text-[#3E5E63] font-semibold mt-0.5">Lọc danh sách bài làm của học viên.</p>
+            <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider">Hộp bài nộp</h3>
           </div>
 
           <div className="flex bg-white border border-gray-200 rounded-lg p-0.5 text-[10px]">
             <button
               onClick={() => setFilterPending(true)}
-              className={`px-2.5 py-1.5 rounded font-bold transition-all ${
+              className={`px-2 py-1 rounded font-bold transition-all ${
                 filterPending ? 'bg-[#214C54] text-white' : 'text-gray-400'
               }`}
             >
@@ -108,7 +147,7 @@ export const SpeedGrader: React.FC = () => {
             </button>
             <button
               onClick={() => setFilterPending(false)}
-              className={`px-2.5 py-1.5 rounded font-bold transition-all ${
+              className={`px-2 py-1 rounded font-bold transition-all ${
                 !filterPending ? 'bg-[#214C54] text-white' : 'text-gray-400'
               }`}
             >
@@ -118,11 +157,11 @@ export const SpeedGrader: React.FC = () => {
         </div>
 
         {/* Submissions List queue */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
           {visibleSubs.length === 0 ? (
             <div className="text-center py-12 space-y-2">
               <span className="text-3xl">🛟</span>
-              <p className="text-xs text-gray-400 font-semibold italic">Không có bài nộp nào phù hợp bộ lọc.</p>
+              <p className="text-xs text-gray-400 font-semibold italic">Trống</p>
             </div>
           ) : (
             visibleSubs.map((sub) => {
@@ -135,34 +174,30 @@ export const SpeedGrader: React.FC = () => {
                 <div
                   key={sub.id}
                   onClick={() => handleSelectSub(sub)}
-                  className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                  className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-2.5 ${
                     isSelected 
                       ? 'bg-[#214C54]/5 border-[#214C54] shadow-sm'
                       : 'bg-white border-gray-100 hover:border-gray-300'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <img 
                       src={student?.avatar_url} 
                       alt={student?.full_name} 
-                      className="w-8 h-8 rounded-full object-cover border border-gray-100 shrink-0"
+                      className="w-7 h-7 rounded-full object-cover border border-gray-100 shrink-0"
                     />
                     <div className="min-w-0">
-                      <span className="text-xs font-bold text-[#15333B] block leading-tight truncate">{student?.full_name}</span>
+                      <span className="text-[11px] font-bold text-[#15333B] block leading-tight truncate">{student?.full_name}</span>
                       <span className="text-[9px] text-[#3E5E63] font-bold block truncate mt-0.5">{les?.title}</span>
-                      <span className="text-[8px] text-gray-400 font-bold block mt-0.5">
-                        {new Date(sub.created_at).toLocaleDateString()}
-                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0 select-none">
-                    <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
+                  <div className="flex items-center gap-1 shrink-0 select-none">
+                    <span className={`text-[8px] font-black uppercase px-1 py-0.5 rounded ${
                       sub.status === 'graded' ? 'bg-green-150 text-green-800' : 'bg-amber-100 text-amber-800'
                     }`}>
                       {sub.status === 'graded' ? 'Graded' : 'Pending'}
                     </span>
-                    <span className="text-gray-300">▶</span>
                   </div>
                 </div>
               );
@@ -171,8 +206,8 @@ export const SpeedGrader: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Column: SpeedGrader details pane (7 cols) */}
-      <div className="lg:col-span-7 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+      {/* Right Column: SpeedGrader details pane (8 cols - wider) */}
+      <div className="lg:col-span-8 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
         {!activeSub ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
             <span className="text-5xl">✅</span>
@@ -203,16 +238,14 @@ export const SpeedGrader: React.FC = () => {
               
               {/* Submission Work Content */}
               <div className="space-y-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Bài làm học viên:</span>
-                <div className="text-xs text-[#3E5E63] font-mono leading-relaxed bg-gray-50 border border-gray-150 p-4 rounded-xl whitespace-pre-line break-all">
-                  {activeSub.content}
-                </div>
+                <span className="text-xs font-black text-[#15333B] uppercase tracking-wider block">Bài làm học viên:</span>
+                {renderSubmissionContent(activeSub.content)}
               </div>
 
               {/* Rubric evaluation checkboxes */}
               {activeAssignment && (
                 <div className="space-y-2.5">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Rubric Đánh Giá (Tick kiểm tra):</span>
+                  <span className="text-xs font-black text-[#15333B] uppercase tracking-wider block">Rubric Đánh Giá (Tick kiểm tra):</span>
                   <div className="space-y-1.5">
                     {activeAssignment.rubric_checklist.map((item, idx) => {
                       const isChecked = !!rubricGrades[idx];
@@ -240,7 +273,7 @@ export const SpeedGrader: React.FC = () => {
 
               {/* Feedback Editor & Grade Selection */}
               <div className="border-t border-gray-100 pt-6 space-y-4">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Đánh giá của Mentor:</span>
+                <span className="text-xs font-black text-[#15333B] uppercase tracking-wider block">Đánh giá của Mentor:</span>
                 
                 {activeSub.status === 'graded' && activeFeedback ? (
                   /* Graded View */

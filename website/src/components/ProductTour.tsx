@@ -23,7 +23,7 @@ export const ProductTour: React.FC = () => {
     },
     {
       targetId: 'nav-item-dashboard',
-      title: 'Trang chủ Hải trình 🏠',
+      title: 'Dashboard học tập 🏠',
       content: 'Nơi hiển thị tiến độ học tập hàng ngày của bạn, danh sách bài tập Live Class chưa hoàn thành và các nhiệm vụ Onboarding.',
       position: 'right'
     },

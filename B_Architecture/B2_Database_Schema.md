@@ -29,6 +29,12 @@ Do sử dụng Supabase, việc xác thực (Authentication) được quản lý
 | `motivation_bet` | `text` | | Đặt cược cá nhân tạo động lực cam kết |
 | `is_profile_completed` | `boolean` | DEFAULT `false` | Đánh dấu đã khai báo đầy đủ 100% profile |
 | `nautical_miles` | `int` | DEFAULT 0 | Tổng số Hải lý (Điểm tích lũy Gamification) |
+| `referral_source` | `text` | | Bạn biết tới khoá học này từ đâu? (Lựa chọn từ danh sách) |
+| `current_role` | `text` | | Vai trò hiện tại của bạn? (Lựa chọn từ danh sách) |
+| `work_field` | `text` | | Bạn đang học/làm trong lĩnh vực gì? (Lựa chọn từ danh sách) |
+| `living_region` | `text` | | Hiện tại bạn đang sinh sống ở khu vực nào? (Lựa chọn từ danh sách) |
+| `gender` | `text` | | Giới tính (Nam, Nữ, Other) |
+| `age_group` | `text` | | Bạn năm nay bao nhiêu tuổi? (Lựa chọn từ danh sách) |
 | `created_at` | `timestamptz` | DEFAULT `now()` | |
 
 ### `enrollments` (Ghi danh / Tham gia Batch)
@@ -249,6 +255,7 @@ Hệ thống thảo luận bao gồm phòng thảo luận chung (Discussion Room
 | `created_by`    | `uuid`        | FK (`profiles.id`)     | Admin/Mentor tạo thông báo                   |
 | `send_email`    | `boolean`     | DEFAULT `false`        | Cờ đánh dấu có gửi email tự động hay không   |
 | `sent_email_at` | `timestamptz` |                        | Thời điểm đã gửi email (NULL nếu chưa gửi)   |
+| `media_urls`    | `text[]`      | DEFAULT `'{}'`         | Danh sách link ảnh/video đính kèm thông báo  |
 | `created_at`    | `timestamptz` | DEFAULT `now()`        |                                              |
 
 ---

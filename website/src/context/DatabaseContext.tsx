@@ -40,6 +40,12 @@ export interface Profile {
   is_profile_completed: boolean;
   nautical_miles: number;
   visits: number;
+  referral_source?: string;
+  current_role?: string;
+  work_field?: string;
+  living_region?: string;
+  gender?: string;
+  age_group?: string;
   created_at: string;
 }
 
@@ -131,6 +137,7 @@ export interface Submission {
   created_at: string;
   upvotes_count?: number;
   upvoted_by?: string[];
+  media_urls?: string[];
 }
 
 export interface DiscussionTopic {
@@ -151,6 +158,7 @@ export interface DiscussionPost {
   created_at: string;
   upvotes_count: number;
   upvoted_by: string[];
+  media_urls?: string[];
 }
 
 export interface Feedback {
@@ -216,6 +224,7 @@ export interface Announcement {
   created_by: string;
   send_email: boolean;
   sent_email_at?: string;
+  media_urls?: string[];
   created_at: string;
   isNew?: boolean;
 }
@@ -323,12 +332,12 @@ interface DatabaseContextType {
   completeLesson: (lessonId: string) => void;
   addNotification: (title: string, message: string, type?: 'telegram' | 'system') => void;
   addTopic: (name: string, description: string) => void;
-  addDiscussionPost: (topicId: string, title: string, content: string, tags?: string[]) => void;
+  addDiscussionPost: (topicId: string, title: string, content: string, tags?: string[], mediaUrls?: string[]) => void;
   upvoteDiscussionPost: (postId: string) => void;
   upvoteSubmission: (submissionId: string) => void;
 
   // New Admin mutation functions
-  addAnnouncement: (title: string, content: string, sendEmail: boolean) => void;
+  addAnnouncement: (title: string, content: string, sendEmail: boolean, mediaUrls?: string[]) => void;
   updateAnnouncement: (id: string, updates: Partial<Announcement>) => void;
   deleteAnnouncement: (id: string) => void;
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => void;
@@ -340,6 +349,7 @@ interface DatabaseContextType {
   updateAboutContent: (updates: Partial<AboutContent>) => void;
   updateLesson: (id: string, updates: Partial<Lesson>) => void;
   updateAssignment: (id: string, updates: Partial<Assignment>) => void;
+  deleteAssignment: (id: string) => void;
   updateModule: (id: string, updates: Partial<Module>) => void;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
   addLesson: (lesson: Lesson) => void;
@@ -417,77 +427,77 @@ const SEED_SKILLS: Skill[] = [
 
 const SEED_BADGES: Badge[] = [
   {
-    id: 'badge-profile-card',
+    id: 'bada0000-0000-0000-0000-000000000001',
     name: 'Thẻ Căn Cước Thủy Thủ',
     icon: '🪪',
     description: 'Khai báo thông tin cá nhân đầy đủ 100% trong Hồ sơ cá nhân.',
     condition: 'Hoàn thành hồ sơ cá nhân với đầy đủ các trường thông tin.'
   },
   {
-    id: 'badge-level-1',
+    id: 'bada0000-0000-0000-0000-000000000101',
     name: 'Huy hiệu: Thủy thủ tập sự',
     icon: '⛵',
     description: 'Mốc khởi đầu hải trình vượt biển lớn của The1ight.',
     condition: 'Tích lũy từ 0 Hải lý trở lên (Có sẵn khi tham gia).'
   },
   {
-    id: 'badge-full-sail',
+    id: 'bada0000-0000-0000-0000-000000000002',
     name: 'Cánh Buồm No Gió',
     icon: '💨',
     description: 'Khởi đầu thuận lợi. Tự động nhận được khi hoàn thành xuất sắc toàn bộ bài tập của Tuần lễ Onboarding.',
     condition: 'Đạt điểm "Meets Expectations" hoặc "Excellent" cho các bài tập thuộc Module 0.'
   },
   {
-    id: 'badge-level-2',
+    id: 'bada0000-0000-0000-0000-000000000102',
     name: 'Huy hiệu: Hoa tiêu',
     icon: '🗺️',
     description: 'Mốc Hải trình thứ hai. Hoa tiêu có khả năng định vị trên đại dương.',
     condition: 'Tích lũy từ 501 Hải lý trở lên.'
   },
   {
-    id: 'badge-iron-anchor',
+    id: 'bada0000-0000-0000-0000-000000000003',
     name: 'Mỏ Neo Thép',
     icon: '⚓',
     description: 'Tượng trưng cho sự kiên định. Nhận được khi có chuỗi nộp bài đúng hạn (Streak) 3 lần liên tiếp.',
     condition: 'Có 3 bài nộp liên tiếp ở trạng thái "submitted" hoặc "graded" và được ghi nhận trước hạn chót.'
   },
   {
-    id: 'badge-level-3',
+    id: 'bada0000-0000-0000-0000-000000000103',
     name: 'Huy hiệu: Thuyền phó',
     icon: '⚔️',
     description: 'Mốc Hải trình thứ ba. Thuyền phó thiện chiến, quản lý thủy thủ đoàn.',
     condition: 'Tích lũy từ 1501 Hải lý trở lên.'
   },
   {
-    id: 'badge-lifebuoy',
+    id: 'bada0000-0000-0000-0000-000000000004',
     name: 'Phao Cứu Sinh',
     icon: '🛟',
     description: 'Dành cho những "thiên thần cộng đồng". Nhận được khi tổng số Upvotes thu về từ các bình luận đạt mốc 50.',
     condition: 'Tích lũy 50 upvotes từ các comment hữu ích trên các bài nộp khác.'
   },
   {
-    id: 'badge-level-4',
+    id: 'bada0000-0000-0000-0000-000000000104',
     name: 'Huy hiệu: Thuyền trưởng',
     icon: '🧭',
     description: 'Mốc Hải trình thứ tư. Làm chủ hải trình, dẫn dắt con tàu.',
     condition: 'Tích lũy từ 3001 Hải lý trở lên.'
   },
   {
-    id: 'badge-lighthouse',
+    id: 'bada0000-0000-0000-0000-000000000005',
     name: 'Ngọn Hải Đăng',
     icon: '🗼',
     description: 'Dành cho sự xuất sắc. Nhận được khi bài nộp đạt điểm "Excellent" và được Mentor "Verified" (ghim) lên top Discussion.',
     condition: 'Đạt điểm "Excellent" ở bất kỳ bài tập nào và được ghim/verified.'
   },
   {
-    id: 'badge-level-5',
+    id: 'bada0000-0000-0000-0000-000000000105',
     name: 'Huy hiệu: Huyền thoại biển cả',
     icon: '👑',
     description: 'Cột mốc tối thượng. Một huyền thoại vĩ đại được cả đại dương kính nể.',
     condition: 'Tích lũy từ 5000 Hải lý trở lên.'
   },
   {
-    id: 'badge-treasure-map',
+    id: 'bada0000-0000-0000-0000-000000000006',
     name: 'Bản Đồ Kho Báu',
     icon: '🗺️',
     description: 'Huy hiệu tốt nghiệp vinh quang. Nhận được khi hoàn thành 100% Lộ trình khóa học (Syllabus) với các chuẩn đầu ra đều ở mức Đạt trở lên.',
@@ -818,23 +828,16 @@ const SEED_SUBMISSIONS: Submission[] = [];
 
 const SEED_TOPICS: DiscussionTopic[] = [
   {
-    id: 'topic-light-support',
-    name: 'Light Support',
-    description: 'Nơi đăng bài nhờ đồng đội hoặc Mentor hỗ trợ giải quyết khó khăn, gỡ lỗi code hoặc làm rõ spec.',
+    id: 'topic-onboarding',
+    name: 'Onboarding Week',
+    description: 'Nơi thảo luận và nộp các bài tập trong tuần Onboarding.',
     created_by: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
     created_at: new Date('2024-09-01T00:00:00Z').toISOString()
   },
   {
-    id: 'topic-assignments',
-    name: 'Assignments',
-    description: 'Nơi showcase bài tập về nhà của cả lớp. Nhớ Kudos (Upvote) và bình luận đóng góp ý kiến cho đồng đội!',
-    created_by: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
-    created_at: new Date('2024-09-01T00:00:00Z').toISOString()
-  },
-  {
-    id: 'topic-general',
-    name: 'Thảo luận chung',
-    description: 'Nơi giao lưu, chia sẻ kinh nghiệm, cập nhật tin tức và thảo luận tự do ngoài lề bài học.',
+    id: 'topic-live-class',
+    name: 'Live Class',
+    description: 'Nơi thảo luận và nộp bài tập của các buổi học trực tuyến (Live Sessions).',
     created_by: 'c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a',
     created_at: new Date('2024-09-01T00:00:00Z').toISOString()
   }
@@ -982,7 +985,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v6';
+  const DB_VERSION = 'lms_v7';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference
@@ -1068,9 +1071,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeParse('lms_assignments', SEED_ASSIGNMENTS)
   );
 
-  const [topics, setTopics] = useState<DiscussionTopic[]>(() => 
-    safeParse('lms_discussion_topics', SEED_TOPICS)
-  );
+  const [topics, setTopics] = useState<DiscussionTopic[]>(() => {
+    const cached = safeParse('lms_discussion_topics', SEED_TOPICS);
+    if (cached.some(t => t.id === 'topic-light-support')) {
+      localStorage.setItem('lms_discussion_topics', JSON.stringify(SEED_TOPICS));
+      return SEED_TOPICS;
+    }
+    return cached;
+  });
 
   const [discussionPosts, setDiscussionPosts] = useState<DiscussionPost[]>(() => 
     safeParse('lms_discussion_posts', SEED_POSTS)
@@ -1403,16 +1411,16 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Auto-unlock silently based on profile completion
     if (activeUser.is_profile_completed) {
-      unlockBadge(activeUser.id, 'badge-profile-card', true);
+      unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000001', true);
     }
 
     const miles = activeUser.nautical_miles || 0;
     // Auto-unlock silently based on miles
-    if (miles >= 5000) unlockBadge(activeUser.id, 'badge-level-5', true);
-    if (miles >= 3001) unlockBadge(activeUser.id, 'badge-level-4', true);
-    if (miles >= 1501) unlockBadge(activeUser.id, 'badge-level-3', true);
-    if (miles >= 501) unlockBadge(activeUser.id, 'badge-level-2', true);
-    if (miles >= 0) unlockBadge(activeUser.id, 'badge-level-1', true);
+    if (miles >= 5000) unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000105', true);
+    if (miles >= 3001) unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000104', true);
+    if (miles >= 1501) unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000103', true);
+    if (miles >= 501) unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000102', true);
+    if (miles >= 0) unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000101', true);
   }, [activeUser?.id, activeUser?.nautical_miles, activeUser?.is_profile_completed]);
 
   // Switch role action helper
@@ -1482,7 +1490,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           addNauticalMiles(profileId, 50, 'profile_completion', 'Hoàn thành 100% hồ sơ cá nhân lần đầu');
           
           // Award badge
-          unlockBadge(profileId, 'badge-profile-card');
+          unlockBadge(profileId, 'bada0000-0000-0000-0000-000000000001');
         }
         
         return updated;
@@ -1526,11 +1534,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
 
         // Auto unlock level milestone badges (with notification)
-        if (newMiles >= 5000) unlockBadge(studentId, 'badge-level-5', false);
-        else if (newMiles >= 3001) unlockBadge(studentId, 'badge-level-4', false);
-        else if (newMiles >= 1501) unlockBadge(studentId, 'badge-level-3', false);
-        else if (newMiles >= 501) unlockBadge(studentId, 'badge-level-2', false);
-        else if (newMiles >= 0) unlockBadge(studentId, 'badge-level-1', false);
+        if (newMiles >= 5000) unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000105', false);
+        else if (newMiles >= 3001) unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000104', false);
+        else if (newMiles >= 1501) unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000103', false);
+        else if (newMiles >= 501) unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000102', false);
+        else if (newMiles >= 0) unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000101', false);
 
         return { ...p, nautical_miles: newMiles };
       }
@@ -1633,7 +1641,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         
       if (studentSubs.length >= 3) {
-        unlockBadge(activeUserId, 'badge-iron-anchor');
+        unlockBadge(activeUserId, 'bada0000-0000-0000-0000-000000000003');
       }
 
       addNotification(
@@ -1672,7 +1680,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // (requires all lessons to be completed, or simply mimics completion logic here)
     const completedLessonTx = nauticalTransactions.filter(t => t.student_id === activeUserId && t.action_type === 'lesson_complete');
     if (completedLessonTx.length + 1 >= SEED_LESSONS.length) {
-      unlockBadge(activeUserId, 'badge-treasure-map');
+      unlockBadge(activeUserId, 'bada0000-0000-0000-0000-000000000006');
     }
   };
 
@@ -1726,7 +1734,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const authorComments = prev.filter(x => x.author_id === c.author_id);
           const totalUpvotes = authorComments.reduce((acc, curr) => acc + curr.upvotes_count, 0) + 1;
           if (totalUpvotes >= 50) {
-            unlockBadge(c.author_id, 'badge-lifebuoy');
+            unlockBadge(c.author_id, 'bada0000-0000-0000-0000-000000000004');
           }
         }
 
@@ -1825,7 +1833,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // 5. Special badge checks
     if (grade === 'excellent') {
-      unlockBadge(studentId, 'badge-lighthouse');
+      unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000005');
     }
 
     // 6. Notify student
@@ -1842,6 +1850,60 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       `🏆 MASTERY UPDATE: Thủy thủ ${studentObj?.full_name} (${studentObj?.gmail}) vừa đạt chứng nhận **${grade === 'excellent' ? 'Xuất sắc (Mastery)' : 'Đạt (Meets Expectations)'}** cho thử thách PRD/Automation! Được thưởng +${amount} Hải lý!`,
       'telegram'
     );
+
+    // 7. Auto-post mentor feedback as a comment under the student's submission post on Discussion Board
+    const commentId = generateUUID();
+    const gradeLabel = grade === 'excellent' ? 'Xuất sắc ⭐' : grade === 'meets_expectations' ? 'Đạt yêu cầu ✅' : 'Cần cải thiện ⚠️';
+    const newComment: Comment = {
+      id: commentId,
+      submission_id: submissionId,
+      batch_id: 'b0000003-0000-0000-0000-000000000003',
+      author_id: activeUserId,
+      content: `📝 **Đánh giá từ Mentor (${gradeLabel}):**\n\n${feedbackContent}`,
+      upvotes_count: 0,
+      is_verified: true,
+      created_at: new Date().toISOString(),
+      upvoted_by: []
+    };
+
+    setComments(prev => [...prev, newComment]);
+
+    supabase.from('comments').insert([newComment]).then(({ error }) => {
+      if (error) console.error('Lỗi khi lưu comment tự động lên Supabase:', error.message);
+    });
+
+    // 8. Tự động tạo thông báo (Announcement) và gửi email cho học viên
+    const assg = assignments.find(a => a.id === assignmentId);
+    const les = assg ? lessons.find(l => l.id === assg.lesson_id) : null;
+    const lessonTitle = les?.title || 'Bài tập';
+    const studentName = studentObj?.full_name || 'Học viên';
+    const studentGmail = studentObj?.gmail;
+
+    const newAnn: Announcement = {
+      id: `ann-${Math.random().toString(36).substr(2, 9)}`,
+      title: `[Nhận xét bài tập] ${lessonTitle} - ${studentName}`,
+      content: `Chào ${studentName},\n\nBài tập "${lessonTitle}" của bạn đã được giáo viên nhận xét chi tiết.\n\n- Mức độ thành thạo: ${gradeLabel}\n- Nội dung nhận xét: ${feedbackContent}\n\nBạn hãy vào xem chi tiết bài làm và nhận xét tại mục Lộ trình học nhé!`,
+      author: 'Giáo viên',
+      created_by: activeUserId,
+      send_email: true,
+      sent_email_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      isNew: true
+    };
+
+    setAnnouncements(prev => [newAnn, ...prev]);
+
+    supabase.from('announcements').insert([newAnn]).then(({ error }) => {
+      if (error) console.error('Lỗi khi lưu thông báo nhận xét bài lên Supabase:', error.message);
+    });
+
+    if (studentGmail) {
+      addNotification(
+        '📢 Email Bot',
+        `📧 ĐÃ GỬI EMAIL: [Nhận xét bài tập: ${lessonTitle}] tới học viên: ${studentName} (${studentGmail})`,
+        'telegram'
+      );
+    }
 
     // Lưu feedback lên Supabase và cập nhật status của submission
     supabase.from('feedbacks').insert([newFeedback]).then(({ error }) => {
@@ -1906,7 +1968,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
-  const addDiscussionPost = async (topicId: string, title: string, content: string, tags: string[] = []) => {
+  const addDiscussionPost = async (topicId: string, title: string, content: string, tags: string[] = [], mediaUrls: string[] = []) => {
     const newPost: DiscussionPost = {
       id: `post-${Math.random().toString(36).substr(2, 9)}`,
       topic_id: topicId,
@@ -1916,7 +1978,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       tags,
       created_at: new Date().toISOString(),
       upvotes_count: 0,
-      upvoted_by: []
+      upvoted_by: [],
+      media_urls: mediaUrls
     };
     setDiscussionPosts(prev => [newPost, ...prev]);
 
@@ -2017,7 +2080,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Admin Action Mutation Implementations
   // ==========================================
 
-  const addAnnouncement = (title: string, content: string, sendEmail: boolean) => {
+  const addAnnouncement = (title: string, content: string, sendEmail: boolean, mediaUrls: string[] = []) => {
     const newAnn: Announcement = {
       id: `ann-${Math.random().toString(36).substr(2, 9)}`,
       title,
@@ -2026,6 +2089,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       created_by: activeUserId,
       send_email: sendEmail,
       sent_email_at: sendEmail ? new Date().toISOString() : undefined,
+      media_urls: mediaUrls,
       created_at: new Date().toISOString(),
       isNew: true
     };
@@ -2251,6 +2315,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addNotification('Cập nhật bài tập', 'Chi tiết bài tập đã được cập nhật', 'system');
   };
 
+  const deleteAssignment = (id: string) => {
+    setAssignments(prev => prev.filter(a => a.id !== id));
+    addNotification('Xóa bài tập', 'Đã xóa bài tập thành công', 'system');
+
+    supabase.from('assignments').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi xóa bài tập trên Supabase:', error.message);
+    });
+  };
+
   const updateModule = (id: string, updates: Partial<Module>) => {
     setModules(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
     addNotification('Cập nhật chương học', 'Thông tin chương học đã được cập nhật', 'system');
@@ -2371,7 +2444,22 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       badges: SEED_BADGES,
       profileBadges,
       notifications,
-      topics,
+      topics: [
+        {
+          id: 'topic-onboarding',
+          name: 'Onboarding Week',
+          description: 'Nơi thảo luận và nộp các bài tập trong tuần Onboarding.',
+          created_by: 'admin',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'topic-live-class',
+          name: 'Live Class',
+          description: 'Nơi thảo luận và nộp bài tập của các buổi học trực tuyến (Live Sessions).',
+          created_by: 'admin',
+          created_at: new Date().toISOString()
+        }
+      ],
       discussionPosts,
       announcements,
       calendarEvents,
@@ -2401,6 +2489,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       updateAboutContent,
       updateLesson,
       updateAssignment,
+      deleteAssignment,
       updateModule,
       updateBatch,
       addLesson,

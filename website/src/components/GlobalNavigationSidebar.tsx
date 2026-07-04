@@ -43,9 +43,9 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
 
   // Navigation Items for Student Portal (using premium SVG icons)
   const studentNav = [
-    { id: 'dashboard', label: 'Trang chủ', icon: HomeIcon },
-    { id: 'announcements', label: 'Thông báo', icon: AnnouncementsIcon },
     { id: 'about', label: 'Giới thiệu', icon: AboutIcon },
+    { id: 'dashboard', label: 'Dashboard học tập', icon: HomeIcon },
+    { id: 'announcements', label: 'Thông báo', icon: AnnouncementsIcon },
     { id: 'onboarding', label: 'Onboarding', icon: OnboardingIcon },
     { id: 'syllabus', label: 'Lộ trình học', icon: SyllabusIcon },
     { id: 'discussion', label: 'Phòng thảo luận', icon: DiscussionsIcon },
@@ -107,12 +107,12 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
               id={`nav-item-${item.id}`}
               onClick={() => onPageChange(item.id)}
               title={isCollapsed ? item.label : ''}
-              className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-200 group relative ${
+              className={`w-full flex items-center rounded-xl text-sm font-semibold transition-all duration-200 group relative border-l-4 ${
                 isCollapsed ? 'justify-center py-3' : 'gap-3.5 px-4 py-3'
               } ${
                 isActive 
-                  ? 'bg-[#214C54] text-[#FFD94C] shadow-md border-l-4 border-[#FFD94C]' 
-                  : 'text-gray-300 hover:bg-[#214C54]/30 hover:text-white'
+                  ? 'bg-[#214C54] text-[#FFD94C] shadow-md border-[#FFD94C]' 
+                  : 'text-gray-300 hover:bg-[#214C54]/30 hover:text-white border-transparent'
               }`}
             >
               <IconComponent 

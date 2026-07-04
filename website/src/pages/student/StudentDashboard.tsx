@@ -8,10 +8,24 @@ interface StudentDashboardProps {
 }
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange }) => {
-  const { activeUser, lessons, assignments, submissions, users } = useDatabase();
+  const { activeUser, lessons, assignments, submissions, users, modules, courses } = useDatabase();
+
+  const currentCourse = courses.find(c => c.title.toLowerCase().includes('201')) || courses[0];
+  let filteredModules = currentCourse 
+    ? modules.filter(m => m.course_id === currentCourse.id)
+    : modules;
+
+  if (filteredModules.length === 0 && modules.length > 0) {
+    const fallbackCourseId = modules[0].course_id;
+    filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
+  }
+
+  const filteredLessons = currentCourse
+    ? lessons.filter(l => filteredModules.some(m => m.id === l.module_id))
+    : lessons;
 
   // Helper to determine if a lesson has started
-  const isLessonStarted = (lesson: typeof lessons[0]): boolean => {
+  const isLessonStarted = (lesson: typeof filteredLessons[0]): boolean => {
     if (!lesson.start_date) return true;
     const start = new Date(lesson.start_date).getTime();
     // System virtual date mock is June 25, 2026
@@ -64,7 +78,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
 
     // Add uncompleted class assignments for started lessons
     assignments.forEach(assignment => {
-      const lesson = lessons.find(l => l.id === assignment.lesson_id);
+      const lesson = filteredLessons.find(l => l.id === assignment.lesson_id);
       if (!lesson) return;
       
       // Check if lesson has started
@@ -97,14 +111,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     });
 
     return list;
-  }, [onboardingProgress, onboardingDueDate, assignments, lessons, submissions, activeUser.id]);
+  }, [onboardingProgress, onboardingDueDate, assignments, filteredLessons, submissions, activeUser.id]);
 
   // 3. Find the nearest class session dynamically
   const nearestLesson = React.useMemo(() => {
     const mockNow = new Date('2026-06-25T23:39:06+07:00').getTime();
     
     // Sort lessons with start_date
-    const upcomingLessons = lessons
+    const upcomingLessons = filteredLessons
       .filter(l => l.start_date)
       .sort((a, b) => new Date(a.start_date!).getTime() - new Date(b.start_date!).getTime());
 
@@ -117,7 +131,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     }
     
     return next;
-  }, [lessons]);
+  }, [filteredLessons]);
 
   // Get formatted date details for nearest lesson
   const lessonDateDetails = React.useMemo(() => {
@@ -152,9 +166,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
   return (
     <div className="space-y-8 animate-fade-in select-none">
       <PageHeader 
-        title={`Chào mừng, ${activeUser.full_name.split(' ').slice(-1)[0]}!`}
+        title={`Chào mừng, ${activeUser.full_name}!`}
         description="Trạng thái hiện tại của hải trình và các nhiệm vụ cần hoàn thành hôm nay."
-        helpTitle="Trang chủ"
+        helpTitle="Dashboard học tập"
         helpSummary="Bảng điều khiển trung tâm theo dõi toàn bộ tiến độ học tập của bạn."
         helpPurpose="Giúp bạn nắm ngay tình trạng học tập, các bài tập chưa làm và các mốc quan trọng — không cần tìm kiếm ở đâu khác."
       />

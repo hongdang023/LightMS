@@ -9,7 +9,7 @@ interface GlobalHeaderProps {
 
 // Map page id → { label, parent }
 const PAGE_META: Record<string, { label: string; parent?: string; parentId?: string }> = {
-  dashboard:      { label: 'Trang chủ' },
+  dashboard:      { label: 'Dashboard học tập' },
   about:          { label: 'Giới thiệu' },
   onboarding:     { label: 'Onboarding' },
   syllabus:       { label: 'Lộ trình học' },
@@ -113,9 +113,9 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
             alt={activeUser.full_name}
             className="w-8 h-8 rounded-full object-cover border-2 border-[#214C54]"
           />
-          <div className="text-left hidden sm:block">
-            <p className="text-xs font-extrabold text-[#15333B] leading-tight">{activeUser.full_name.split(' ').slice(-1)[0]}</p>
-            <p className="text-[9px] text-gray-400 font-semibold leading-tight">
+          <div className="text-left hidden sm:flex flex-col justify-center gap-1">
+            <p className="text-xs font-extrabold text-[#15333B] leading-none mb-0">{activeUser.full_name.split(' ').slice(-1)[0]}</p>
+            <p className="text-[9px] text-gray-400 font-semibold leading-none mb-0">
               {isStudent ? 'Học viên' : 'Admin / Mentor'}
             </p>
           </div>
@@ -134,17 +134,17 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
                   className="w-11 h-11 rounded-full object-cover border-2 border-[#FFD94C]"
                 />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex flex-col justify-center gap-[5px]">
                 {/* Tên — lớn nhất, bold nhất */}
-                <p className="font-extrabold text-[15px] text-white leading-tight truncate">
+                <p className="font-extrabold text-[15px] text-white leading-none truncate mb-0">
                   {activeUser.full_name.split(' ').slice(-1)[0]}
                 </p>
                 {/* Vai trò — cỡ trung, màu gold nhạt */}
-                <p className="text-[11px] text-[#FFD94C]/80 font-semibold leading-tight mt-0.5">
+                <p className="text-[11px] text-[#FFD94C]/80 font-semibold leading-none mb-0">
                   {isStudent ? 'Học viên' : 'Admin / Mentor'}
                 </p>
                 {/* Email — nhỏ nhất, mono, mờ nhất */}
-                <p className="text-[10px] text-[#3E5E63] font-mono leading-tight mt-0.5 truncate">
+                <p className="text-[10px] text-[#3E5E63] font-mono leading-none truncate mb-0">
                   {activeUser.gmail}
                 </p>
               </div>

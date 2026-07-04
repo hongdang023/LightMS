@@ -5,29 +5,144 @@ import { PageHeader } from '../../components/PageHeader';
 export const ProfileView: React.FC = () => {
   const { activeUser, updateProfile, badges, profileBadges, nauticalTransactions, addNotification } = useDatabase();
 
+  // Helpers to parse fields that can be "Other"
+  const initReferral = () => {
+    const val = activeUser.referral_source || '';
+    if (val.startsWith('Other: ')) {
+      return { main: 'Other', other: val.substring(7) };
+    }
+    const standardOptions = [
+      'Substack The1ight',
+      'Facebook cá nhân của Trainer Quang Nguyễn',
+      'Facebook Fanpage The1ight',
+      'Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)',
+      'Cộng đồng 1ight Club',
+      'Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)',
+      'Người quen giới thiệu'
+    ];
+    if (val && !standardOptions.includes(val)) {
+      return { main: 'Other', other: val };
+    }
+    return { main: val, other: '' };
+  };
+
+  const initRole = () => {
+    const val = activeUser.current_role || '';
+    if (val.startsWith('Other: ')) {
+      return { main: 'Other', other: val.substring(7) };
+    }
+    const standardOptions = [
+      'Học sinh/ Sinh viên',
+      'Nhân viên/ Chuyên viên',
+      'Quản lý/ Leader',
+      'Founder',
+      'Freelancer',
+      'Đang trong thời gian nghỉ việc/ chuyển ngành'
+    ];
+    if (val && !standardOptions.includes(val)) {
+      return { main: 'Other', other: val };
+    }
+    return { main: val, other: '' };
+  };
+
+  const initField = () => {
+    const val = activeUser.work_field || '';
+    if (val.startsWith('Other: ')) {
+      return { main: 'Other', other: val.substring(7) };
+    }
+    const standardOptions = [
+      'Marketing/ Truyền thông',
+      'Tài chính/ Kế toán',
+      'Giáo dục',
+      'Sản phẩm/ Công nghệ',
+      'Sản xuất',
+      'FMCG',
+      'Nghệ thuật',
+      'HR'
+    ];
+    if (val && !standardOptions.includes(val)) {
+      return { main: 'Other', other: val };
+    }
+    return { main: val, other: '' };
+  };
+
+  const initGender = () => {
+    const val = activeUser.gender || '';
+    if (val.startsWith('Other: ')) {
+      return { main: 'Other', other: val.substring(7) };
+    }
+    const standardOptions = ['Nam', 'Nữ'];
+    if (val && !standardOptions.includes(val)) {
+      return { main: 'Other', other: val };
+    }
+    return { main: val, other: '' };
+  };
+
+  const refInit = initReferral();
+  const roleInit = initRole();
+  const fieldInit = initField();
+  const genderInit = initGender();
+
   // Form states
   const [fullName, setFullName] = useState(activeUser.full_name);
-  const [telegramId, setTelegramId] = useState(activeUser.telegram_id);
   const [gmail, setGmail] = useState(activeUser.gmail || '');
   const [phone, setPhone] = useState(activeUser.phone_number || '');
   const [fbUrl, setFbUrl] = useState(activeUser.facebook_url || '');
-  const [industry, setIndustry] = useState(activeUser.industry || '');
-  const [job, setJob] = useState(activeUser.current_job || '');
   const [idea, setIdea] = useState(activeUser.product_idea || '');
+
+  const [referralSource, setReferralSource] = useState(refInit.main);
+  const [otherReferral, setOtherReferral] = useState(refInit.other);
+
+  const [currentRole, setCurrentRole] = useState(roleInit.main);
+  const [otherRole, setOtherRole] = useState(roleInit.other);
+
+  const [workField, setWorkField] = useState(fieldInit.main);
+  const [otherField, setOtherField] = useState(fieldInit.other);
+
+  const [gender, setGender] = useState(genderInit.main);
+  const [otherGender, setOtherGender] = useState(genderInit.other);
+
+  const [livingRegion, setLivingRegion] = useState(activeUser.living_region || '');
+  const [ageGroup, setAgeGroup] = useState(activeUser.age_group || '');
 
   // Save changes
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     
+    let finalReferral = referralSource;
+    if (referralSource === 'Other' && otherReferral.trim()) {
+      finalReferral = `Other: ${otherReferral.trim()}`;
+    }
+
+    let finalRole = currentRole;
+    if (currentRole === 'Other' && otherRole.trim()) {
+      finalRole = `Other: ${otherRole.trim()}`;
+    }
+
+    let finalField = workField;
+    if (workField === 'Other' && otherField.trim()) {
+      finalField = `Other: ${otherField.trim()}`;
+    }
+
+    let finalGender = gender;
+    if (gender === 'Other' && otherGender.trim()) {
+      finalGender = `Other: ${otherGender.trim()}`;
+    }
+
     updateProfile(activeUser.id, {
       full_name: fullName,
-      telegram_id: telegramId,
       gmail: gmail,
       phone_number: phone,
       facebook_url: fbUrl,
-      industry: industry,
-      current_job: job,
-      product_idea: idea
+      industry: finalField,
+      current_job: finalRole,
+      product_idea: idea,
+      referral_source: finalReferral,
+      current_role: finalRole,
+      work_field: finalField,
+      living_region: livingRegion,
+      gender: finalGender,
+      age_group: ageGroup
     });
 
     addNotification('Cập nhật thành công', 'Thông tin hồ sơ thủy thủ của bạn đã được cập nhật!', 'system');
@@ -75,18 +190,6 @@ export const ProfileView: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Telegram Username</label>
-              <input
-                type="text"
-                value={telegramId}
-                onChange={(e) => setTelegramId(e.target.value)}
-                className="form-control text-xs font-semibold"
-                placeholder="@username"
-                required
-              />
-            </div>
-
-            <div className="form-group">
               <label className="form-label">Gmail liên kết</label>
               <input
                 type="email"
@@ -105,53 +208,185 @@ export const ProfileView: React.FC = () => {
                 onChange={(e) => setPhone(e.target.value)}
                 className="form-control text-xs font-semibold"
                 placeholder="Ví dụ: 0987654321"
+                required
               />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">Facebook Profile URL</label>
-            <input
-              type="text"
-              value={fbUrl}
-              onChange={(e) => setFbUrl(e.target.value)}
-              className="form-control text-xs font-semibold"
-              placeholder="https://facebook.com/username"
-            />
+            <div className="form-group">
+              <label className="form-label">Facebook Profile URL</label>
+              <input
+                type="text"
+                value={fbUrl}
+                onChange={(e) => setFbUrl(e.target.value)}
+                className="form-control text-xs font-semibold"
+                placeholder="https://facebook.com/username"
+                required
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="form-group">
-              <label className="form-label">Lĩnh vực hoạt động</label>
-              <input
-                type="text"
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="form-control text-xs font-semibold"
-                placeholder="Ví dụ: Marketing, Sales, Tài chính..."
-              />
+              <label className="form-label">Vai trò hiện tại</label>
+              <select
+                value={currentRole}
+                onChange={(e) => setCurrentRole(e.target.value)}
+                className="form-control text-xs font-semibold bg-white"
+                required
+              >
+                <option value="">-- Chọn vai trò --</option>
+                <option value="Học sinh/ Sinh viên">Học sinh/ Sinh viên</option>
+                <option value="Nhân viên/ Chuyên viên">Nhân viên/ Chuyên viên</option>
+                <option value="Quản lý/ Leader">Quản lý/ Leader</option>
+                <option value="Founder">Founder</option>
+                <option value="Freelancer">Freelancer</option>
+                <option value="Đang trong thời gian nghỉ việc/ chuyển ngành">Đang trong thời gian nghỉ việc/ chuyển ngành</option>
+                <option value="Other">Other (Khác)...</option>
+              </select>
+              {currentRole === 'Other' && (
+                <input
+                  type="text"
+                  required
+                  value={otherRole}
+                  onChange={(e) => setOtherRole(e.target.value)}
+                  className="form-control text-xs font-semibold mt-2"
+                  placeholder="Nhập vai trò cụ thể..."
+                />
+              )}
             </div>
 
             <div className="form-group">
-              <label className="form-label">Công việc hiện tại</label>
-              <input
-                type="text"
-                value={job}
-                onChange={(e) => setJob(e.target.value)}
-                className="form-control text-xs font-semibold"
-                placeholder="Ví dụ: Designer, Accountant..."
-              />
+              <label className="form-label">Lĩnh vực hoạt động</label>
+              <select
+                value={workField}
+                onChange={(e) => setWorkField(e.target.value)}
+                className="form-control text-xs font-semibold bg-white"
+                required
+              >
+                <option value="">-- Chọn lĩnh vực --</option>
+                <option value="Marketing/ Truyền thông">Marketing/ Truyền thông</option>
+                <option value="Tài chính/ Kế toán">Tài chính/ Kế toán</option>
+                <option value="Giáo dục">Giáo dục</option>
+                <option value="Sản phẩm/ Công nghệ">Sản phẩm/ Công nghệ</option>
+                <option value="Sản xuất">Sản xuất</option>
+                <option value="FMCG">FMCG</option>
+                <option value="Nghệ thuật">Nghệ thuật</option>
+                <option value="HR">HR</option>
+                <option value="Other">Other (Khác)...</option>
+              </select>
+              {workField === 'Other' && (
+                <input
+                  type="text"
+                  required
+                  value={otherField}
+                  onChange={(e) => setOtherField(e.target.value)}
+                  className="form-control text-xs font-semibold mt-2"
+                  placeholder="Nhập lĩnh vực cụ thể..."
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="form-label">Nguồn biết tới khoá học</label>
+              <select
+                value={referralSource}
+                onChange={(e) => setReferralSource(e.target.value)}
+                className="form-control text-xs font-semibold bg-white"
+                required
+              >
+                <option value="">-- Chọn nguồn giới thiệu --</option>
+                <option value="Substack The1ight">Substack The1ight</option>
+                <option value="Facebook cá nhân của Trainer Quang Nguyễn">Facebook cá nhân của Trainer Quang Nguyễn</option>
+                <option value="Facebook Fanpage The1ight">Facebook Fanpage The1ight</option>
+                <option value="Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)">Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)</option>
+                <option value="Cộng đồng 1ight Club">Cộng đồng 1ight Club</option>
+                <option value="Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)">Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)</option>
+                <option value="Người quen giới thiệu">Người quen giới thiệu</option>
+                <option value="Other">Other (Khác)...</option>
+              </select>
+              {referralSource === 'Other' && (
+                <input
+                  type="text"
+                  required
+                  value={otherReferral}
+                  onChange={(e) => setOtherReferral(e.target.value)}
+                  className="form-control text-xs font-semibold mt-2"
+                  placeholder="Nhập nguồn cụ thể..."
+                />
+              )}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Khu vực sinh sống</label>
+              <select
+                value={livingRegion}
+                onChange={(e) => setLivingRegion(e.target.value)}
+                className="form-control text-xs font-semibold bg-white"
+                required
+              >
+                <option value="">-- Chọn khu vực --</option>
+                <option value="Miền Bắc Việt Nam">Miền Bắc Việt Nam</option>
+                <option value="Miền Trung Việt Nam">Miền Trung Việt Nam</option>
+                <option value="Miền Nam Việt Nam">Miền Nam Việt Nam</option>
+                <option value="Ngoài lãnh thổ Việt Nam">Ngoài lãnh thổ Việt Nam</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Giới tính</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="form-control text-xs font-semibold bg-white"
+                required
+              >
+                <option value="">-- Chọn giới tính --</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Other">Other (Khác)...</option>
+              </select>
+              {gender === 'Other' && (
+                <input
+                  type="text"
+                  required
+                  value={otherGender}
+                  onChange={(e) => setOtherGender(e.target.value)}
+                  className="form-control text-xs font-semibold mt-2"
+                  placeholder="Nhập giới tính..."
+                />
+              )}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Độ tuổi</label>
+              <select
+                value={ageGroup}
+                onChange={(e) => setAgeGroup(e.target.value)}
+                className="form-control text-xs font-semibold bg-white"
+                required
+              >
+                <option value="">-- Chọn độ tuổi --</option>
+                <option value="Dưới 18 tuổi">Dưới 18 tuổi</option>
+                <option value="18 - 24 tuổi">18 - 24 tuổi</option>
+                <option value="25 - 30 tuổi">25 - 30 tuổi</option>
+                <option value="31 - 45 tuổi">31 - 45 tuổi</option>
+                <option value="46 - 55 tuổi">46 - 55 tuổi</option>
+                <option value="Trên 55 tuổi">Trên 55 tuổi</option>
+              </select>
             </div>
           </div>
 
           <div className="form-group">
             <label className="form-label">Ý tưởng sản phẩm dự kiến</label>
-            <input
-              type="text"
+            <textarea
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
               className="form-control text-xs font-semibold"
+              rows={3}
               placeholder="Ví dụ: Một trang portfolio cá nhân, hay app quản lý phòng khám..."
+              required
             />
           </div>
 

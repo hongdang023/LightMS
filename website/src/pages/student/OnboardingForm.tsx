@@ -17,17 +17,62 @@ export const OnboardingForm: React.FC = () => {
     industry: activeUser.industry || '',
     current_job: activeUser.current_job || '',
     product_idea: activeUser.product_idea || '',
-    bio: activeUser.bio || 'Thủy thủ mới gia nhập hải trình.'
+    bio: activeUser.bio || 'Thủy thủ mới gia nhập hải trình.',
+    
+    // New fields (now single values for dropdowns)
+    referral_source: activeUser.referral_source || '',
+    current_role: activeUser.current_role || '',
+    work_field: activeUser.work_field || '',
+    living_region: activeUser.living_region || '',
+    gender: activeUser.gender || '',
+    age_group: activeUser.age_group || ''
   });
+
+  // Separate states for "Other" text inputs
+  const [otherReferral, setOtherReferral] = useState('');
+  const [otherRole, setOtherRole] = useState('');
+  const [otherField, setOtherField] = useState('');
+  const [otherGender, setOtherGender] = useState('');
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Mascot quotes per step
   const mascotQuotes = [
     'Ahoy! Ta cần danh tính của ngươi để ghi chép vào sổ thủy thủ đoàn. Điền đầy đủ thông tin liên hệ nhé! 🦜',
-    'Cho ta biết ngành nghề và lĩnh vực của ngươi để giảng viên dễ dàng hỗ trợ! 🦜',
+    'Chọn chính xác vai trò và lĩnh vực từ danh sách thả xuống để ta sắp xếp nhóm phù hợp nhé! 🦜',
+    'Khảo sát nhanh để hiểu rõ hơn về lộ trình hoạt động và hành trang đi biển của ngươi nhé! 🦜',
     'Đây là phần quan trọng nhất! Khai báo ý tưởng sản phẩm số của ngươi để bắt đầu! 🦜'
   ];
+
+  const getProcessedData = () => {
+    let referral_source = formData.referral_source;
+    if (referral_source === 'Other' && otherReferral.trim()) {
+      referral_source = `Other: ${otherReferral.trim()}`;
+    }
+
+    let current_role = formData.current_role;
+    if (current_role === 'Other' && otherRole.trim()) {
+      current_role = `Other: ${otherRole.trim()}`;
+    }
+
+    let work_field = formData.work_field;
+    if (work_field === 'Other' && otherField.trim()) {
+      work_field = `Other: ${otherField.trim()}`;
+    }
+
+    let gender = formData.gender;
+    if (gender === 'Other' && otherGender.trim()) {
+      gender = `Other: ${otherGender.trim()}`;
+    }
+
+    return {
+      ...formData,
+      referral_source,
+      current_role,
+      work_field,
+      gender
+    };
+  };
 
   const validateStep = () => {
     const newErrors: { [key: string]: string } = {};
@@ -38,9 +83,38 @@ export const OnboardingForm: React.FC = () => {
       if (!formData.telegram_id.trim()) newErrors.telegram_id = 'Telegram ID không được để trống';
       if (!formData.facebook_url.trim()) newErrors.facebook_url = 'Facebook URL không được để trống';
     } else if (step === 2) {
-      if (!formData.industry.trim()) newErrors.industry = 'Ngành nghề không được để trống';
-      if (!formData.current_job.trim()) newErrors.current_job = 'Công việc hiện tại không được để trống';
+      if (!formData.current_role) {
+        newErrors.current_role = 'Vui lòng chọn vai trò hiện tại của bạn';
+      } else if (formData.current_role === 'Other' && !otherRole.trim()) {
+        newErrors.current_role = 'Vui lòng nhập vai trò cụ thể';
+      }
+
+      if (!formData.work_field) {
+        newErrors.work_field = 'Vui lòng chọn lĩnh vực của bạn';
+      } else if (formData.work_field === 'Other' && !otherField.trim()) {
+        newErrors.work_field = 'Vui lòng nhập lĩnh vực cụ thể';
+      }
     } else if (step === 3) {
+      if (!formData.referral_source) {
+        newErrors.referral_source = 'Vui lòng chọn nguồn biết tới khóa học';
+      } else if (formData.referral_source === 'Other' && !otherReferral.trim()) {
+        newErrors.referral_source = 'Vui lòng điền cụ thể nguồn biết tới';
+      }
+
+      if (!formData.living_region) {
+        newErrors.living_region = 'Vui lòng chọn khu vực sinh sống';
+      }
+
+      if (!formData.gender) {
+        newErrors.gender = 'Vui lòng chọn giới tính';
+      } else if (formData.gender === 'Other' && !otherGender.trim()) {
+        newErrors.gender = 'Vui lòng điền giới tính cụ thể';
+      }
+
+      if (!formData.age_group) {
+        newErrors.age_group = 'Vui lòng chọn nhóm tuổi';
+      }
+    } else if (step === 4) {
       if (!formData.product_idea.trim()) newErrors.product_idea = 'Ý tưởng sản phẩm không được để trống';
     }
 
@@ -62,20 +136,25 @@ export const OnboardingForm: React.FC = () => {
     e.preventDefault();
     if (!validateStep()) return;
 
-    // Call update profile with completed fields
-    // The rules engine inside updateProfile will automatically award +50 miles and badge if all fields are valid.
+    const finalData = getProcessedData();
+
+    // Map industry and job roles from selected values for backward compatibility
+    const industry = finalData.work_field;
+    const current_job = finalData.current_role;
+
     updateProfile(activeUser.id, {
-      ...formData,
-      gmail: activeUser.gmail, // keep original gmail
-      is_profile_completed: true // set true
+      ...finalData,
+      industry,
+      current_job,
+      gmail: activeUser.gmail,
+      is_profile_completed: true
     });
 
-    // Show celebration screen before redirecting
     setCelebrate(true);
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#F0F0F0] flex items-center justify-center p-4 md:p-8 select-none font-sans overflow-x-hidden">
+    <div className="relative min-h-screen w-full bg-[#F0F0F0] flex items-center justify-center p-4 md:p-8 select-none font-sans overflow-x-hidden font-medium">
       
       {/* Background nautical pattern overlay */}
       <div className="absolute inset-0 z-0 opacity-[0.02] pointer-events-none" 
@@ -118,7 +197,6 @@ export const OnboardingForm: React.FC = () => {
 
             <button
               onClick={() => {
-                // Trigger page refresh or app reroute
                 window.location.reload();
               }}
               className="w-full py-4 bg-[#EAB308] hover:bg-[#CA8A04] text-[#15333B] font-black rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2"
@@ -131,10 +209,10 @@ export const OnboardingForm: React.FC = () => {
       )}
 
       {/* Main Onboarding Card */}
-      <div className="relative z-10 w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col md:flex-row">
+      <div className="relative z-10 w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden flex flex-col md:flex-row">
         
         {/* Decorative Side Panel */}
-        <div className="md:w-[220px] bg-gradient-to-br from-[#15333B] to-[#214C54] p-6 md:p-8 text-white flex flex-col justify-between shrink-0">
+        <div className="md:w-[240px] bg-gradient-to-br from-[#15333B] to-[#214C54] p-6 md:p-8 text-white flex flex-col justify-between shrink-0">
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <BrandLogo size={32} lighthouseColor="#FFD94C" sunbeamColor="#FFF" waveColor="#00B2E2" />
@@ -152,8 +230,9 @@ export const OnboardingForm: React.FC = () => {
           <div className="space-y-3 mt-8 md:mt-0">
             {[
               { num: 1, name: 'Thông tin liên hệ' },
-              { num: 2, name: 'Lĩnh vực & Trình độ' },
-              { num: 3, name: 'Sản phẩm & Cam kết' }
+              { num: 2, name: 'Vai trò & Lĩnh vực' },
+              { num: 3, name: 'Khảo sát cá nhân' },
+              { num: 4, name: 'Sản phẩm & Cam kết' }
             ].map((s) => (
               <div key={s.num} className="flex items-center gap-3 text-left">
                 <div className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center border transition-all ${
@@ -174,7 +253,7 @@ export const OnboardingForm: React.FC = () => {
         </div>
 
         {/* Form Content Panel */}
-        <form onSubmit={handleSubmit} className="flex-1 p-6 md:p-8 flex flex-col justify-between text-left bg-white">
+        <form onSubmit={handleSubmit} className="flex-1 p-6 md:p-8 flex flex-col justify-between text-left bg-white min-h-[580px]">
           
           <div className="space-y-6">
             
@@ -182,17 +261,19 @@ export const OnboardingForm: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 text-xs font-black text-[#214C54]/50 uppercase tracking-widest mb-1">
                 <Compass className="w-4 h-4 text-[#214C54]" />
-                Bước {step} / 3
+                Bước {step} / 4
               </div>
               <h2 className="text-2xl font-black text-[#15333B] tracking-tight">
                 {step === 1 && 'Hồ sơ liên lạc'}
                 {step === 2 && 'Định vị năng lực'}
-                {step === 3 && 'Cam kết hải trình'}
+                {step === 3 && 'Khảo sát học viên'}
+                {step === 4 && 'Cam kết hải trình'}
               </h2>
               <p className="text-xs text-[#3E5E63] leading-relaxed mt-1">
                 {step === 1 && 'Hãy cung cấp thông tin liên hệ chính xác để giảng viên và bot hệ thống hỗ trợ bạn kịp thời.'}
-                {step === 2 && 'Chia sẻ một chút về trình độ kỹ thuật và lĩnh vực làm việc hiện tại của bạn.'}
-                {step === 3 && 'Nêu ý tưởng sản phẩm số dự định build cùng lời cam kết hành động tạo động lực.'}
+                {step === 2 && 'Chọn vai trò và lĩnh vực hoạt động chính từ danh sách thả xuống.'}
+                {step === 3 && 'Một số thông tin khảo sát giúp ban tổ chức đồng hành hiệu quả hơn cùng bạn.'}
+                {step === 4 && 'Nêu ý tưởng sản phẩm số dự định build cùng lời cam kết hành động tạo động lực.'}
               </p>
             </div>
 
@@ -256,38 +337,176 @@ export const OnboardingForm: React.FC = () => {
 
             {/* Step 2 Fields */}
             {step === 2 && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Lĩnh vực chuyên môn</label>
+              <div className="space-y-5 animate-fade-in pr-1">
+                {/* Current Role Dropdown */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">Vai trò hiện tại của bạn? <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.current_role}
+                    onChange={(e) => setFormData({ ...formData, current_role: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
+                  >
+                    <option value="">-- Chọn vai trò --</option>
+                    <option value="Học sinh/ Sinh viên">Học sinh/ Sinh viên</option>
+                    <option value="Nhân viên/ Chuyên viên">Nhân viên/ Chuyên viên</option>
+                    <option value="Quản lý/ Leader">Quản lý/ Leader</option>
+                    <option value="Founder">Founder</option>
+                    <option value="Freelancer">Freelancer</option>
+                    <option value="Đang trong thời gian nghỉ việc/ chuyển ngành">Đang trong thời gian nghỉ việc/ chuyển ngành</option>
+                    <option value="Other">Other (Khác)...</option>
+                  </select>
+
+                  {formData.current_role === 'Other' && (
                     <input
                       type="text"
                       required
-                      value={formData.industry}
-                      onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                      placeholder="VD: Marketing, Business, Tech..."
+                      value={otherRole}
+                      onChange={(e) => setOtherRole(e.target.value)}
+                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
+                      placeholder="Nhập vai trò cụ thể của bạn..."
                     />
-                    {errors.industry && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.industry}</span>}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Chức danh / Công việc hiện tại</label>
+                  )}
+                  {errors.current_role && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.current_role}</span>}
+                </div>
+
+                {/* Work Field Dropdown */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn đang học/làm trong lĩnh vực gì? <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.work_field}
+                    onChange={(e) => setFormData({ ...formData, work_field: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
+                  >
+                    <option value="">-- Chọn lĩnh vực --</option>
+                    <option value="Marketing/ Truyền thông">Marketing/ Truyền thông</option>
+                    <option value="Tài chính/ Kế toán">Tài chính/ Kế toán</option>
+                    <option value="Giáo dục">Giáo dục</option>
+                    <option value="Sản phẩm/ Công nghệ">Sản phẩm/ Công nghệ</option>
+                    <option value="Sản xuất">Sản xuất</option>
+                    <option value="FMCG">FMCG</option>
+                    <option value="Nghệ thuật">Nghệ thuật</option>
+                    <option value="HR">HR</option>
+                    <option value="Other">Other (Khác)...</option>
+                  </select>
+
+                  {formData.work_field === 'Other' && (
                     <input
                       type="text"
                       required
-                      value={formData.current_job}
-                      onChange={(e) => setFormData({ ...formData, current_job: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                      placeholder="VD: Marketing Specialist, PM..."
+                      value={otherField}
+                      onChange={(e) => setOtherField(e.target.value)}
+                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
+                      placeholder="Nhập lĩnh vực cụ thể của bạn..."
                     />
-                    {errors.current_job && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.current_job}</span>}
-                  </div>
+                  )}
+                  {errors.work_field && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.work_field}</span>}
                 </div>
               </div>
             )}
 
             {/* Step 3 Fields */}
             {step === 3 && (
+              <div className="space-y-5 animate-fade-in max-h-[380px] overflow-y-auto pr-1">
+                
+                {/* Referral Source Dropdown */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn biết tới khoá học này từ đâu? <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.referral_source}
+                    onChange={(e) => setFormData({ ...formData, referral_source: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
+                  >
+                    <option value="">-- Chọn nguồn giới thiệu --</option>
+                    <option value="Substack The1ight">Substack The1ight</option>
+                    <option value="Facebook cá nhân của Trainer Quang Nguyễn">Facebook cá nhân của Trainer Quang Nguyễn</option>
+                    <option value="Facebook Fanpage The1ight">Facebook Fanpage The1ight</option>
+                    <option value="Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)">Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)</option>
+                    <option value="Cộng đồng 1ight Club">Cộng đồng 1ight Club</option>
+                    <option value="Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)">Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)</option>
+                    <option value="Người quen giới thiệu">Người quen giới thiệu</option>
+                    <option value="Other">Other (Khác)...</option>
+                  </select>
+
+                  {formData.referral_source === 'Other' && (
+                    <input
+                      type="text"
+                      required
+                      value={otherReferral}
+                      onChange={(e) => setOtherReferral(e.target.value)}
+                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
+                      placeholder="Nhập nguồn giới thiệu cụ thể..."
+                    />
+                  )}
+                  {errors.referral_source && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.referral_source}</span>}
+                </div>
+
+                {/* Living Region Dropdown */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">Hiện tại bạn đang sinh sống ở khu vực nào? <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.living_region}
+                    onChange={(e) => setFormData({ ...formData, living_region: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
+                  >
+                    <option value="">-- Chọn khu vực --</option>
+                    <option value="Miền Bắc Việt Nam">Miền Bắc Việt Nam</option>
+                    <option value="Miền Trung Việt Nam">Miền Trung Việt Nam</option>
+                    <option value="Miền Nam Việt Nam">Miền Nam Việt Nam</option>
+                    <option value="Ngoài lãnh thổ Việt Nam">Ngoài lãnh thổ Việt Nam</option>
+                  </select>
+                  {errors.living_region && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.living_region}</span>}
+                </div>
+
+                {/* Gender Dropdown */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn là: <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
+                  >
+                    <option value="">-- Chọn giới tính --</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Other">Other (Khác)...</option>
+                  </select>
+
+                  {formData.gender === 'Other' && (
+                    <input
+                      type="text"
+                      required
+                      value={otherGender}
+                      onChange={(e) => setOtherGender(e.target.value)}
+                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
+                      placeholder="Nhập giới tính của bạn..."
+                    />
+                  )}
+                  {errors.gender && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.gender}</span>}
+                </div>
+
+                {/* Age Group Dropdown */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn năm nay bao nhiêu tuổi? <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.age_group}
+                    onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
+                  >
+                    <option value="">-- Chọn độ tuổi --</option>
+                    <option value="Dưới 18 tuổi">Dưới 18 tuổi</option>
+                    <option value="18 - 24 tuổi">18 - 24 tuổi</option>
+                    <option value="25 - 30 tuổi">25 - 30 tuổi</option>
+                    <option value="31 - 45 tuổi">31 - 45 tuổi</option>
+                    <option value="46 - 55 tuổi">46 - 55 tuổi</option>
+                    <option value="Trên 55 tuổi">Trên 55 tuổi</option>
+                  </select>
+                  {errors.age_group && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.age_group}</span>}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4 Fields */}
+            {step === 4 && (
               <div className="space-y-4 animate-fade-in">
                 <div>
                   <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Ý tưởng sản phẩm dự kiến xây dựng</label>
@@ -295,9 +514,9 @@ export const OnboardingForm: React.FC = () => {
                     required
                     value={formData.product_idea}
                     onChange={(e) => setFormData({ ...formData, product_idea: e.target.value })}
-                    rows={3}
+                    rows={5}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                    placeholder="VD: Một ứng dụng theo dõi chi tiêu mini kết nối Google Sheet..."
+                    placeholder="VD: Một ứng dụng theo dõi chi tiêu mini kết nối Google Sheet để quản lý tài chính cá nhân tự động bằng AI..."
                   />
                   {errors.product_idea && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.product_idea}</span>}
                 </div>
@@ -306,7 +525,7 @@ export const OnboardingForm: React.FC = () => {
           </div>
 
           {/* Interactive Mascot Speech box for the Step */}
-          <div className="bg-[#FDF5DA] border border-[#EAB308]/40 p-4 rounded-2xl flex items-start gap-3 mt-6">
+          <div className="bg-[#FDF5DA] border border-[#EAB308]/40 p-4 rounded-2xl flex items-start gap-3 mt-6 shrink-0">
             <span className="text-2xl shrink-0">🦜</span>
             <p className="text-xs text-[#15333B] leading-relaxed font-semibold">
               {mascotQuotes[step - 1]}
@@ -314,7 +533,7 @@ export const OnboardingForm: React.FC = () => {
           </div>
 
           {/* Navigation Actions */}
-          <div className="flex justify-between gap-4 border-t border-gray-100 pt-6 mt-6">
+          <div className="flex justify-between gap-4 border-t border-gray-100 pt-6 mt-6 shrink-0">
             {step > 1 ? (
               <button
                 type="button"
@@ -325,10 +544,10 @@ export const OnboardingForm: React.FC = () => {
                 Quay lại
               </button>
             ) : (
-              <div /> // spacing placeholder
+              <div />
             )}
 
-            {step < 3 ? (
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={handleNext}

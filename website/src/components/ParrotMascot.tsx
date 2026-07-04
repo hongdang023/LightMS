@@ -10,6 +10,9 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
   const [bubbleText, setBubbleText] = useState('');
   const [showBubble, setShowBubble] = useState(false);
   const [isWiggling, setIsWiggling] = useState(false);
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    return localStorage.getItem('lms_parrot_muted') === 'true';
+  });
 
   // Define speech scripts based on page views
   useEffect(() => {
@@ -80,8 +83,10 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
     }
 
     setBubbleText(script);
-    setShowBubble(true);
-    triggerWiggle();
+    if (!isMuted) {
+      setShowBubble(true);
+      triggerWiggle();
+    }
 
     // Hide bubble after 8 seconds
     const timer = setTimeout(() => {
@@ -89,11 +94,11 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, [currentPage, activeUser]);
+  }, [currentPage, activeUser, isMuted]);
 
   // Listen to new notifications and pop them up through the parrot!
   useEffect(() => {
-    if (notifications.length > 0) {
+    if (notifications.length > 0 && !isMuted) {
       const latest = notifications[0];
       // Only pop up if it's recent (within 5 seconds)
       const isRecent = (new Date().getTime() - new Date(latest.created_at).getTime()) < 5000;
@@ -109,11 +114,21 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         return () => clearTimeout(timer);
       }
     }
-  }, [notifications]);
+  }, [notifications, isMuted]);
 
   const triggerWiggle = () => {
     setIsWiggling(true);
     setTimeout(() => setIsWiggling(false), 800);
+  };
+
+  const handleToggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    localStorage.setItem('lms_parrot_muted', String(newMuted));
+    if (newMuted) {
+      setShowBubble(false);
+    }
   };
 
   return (
@@ -127,7 +142,15 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
           <div className="absolute bottom-[-10px] right-8 w-0 h-0 border-t-[10px] border-t-[#EAB308] border-x-[8px] border-x-transparent" />
           <div className="absolute bottom-[-7px] right-[33px] w-0 h-0 border-t-[8px] border-t-[#FDF5DA] border-x-[7px] border-x-transparent" />
           <p className="leading-relaxed whitespace-pre-line">{bubbleText}</p>
-          <div className="text-[10px] text-[#3E5E63] mt-2 text-right opacity-60">Nhấp để đóng</div>
+          <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#EAB308]/20">
+            <button
+              onClick={handleToggleMute}
+              className="text-[10px] text-[#CA8A04] hover:text-[#CA8A04]/80 font-bold underline"
+            >
+              Tắt tự động nói
+            </button>
+            <span className="text-[10px] text-[#3E5E63] opacity-60">Nhấp để đóng</span>
+          </div>
         </div>
       )}
 
@@ -135,16 +158,26 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
       <div 
         className={`w-16 h-16 bg-[#214C54] border-2 border-[#FFD94C] rounded-full shadow-lg flex items-center justify-center pointer-events-auto cursor-pointer relative overflow-visible ${
           isWiggling ? 'animate-wiggle' : 'hover:scale-110 transition-transform duration-300'
-        }`}
+        } ${isMuted ? 'opacity-50 grayscale hover:opacity-100 hover:grayscale-0' : ''}`}
         onClick={() => {
           setShowBubble(!showBubble);
           triggerWiggle();
         }}
+        title={isMuted ? "Vẹt đang tắt tự động nói. Nhấp để bật/tương tác." : "Vẹt trợ lý. Nhấp để trò chuyện."}
       >
         <span className="text-3xl filter drop-shadow">🦜</span>
         
         {/* Glow pulsing effect */}
-        <span className="absolute inset-0 rounded-full border border-[#FFD94C] animate-ping opacity-25 pointer-events-none" />
+        {!isMuted && (
+          <span className="absolute inset-0 rounded-full border border-[#FFD94C] animate-ping opacity-25 pointer-events-none" />
+        )}
+
+        {/* Small mute status badge */}
+        {isMuted && (
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-[10px] text-white border border-white font-bold">
+            🔇
+          </div>
+        )}
       </div>
     </div>
   );

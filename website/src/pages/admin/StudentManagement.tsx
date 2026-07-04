@@ -1,7 +1,153 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { Users, Mail, Award, CheckCircle, Search, Trophy, ShieldAlert } from 'lucide-react';
+import { Users, Mail, Award, CheckCircle, Search, Trophy, ShieldAlert, BarChart3 } from 'lucide-react';
+
+// Custom components & helpers for Demographics Overview
+const getDemographics = (student: any) => {
+  return {
+    current_role: student.current_role || student.current_job || 'Chưa cập nhật',
+    work_field: student.work_field || student.industry || 'Chưa cập nhật',
+    gender: student.gender || 'Chưa cập nhật',
+    age_group: student.age_group || 'Chưa cập nhật',
+    living_region: student.living_region || 'Chưa cập nhật',
+    referral_source: student.referral_source || 'Chưa cập nhật'
+  };
+};
+
+const DemographicsChartCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300">
+      <h4 className="font-extrabold text-xs text-[#15333B] uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{title}</h4>
+      <div className="flex-1 flex items-center justify-center min-h-[160px] w-full">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const HorizontalProgressBarList: React.FC<{
+  data: { label: string; count: number; percentage: number }[];
+  colorClass?: string;
+}> = ({ data, colorClass = 'bg-amber-500' }) => {
+  return (
+    <div className="w-full space-y-3">
+      {data.map((item, idx) => (
+        <div key={idx} className="space-y-1">
+          <div className="flex justify-between items-center text-[10px] font-bold">
+            <span className="text-gray-700 truncate max-w-[180px]" title={item.label}>{item.label}</span>
+            <span className="text-[#15333B] font-extrabold">{item.count} HV ({item.percentage}%)</span>
+          </div>
+          <div className="w-full bg-gray-150 h-2 rounded-full overflow-hidden">
+            <div
+              style={{ width: `${item.percentage}%` }}
+              className={`h-full rounded-full transition-all duration-500 ease-out ${colorClass}`}
+            ></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const DemographicsDonutChart: React.FC<{
+  data: { label: string; count: number; percentage: number; colorHex: string }[];
+}> = ({ data }) => {
+  const radius = 32;
+  const strokeWidth = 7;
+  const circumference = 2 * Math.PI * radius;
+  
+  let accumulatedPercentage = 0;
+
+  return (
+    <div className="flex items-center justify-center gap-6 w-full">
+      <div className="relative w-24 h-24 flex-shrink-0">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 80 80">
+          <circle
+            cx="40"
+            cy="40"
+            r={radius}
+            fill="transparent"
+            stroke="#F3F4F6"
+            strokeWidth={strokeWidth}
+          />
+          {data.map((item, idx) => {
+            const strokeDashoffset = circumference - (item.percentage / 100) * circumference;
+            const strokeDasharray = `${circumference}`;
+            const rotationOffset = (accumulatedPercentage / 100) * circumference;
+            accumulatedPercentage += item.percentage;
+            
+            return (
+              <circle
+                key={idx}
+                cx="40"
+                cy="40"
+                r={radius}
+                fill="transparent"
+                stroke={item.colorHex}
+                strokeWidth={strokeWidth}
+                strokeDasharray={strokeDasharray}
+                strokeDashoffset={strokeDashoffset}
+                style={{
+                  transformOrigin: '40px 40px',
+                  transform: `rotate(${(rotationOffset / circumference) * 360}deg)`,
+                }}
+                strokeLinecap="round"
+                className="transition-all duration-700 ease-out"
+              />
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[10px] text-gray-400 font-bold uppercase">Tổng</span>
+          <span className="text-sm font-black text-[#15333B]">{data.reduce((sum, item) => sum + item.count, 0)} HV</span>
+        </div>
+      </div>
+      
+      <div className="flex-1 space-y-2">
+        {data.map((item, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.colorHex }}></span>
+            <div className="flex justify-between w-full text-[10px] font-bold text-gray-700">
+              <span>{item.label}</span>
+              <span className="text-[#15333B] font-extrabold">{item.count} ({item.percentage}%)</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const VerticalProgressBarList: React.FC<{
+  data: { label: string; count: number; percentage: number }[];
+  colorClass?: string;
+}> = ({ data, colorClass = 'bg-amber-500' }) => {
+  return (
+    <div className="flex items-end justify-around h-36 w-full pt-4 border-b border-gray-150 pb-1">
+      {data.map((item, idx) => (
+        <div key={idx} className="group relative flex flex-col items-center flex-1 mx-1 h-full justify-end">
+          <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#15333B] text-white text-[9px] px-2 py-1 rounded-lg shadow-lg z-10 w-24 text-center pointer-events-none transition-all">
+            <span className="font-extrabold truncate w-full">{item.label}</span>
+            <span className="font-bold text-emerald-400">{item.count} HV ({item.percentage}%)</span>
+            <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
+          </div>
+          
+          <span className="text-[9px] font-black text-gray-500 mb-1">{item.percentage}%</span>
+          
+          <div
+            style={{ height: `${Math.max(item.percentage, 5)}%` }}
+            className={`w-full max-w-[16px] rounded-t-md transition-all duration-300 group-hover:opacity-85 ${colorClass}`}
+          ></div>
+          
+          <span className="text-[8px] font-extrabold text-[#3E5E63] mt-2 block truncate w-full text-center" title={item.label}>
+            {item.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export const StudentManagement: React.FC = () => {
   const { users, submissions, lessons, assignments, onboardingDays, addNotification } = useDatabase();
@@ -9,6 +155,7 @@ export const StudentManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'overview'>('list');
 
   // Bulk email states
   const [isBulkEmailModalOpen, setIsBulkEmailModalOpen] = useState(false);
@@ -215,21 +362,88 @@ export const StudentManagement: React.FC = () => {
     updateEmailTemplate('all');
   };
 
+  const stats = (() => {
+    const rolesMap: Record<string, number> = {};
+    const fieldsMap: Record<string, number> = {};
+    const gendersMap: Record<string, number> = {};
+    const ageGroupsMap: Record<string, number> = {};
+    const regionsMap: Record<string, number> = {};
+    const referralsMap: Record<string, number> = {};
+
+    students.forEach(student => {
+      const demo = getDemographics(student);
+      
+      rolesMap[demo.current_role] = (rolesMap[demo.current_role] || 0) + 1;
+      fieldsMap[demo.work_field] = (fieldsMap[demo.work_field] || 0) + 1;
+      gendersMap[demo.gender] = (gendersMap[demo.gender] || 0) + 1;
+      ageGroupsMap[demo.age_group] = (ageGroupsMap[demo.age_group] || 0) + 1;
+      regionsMap[demo.living_region] = (regionsMap[demo.living_region] || 0) + 1;
+      referralsMap[demo.referral_source] = (referralsMap[demo.referral_source] || 0) + 1;
+    });
+
+    const formatMap = (map: Record<string, number>) => {
+      return Object.entries(map)
+        .map(([label, count]) => ({
+          label,
+          count,
+          percentage: Math.round((count / students.length) * 100)
+        }))
+        .sort((a, b) => b.count - a.count);
+    };
+
+    const gendersColorMap: Record<string, string> = {
+      'Nam': '#10B981', 
+      'Nữ': '#F43F5E', 
+      'Other': '#F59E0B',
+      'Chưa cập nhật': '#9CA3AF'
+    };
+
+    const formattedGenders = Object.entries(gendersMap).map(([label, count]) => ({
+      label,
+      count,
+      percentage: Math.round((count / students.length) * 100),
+      colorHex: gendersColorMap[label] || '#6B7280'
+    })).sort((a, b) => b.count - a.count);
+
+    return {
+      roles: formatMap(rolesMap),
+      fields: formatMap(fieldsMap),
+      genders: formattedGenders,
+      ageGroups: formatMap(ageGroupsMap),
+      regions: formatMap(regionsMap),
+      referrals: formatMap(referralsMap)
+    };
+  })();
+
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in select-none overflow-hidden space-y-6">
-      <PageHeader
-        title="Quản lý Học viên"
-        description="Theo dõi hoạt động, tiến độ bài tập, khen thưởng học viên xuất sắc hoặc cảnh báo học viên cần hỗ trợ."
-        icon={<Users size={32} strokeWidth={1.5} />}
-        action={
+    <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in select-none overflow-hidden space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <PageHeader
+          title="Quản lý Học viên"
+          description="Theo dõi hoạt động, tiến độ bài tập, khen thưởng học viên xuất sắc hoặc cảnh báo học viên cần hỗ trợ."
+          icon={<Users size={32} strokeWidth={1.5} />}
+        />
+
+        {/* View Switcher Tabs */}
+        <div className="flex items-center gap-1.5 bg-gray-150 p-1 rounded-xl border border-gray-200 w-fit self-start sm:self-auto shadow-sm">
           <button
-            onClick={openBulkEmailModal}
-            className="btn btn-primary text-xs font-extrabold px-4 py-2 flex items-center gap-2 rounded-xl shadow-sm"
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              viewMode === 'list' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-655 hover:text-gray-900 hover:bg-gray-200/50'
+            }`}
           >
-            <Mail size={14} /> Gửi Email Hàng Loạt
+            <Users size={14} /> Danh sách chi tiết
           </button>
-        }
-      />
+          <button
+            onClick={() => setViewMode('overview')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              viewMode === 'overview' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-655 hover:text-gray-900 hover:bg-gray-200/50'
+            }`}
+          >
+            <BarChart3 size={14} /> Tổng quan học viên
+          </button>
+        </div>
+      </div>
 
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-[#15333B] text-white px-5 py-3 rounded-2xl shadow-2xl border border-[#3E5E63] flex items-center gap-3 animate-scale-up">
@@ -239,7 +453,8 @@ export const StudentManagement: React.FC = () => {
         </div>
       )}
       
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+      {viewMode === 'list' ? (
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         
         {/* Left Column: Students directory (8 cols) */}
         <div className="lg:col-span-8 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
@@ -265,31 +480,41 @@ export const StudentManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 bg-gray-150 p-1 rounded-xl border border-gray-200 w-fit">
-              <button 
-                onClick={() => setActiveTab('all')}
-                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                  activeTab === 'all' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                }`}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-1.5 bg-gray-150 p-1 rounded-xl border border-gray-200 w-fit">
+                <button 
+                  onClick={() => setActiveTab('all')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                    activeTab === 'all' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Tất cả ({students.length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('risk')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                    activeTab === 'risk' ? 'bg-red-600 text-white shadow-sm' : 'text-red-600 hover:bg-red-50'
+                  }`}
+                >
+                  <ShieldAlert size={12} /> Cần hỗ trợ ({students.filter(s => getStudentStatus(s) === 'risk').length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('outstanding')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                    activeTab === 'outstanding' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-600 hover:bg-amber-50'
+                  }`}
+                >
+                  <Trophy size={12} /> Khen thưởng ({students.filter(s => getStudentStatus(s) === 'outstanding').length})
+                </button>
+              </div>
+
+              {/* Bulk Email Button */}
+              <button
+                onClick={openBulkEmailModal}
+                className="btn btn-primary text-xs font-extrabold px-4 py-2 flex items-center gap-2 rounded-xl shadow-sm self-start sm:self-auto"
               >
-                Tất cả ({students.length})
-              </button>
-              <button 
-                onClick={() => setActiveTab('risk')}
-                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
-                  activeTab === 'risk' ? 'bg-red-600 text-white shadow-sm' : 'text-red-600 hover:bg-red-50'
-                }`}
-              >
-                <ShieldAlert size={12} /> Cần hỗ trợ ({students.filter(s => getStudentStatus(s) === 'risk').length})
-              </button>
-              <button 
-                onClick={() => setActiveTab('outstanding')}
-                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
-                  activeTab === 'outstanding' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-600 hover:bg-amber-50'
-                }`}
-              >
-                <Trophy size={12} /> Khen thưởng ({students.filter(s => getStudentStatus(s) === 'outstanding').length})
+                <Mail size={14} /> Gửi Email Hàng Loạt
               </button>
             </div>
           </div>
@@ -446,6 +671,41 @@ export const StudentManagement: React.FC = () => {
                 </div>
               </div>
 
+              {/* Progress Summary Block */}
+              {(() => {
+                const obCount = getOnboardingCompletedCount(activeStudent.nautical_miles);
+                const lcCount = getLiveClassCompletedCount(activeStudent.id);
+                const totalHw = 7 + totalLiveClassCount;
+                const completedHw = obCount + lcCount;
+                const progressPct = Math.round((completedHw / totalHw) * 100);
+
+                return (
+                  <div className="bg-[#214C54]/5 border border-[#214C54]/10 rounded-2xl p-4 space-y-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-extrabold text-[#15333B]">Tiến độ làm bài tập</span>
+                      <span className="font-black text-[#214C54]">{completedHw}/{totalHw} bài ({progressPct}%)</span>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 transition-all duration-550" 
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-[10px] pt-1">
+                      <div>
+                        <span className="text-gray-400 font-bold block">BTVN Onboarding:</span>
+                        <span className="font-extrabold text-gray-700">{obCount}/7</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 font-bold block">BTVN Live Class:</span>
+                        <span className="font-extrabold text-gray-700">{lcCount}/{totalLiveClassCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Business fields */}
               <div className="space-y-4 text-xs">
                 <div>
@@ -457,18 +717,57 @@ export const StudentManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Lĩnh vực hoạt động:</span>
-                    <span className="font-bold text-[#15333B] block">{activeStudent.industry || 'Chưa cập nhật'}</span>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Vai trò hiện tại:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.current_role || activeStudent.current_job || 'Chưa cập nhật'}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Chức vụ hiện tại:</span>
-                    <span className="font-bold text-[#15333B] block">{activeStudent.current_job || 'Chưa cập nhật'}</span>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Lĩnh vực hoạt động:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.work_field || activeStudent.industry || 'Chưa cập nhật'}</span>
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Telegram username:</span>
-                  <span className="font-mono text-xs text-[#15333B] block font-bold">{activeStudent.telegram_id || 'Chưa cập nhật'}</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Số điện thoại (Zalo):</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.phone_number || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Facebook URL:</span>
+                    {activeStudent.facebook_url ? (
+                      <a 
+                        href={activeStudent.facebook_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-bold text-[#214C54] hover:underline block truncate"
+                      >
+                        {activeStudent.facebook_url}
+                      </a>
+                    ) : (
+                      <span className="font-bold text-gray-400 block">Chưa cập nhật</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Giới tính:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.gender || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Độ tuổi:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.age_group || 'Chưa cập nhật'}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Khu vực sinh sống:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.living_region || 'Chưa cập nhật'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Nguồn giới thiệu:</span>
+                    <span className="font-bold text-[#15333B] block">{activeStudent.referral_source || 'Chưa cập nhật'}</span>
+                  </div>
                 </div>
 
                 {/* Detailed Homework Progress Checklist */}
@@ -533,6 +832,35 @@ export const StudentManagement: React.FC = () => {
         </div>
 
       </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 pr-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <DemographicsChartCard title="Giới tính (Gender)">
+              <DemographicsDonutChart data={stats.genders} />
+            </DemographicsChartCard>
+            
+            <DemographicsChartCard title="Độ tuổi (Age Group)">
+              <VerticalProgressBarList data={stats.ageGroups} />
+            </DemographicsChartCard>
+
+            <DemographicsChartCard title="Khu vực sinh sống (Living Region)">
+              <HorizontalProgressBarList data={stats.regions} />
+            </DemographicsChartCard>
+
+            <DemographicsChartCard title="Vai trò hiện tại (Current Role)">
+              <HorizontalProgressBarList data={stats.roles} />
+            </DemographicsChartCard>
+
+            <DemographicsChartCard title="Lĩnh vực hoạt động (Work Field)">
+              <VerticalProgressBarList data={stats.fields} />
+            </DemographicsChartCard>
+
+            <DemographicsChartCard title="Nguồn giới thiệu (Referral Source)">
+              <HorizontalProgressBarList data={stats.referrals} />
+            </DemographicsChartCard>
+          </div>
+        </div>
+      )}
 
       {/* Bulk Email Modal */}
       {isBulkEmailModalOpen && (

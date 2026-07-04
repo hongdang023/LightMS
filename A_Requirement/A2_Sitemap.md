@@ -6,15 +6,15 @@ Sitemap này quy định tên chính thức của các thanh điều hướng (N
 
 Danh sách các Nav Items chính thức trên thanh điều hướng bên (Sidebar) - sử dụng bộ icon phẳng 2D Line-art tối giản (duotone Teal/Gold):
 
-- **Trang chủ** (Icon: Compass / La bàn)
+- **Giới thiệu** (Icon: Logbook / Nhật ký hải trình)
+  - Phần thông tin giới thiệu cơ bản về khóa học (Read Me First).
+
+- **Dashboard học tập** (Icon: Compass / La bàn)
   - Daily Tasks: Hiển thị ngay các công việc/bài học cần làm hôm nay. _(US-STU-04)_
   - Learning Progress: Thanh tiến độ tổng quan lộ trình học. _(US-STU-01)_
 
 - **Thông báo** (Icon: Megaphone / Loa truyền tin)
   - Nơi hiển thị các tin mới nhất của lớp. Lúc ấn vào từng thông báo thì sẽ được điều hướng để đọc cả bài.
-
-- **Giới thiệu** (Icon: Logbook / Nhật ký hải trình)
-  - Phần thông tin giới thiệu cơ bản về khóa học (Read Me First).
 
 - **Onboarding** (Icon: Set Sail / Cánh buồm khởi hành)
   - Hướng dẫn làm quen hệ thống, lộ trình và phương pháp học trong tuần đầu tiên.

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
-import { Plus, Search, Tag, X, Sparkles, ChevronLeft, MessageSquare, Award, Info } from 'lucide-react';
+import { Plus, Search, Tag, X, Sparkles, ChevronLeft, MessageSquare, ThumbsUp } from 'lucide-react';
 import { PageHeader } from '../../components/PageHeader';
 
 export const DiscussionBoard: React.FC = () => {
@@ -30,7 +30,7 @@ export const DiscussionBoard: React.FC = () => {
   // Filters & Sorting
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLessonId, setSelectedLessonId] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'upvotes'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'upvotes'>('newest');
 
   // Topic Creation Dialog (Admin only)
   const [isAddingTopic, setIsAddingTopic] = useState(false);
@@ -42,9 +42,51 @@ export const DiscussionBoard: React.FC = () => {
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostTag, setNewPostTag] = useState<string>('');
+  const [newPostTopicId, setNewPostTopicId] = useState<string>('topic-onboarding');
+  const [selectedMediaFiles, setSelectedMediaFiles] = useState<string[]>([]);
 
   const isUserAdmin = activeUser.role === 'admin' || activeUser.role === 'mentor';
   const isAdminMode = isUserAdmin;
+
+  const renderFormattedContent = (text: string) => {
+    if (!text) return null;
+    const lines = text.split('\n');
+    return lines.map((line, idx) => {
+      const parts = line.split(/(\*\*.*?\*\*)/g);
+      const renderedLine = parts.map((part, pIdx) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={pIdx} className="font-extrabold text-[#15333B]">{part.slice(2, -2)}</strong>;
+        }
+        // Match links
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        if (urlRegex.test(part)) {
+          const urlParts = part.split(urlRegex);
+          return urlParts.map((urlPart, uIdx) => {
+            if (urlRegex.test(urlPart)) {
+              return (
+                <a 
+                  key={uIdx} 
+                  href={urlPart} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="text-[#214C54] hover:underline font-extrabold break-all inline-flex items-center gap-0.5"
+                >
+                  {urlPart} ↗
+                </a>
+              );
+            }
+            return urlPart;
+          });
+        }
+        return part;
+      });
+      return (
+        <div key={idx} className="min-h-[1.25rem]">
+          {renderedLine}
+        </div>
+      );
+    });
+  };
 
   const handleTopicChange = (topicId: string) => {
     setSelectedTopicId(topicId);
@@ -64,6 +106,25 @@ export const DiscussionBoard: React.FC = () => {
     setIsAddingTopic(false);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setSelectedMediaFiles(prev => [...prev, reader.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveMedia = (idxToRemove: number) => {
+    setSelectedMediaFiles(prev => prev.filter((_, idx) => idx !== idxToRemove));
+  };
+
   const handleAddPostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostTitle.trim() || !newPostContent.trim()) return;
@@ -78,16 +139,14 @@ export const DiscussionBoard: React.FC = () => {
         tagsList.push(newPostTag);
       }
     } else {
-      tagsList.push('Hỏi đáp');
+      tagsList.push(newPostTopicId === 'topic-onboarding' ? 'Onboarding' : 'Live Class');
     }
 
-    // Default to 'topic-light-support' if All is active, or use selectedTopicId
-    const targetTopicId = selectedTopicId === 'all' ? 'topic-light-support' : selectedTopicId;
-    
-    addDiscussionPost(targetTopicId, newPostTitle.trim(), newPostContent.trim(), tagsList);
+    addDiscussionPost(newPostTopicId, newPostTitle.trim(), newPostContent.trim(), tagsList, selectedMediaFiles);
     setNewPostTitle('');
     setNewPostContent('');
     setNewPostTag('');
+    setSelectedMediaFiles([]);
     setIsAddingPost(false);
   };
 
@@ -104,21 +163,7 @@ export const DiscussionBoard: React.FC = () => {
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
   };
 
-  // Helper to render next lesson reminder (mimics live notice in Skool)
-  const getNextLessonNotice = () => {
-    const futureLessons = lessons.filter(l => l.start_date && new Date(l.start_date).getTime() > Date.now());
-    if (futureLessons.length === 0) return null;
-    futureLessons.sort((a, b) => {
-      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0;
-      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0;
-      return aTime - bTime;
-    });
-    const nextLes = futureLessons[0];
-    if (!nextLes.start_date) return null;
-    const diffTime = new Date(nextLes.start_date).getTime() - Date.now();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return `📅 Live Session: ${nextLes.title} sẽ lên sóng trong ${diffDays} ngày tới.`;
-  };
+
 
   // Compile list of threads based on active topic and filters
   let filteredThreads: any[] = [];
@@ -131,14 +176,37 @@ export const DiscussionBoard: React.FC = () => {
     const les = assg ? lessons.find(l => l.id === assg.lesson_id) : null;
     const countComments = comments.filter(c => c.submission_id === sub.id).length;
     
+    const isOb = les ? (les.title.toLowerCase().includes('ngày') || les.title.toLowerCase().includes('onboarding')) : false;
+    const topicId = isOb ? 'topic-onboarding' : 'topic-live-class';
+    const topicNameStr = isOb ? 'Onboarding Week 👋' : 'Live Class 🎥';
+
+    let parsedContent = sub.content;
+    try {
+      const parsed = JSON.parse(sub.content);
+      if (parsed && typeof parsed === 'object' && parsed.url) {
+        parsedContent = `⚓ **Thủy thủ:** ${authorObj?.full_name || 'Học viên'}
+🔗 **Đường dẫn bài làm:** ${parsed.url}
+
+💬 **Cảm nhận & Bài học rút ra:**
+${parsed.reflection || 'Không có mô tả cảm nhận.'}`;
+      }
+    } catch (e) {
+      parsedContent = `⚓ **Thủy thủ:** ${authorObj?.full_name || 'Học viên'}
+🔗 **Đường dẫn bài làm:** ${sub.content}`;
+    }
+
+    const cleanTitle = les ? les.title.replace(/^Buổi\s+\d+\s*:\s*/i, '') : 'Bài tập';
+    const lessonMatch = les ? les.title.match(/^Buổi\s+(\d+)/i) : null;
+    const lessonNumberTag = lessonMatch ? `Buổi ${lessonMatch[1]}` : (les ? `Buổi ${les.order_index - 1}` : 'Bài tập');
+
     return {
       id: sub.id,
-      topic_id: 'topic-assignments',
-      topic_name: 'Assignments 📝',
+      topic_id: topicId,
+      topic_name: topicNameStr,
       author_id: sub.student_id,
       author: authorObj,
-      title: `${authorObj?.full_name} - Nộp bài tập ${les?.title.split(':')[0] || ''}`,
-      content: sub.content,
+      title: `Bài nộp: ${cleanTitle} - ${authorObj?.full_name || 'Học viên'}`,
+      content: parsedContent,
       created_at: sub.created_at,
       upvotes_count: sub.upvotes_count || 0,
       upvoted_by: sub.upvoted_by || [],
@@ -147,16 +215,23 @@ export const DiscussionBoard: React.FC = () => {
       lesson_title: les?.title,
       is_assignment: true,
       status: sub.status,
-      tags: [les?.title.split(':')[0] || 'Bài tập']
+      tags: ['Live Class', lessonNumberTag],
+      media_urls: sub.media_urls || []
     };
   });
 
   // 2. Gather all general discussion posts
   const customThreads = discussionPosts.map(post => {
     const authorObj = users.find(u => u.id === post.author_id);
-    const topicObj = topics.find(t => t.id === post.topic_id);
     const countComments = comments.filter(c => c.submission_id === post.id).length;
     
+    let topicId = post.topic_id;
+    if (topicId !== 'topic-onboarding' && topicId !== 'topic-live-class') {
+      const hasObTag = post.tags && post.tags.some(t => t.toLowerCase().includes('ngày') || t.toLowerCase().includes('ob'));
+      topicId = hasObTag ? 'topic-onboarding' : 'topic-live-class';
+    }
+    const topicNameStr = topicId === 'topic-onboarding' ? 'Onboarding Week 👋' : 'Live Class 🎥';
+
     let lessonId = 'all';
     if (post.tags && post.tags.length > 0) {
       const matchingLesson = lessons.find(l => post.tags.some(t => l.title.includes(t)));
@@ -165,8 +240,8 @@ export const DiscussionBoard: React.FC = () => {
 
     return {
       id: post.id,
-      topic_id: post.topic_id,
-      topic_name: topicObj ? `${topicObj.name} ${post.topic_id === 'topic-light-support' ? '🛟' : '⛵'}` : 'Thảo luận',
+      topic_id: topicId,
+      topic_name: topicNameStr,
       author_id: post.author_id,
       author: authorObj,
       title: post.title,
@@ -177,7 +252,8 @@ export const DiscussionBoard: React.FC = () => {
       comment_count: countComments,
       tags: post.tags || [],
       lesson_id: lessonId,
-      is_assignment: false
+      is_assignment: false,
+      media_urls: post.media_urls || []
     };
   });
 
@@ -224,6 +300,8 @@ export const DiscussionBoard: React.FC = () => {
 
     if (sortBy === 'newest') {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    } else if (sortBy === 'oldest') {
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     } else {
       return b.upvotes_count - a.upvotes_count;
     }
@@ -232,19 +310,6 @@ export const DiscussionBoard: React.FC = () => {
   // Active thread details
   const activeThread = filteredThreads.find(t => t.id === activeThreadId);
   const threadComments = activeThread ? comments.filter(c => c.submission_id === activeThread.id) : [];
-
-  // Leaderboard Calculation (Students with most Nautical Miles)
-  const studentRankings = users
-    .filter(u => u.role === 'student')
-    .sort((a, b) => (b.nautical_miles || 0) - (a.nautical_miles || 0))
-    .slice(0, 4);
-
-  const getRankBadge = (idx: number) => {
-    if (idx === 0) return '🥇';
-    if (idx === 1) return '🥈';
-    if (idx === 2) return '🥉';
-    return '⚓';
-  };
 
   const getRoleLabel = (role?: string) => {
     if (role === 'admin') return 'Thuyền trưởng';
@@ -268,11 +333,11 @@ export const DiscussionBoard: React.FC = () => {
         helpPurpose="Xây dựng văn hóa tương trợ, cọ xát góc nhìn thực tế và cùng vượt qua giông bão bài tập."
       />
 
-      {/* Skool 2-Column Responsive Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start h-[calc(100vh-210px)] overflow-hidden">
+      {/* Skool 1-Column Responsive Layout */}
+      <div className="h-[calc(100vh-210px)] overflow-hidden">
         
-        {/* Left Column: Feed Content & Detail (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col h-full overflow-hidden bg-transparent">
+        {/* Main Column: Feed Content & Detail */}
+        <div className="flex flex-col h-full overflow-hidden bg-transparent">
           
           {!activeThread ? (
             // ==================== FEED VIEW ====================
@@ -293,23 +358,19 @@ export const DiscussionBoard: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Live Q&A / Upcoming class Notice */}
-              {getNextLessonNotice() && (
-                <div className="text-center bg-[#214C54]/5 text-[#214C54] text-[11px] font-bold py-2 px-4 rounded-xl border border-[#214C54]/10">
-                  {getNextLessonNotice()}
-                </div>
-              )}
 
-              {/* 3. Horizontal scrolling category pills */}
-              <div className="flex justify-between items-center gap-4 bg-transparent pt-1">
-                <div className="flex-1 flex gap-2 overflow-x-auto py-1 custom-scrollbar scrollbar-none">
+              {/* 3. Filter & Sort Row (No Card Background, Single Row Layout) */}
+              <div className="flex items-center justify-between gap-4 w-full bg-transparent p-0 border-none shadow-none mt-2">
+                
+                {/* Left Side: Topic Pills */}
+                <div className="flex gap-1 overflow-x-auto py-1 custom-scrollbar scrollbar-none shrink-0">
                   {/* "Tất cả" Pill */}
                   <button
                     onClick={() => handleTopicChange('all')}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all border ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
                       selectedTopicId === 'all'
-                        ? 'bg-[#15333B] text-white border-[#15333B] shadow-sm'
-                        : 'bg-white text-[#3E5E63] border-gray-200 hover:bg-gray-50'
+                        ? 'bg-[#15333B] text-white shadow-xs'
+                        : 'bg-transparent text-[#3E5E63] hover:text-[#15333B]'
                     }`}
                   >
                     Tất cả
@@ -319,18 +380,17 @@ export const DiscussionBoard: React.FC = () => {
                   {topics.map(topic => {
                     const isActive = topic.id === selectedTopicId;
                     let iconStr = "💬";
-                    if (topic.id === 'topic-light-support') iconStr = "🛟";
-                    if (topic.id === 'topic-assignments') iconStr = "📝";
-                    if (topic.id === 'topic-general') iconStr = "⛵";
+                    if (topic.id === 'topic-onboarding') iconStr = "👋";
+                    if (topic.id === 'topic-live-class') iconStr = "🎥";
 
                     return (
                       <button
                         key={topic.id}
                         onClick={() => handleTopicChange(topic.id)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all border flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
                           isActive
-                            ? 'bg-[#15333B] text-white border-[#15333B] shadow-sm'
-                            : 'bg-white text-[#3E5E63] border-gray-200 hover:bg-gray-50'
+                            ? 'bg-[#15333B] text-white shadow-xs'
+                            : 'bg-transparent text-[#3E5E63] hover:text-[#15333B]'
                         }`}
                       >
                         <span>{iconStr}</span>
@@ -340,53 +400,74 @@ export const DiscussionBoard: React.FC = () => {
                   })}
                 </div>
 
+                {/* Right Side: Search, Tag/Lesson Filter, and Sort Select */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Admin add topic pill */}
+                  
+                  {/* Search Input */}
+                  <div className="relative w-36 md:w-44">
+                    <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="form-control text-xs w-full pl-8 pr-3 py-2 bg-white border-gray-200"
+                    />
+                  </div>
+
+                  {/* Tag / Lesson Filter */}
+                  <select
+                    value={selectedLessonId}
+                    onChange={(e) => setSelectedLessonId(e.target.value)}
+                    className="form-control text-xs font-bold px-2.5 py-2 bg-white border-gray-200 text-[#15333B] rounded-xl w-36 md:w-44 cursor-pointer"
+                  >
+                    {selectedTopicId === 'topic-onboarding' ? (
+                      <>
+                        <option value="all">Lọc theo ngày học</option>
+                        <option value="Ngày 1">Ngày 1</option>
+                        <option value="Ngày 2">Ngày 2</option>
+                        <option value="Ngày 3">Ngày 3</option>
+                        <option value="Ngày 4">Ngày 4</option>
+                        <option value="Ngày 5">Ngày 5</option>
+                        <option value="Ngày 6">Ngày 6</option>
+                        <option value="Ngày 7">Ngày 7</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="all">Lọc theo buổi học</option>
+                        {lessons.map(les => (
+                          <option key={les.id} value={les.id}>
+                            {les.title.split(':')[0]}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+
+                  {/* Sort Filter Select */}
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'upvotes')}
+                    className="form-control text-xs font-bold px-2.5 py-2 bg-white border-gray-200 text-[#3E5E63] rounded-xl cursor-pointer w-28 md:w-32"
+                  >
+                    <option value="newest">📅 Mới nhất</option>
+                    <option value="oldest">⏳ Cũ nhất</option>
+                    <option value="upvotes">🔥 Kudos/Up</option>
+                  </select>
+
+                  {/* Admin Add Topic Pill (if admin mode) */}
                   {isUserAdmin && (
                     <button
                       onClick={() => setIsAddingTopic(true)}
-                      className="p-1.5 rounded-full bg-white border border-gray-200 text-[#214C54] hover:bg-gray-50 transition-colors shadow-sm"
+                      className="p-2 rounded-xl bg-white border border-gray-200 text-[#214C54] hover:bg-gray-50 transition-colors shadow-sm"
                       title="Thêm phòng thảo luận mới"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                   )}
 
-                  {/* Filter / Sort Control */}
-                  <button
-                    onClick={() => setSortBy(sortBy === 'newest' ? 'upvotes' : 'newest')}
-                    className="flex items-center gap-1 text-[10px] font-bold px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[#3E5E63] hover:bg-gray-50 transition-colors shadow-sm"
-                  >
-                    <span>{sortBy === 'newest' ? '📅 Mới nhất' : '🔥 Kudos/Up'}</span>
-                  </button>
                 </div>
-              </div>
 
-              {/* Sub-filtering Panel */}
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Tìm kiếm bài đăng hoặc tác giả..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="form-control text-xs w-full pl-9 pr-4 py-2 bg-white"
-                  />
-                </div>
-                
-                <select
-                  value={selectedLessonId}
-                  onChange={(e) => setSelectedLessonId(e.target.value)}
-                  className="form-control text-xs font-bold px-3 py-2 bg-white border-gray-200 text-[#15333B]"
-                >
-                  <option value="all">Lọc theo buổi học</option>
-                  {lessons.map(les => (
-                    <option key={les.id} value={les.id}>
-                      {les.title.split(':')[0]}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* 4. Posts Cards List */}
@@ -483,17 +564,15 @@ export const DiscussionBoard: React.FC = () => {
 
                           {/* Card Footer Actions */}
                           <div className="flex justify-between items-center pt-3 border-t border-gray-100 text-xs">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-5">
                               <button
                                 onClick={() => thread.is_assignment ? upvoteSubmission(thread.id) : upvoteDiscussionPost(thread.id)}
-                                className={`flex items-center gap-1.5 text-xs font-bold transition-all px-2.5 py-1 rounded-xl border ${
-                                  thread.upvoted_by.includes(activeUser.id)
-                                    ? 'bg-[#214C54]/5 text-[#214C54] border-[#214C54]'
-                                    : 'text-gray-400 border-transparent hover:border-gray-200'
+                                className={`flex items-center gap-1.5 transition-all text-[#3E5E63] hover:text-[#214C54] select-none cursor-pointer ${
+                                  thread.upvoted_by.includes(activeUser.id) ? 'text-[#214C54]' : ''
                                 }`}
                               >
-                                <span>{thread.is_assignment ? '👏' : '👍'}</span>
-                                <span className="text-xs text-[#15333B]">{thread.upvotes_count}</span>
+                                <ThumbsUp className={`w-4 h-4 ${thread.upvoted_by.includes(activeUser.id) ? 'fill-current' : ''}`} />
+                                <span className="text-xs font-black">{thread.upvotes_count}</span>
                               </button>
 
                               <button
@@ -501,12 +580,13 @@ export const DiscussionBoard: React.FC = () => {
                                   setActiveThreadId(thread.id);
                                   setCommentInput('');
                                 }}
-                                className="flex items-center gap-1.5 text-xs font-bold text-gray-400 border border-transparent hover:border-gray-200 px-2.5 py-1 rounded-xl"
+                                className="flex items-center gap-1.5 transition-all text-[#3E5E63] hover:text-[#214C54] select-none cursor-pointer"
                               >
-                                <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
-                                <span className="text-xs text-[#15333B]">{thread.comment_count}</span>
+                                <MessageSquare className="w-4 h-4" />
+                                <span className="text-xs font-black">{thread.comment_count}</span>
                               </button>
                             </div>
+                          </div>
 
                             {/* Commenters overlap avatars */}
                             {commenterAvatars.length > 0 && (
@@ -527,10 +607,8 @@ export const DiscussionBoard: React.FC = () => {
                               </div>
                             )}
                           </div>
-
                         </div>
-                      </div>
-                    );
+                      );
                   })
                 )}
               </div>
@@ -587,53 +665,69 @@ export const DiscussionBoard: React.FC = () => {
               </div>
 
               {/* Thread Main Content */}
-              <div className="space-y-4 py-4">
-                <h3 className="text-base font-black text-[#15333B]">
+              <div className="space-y-4 py-5">
+                <h3 className="text-xl md:text-2xl font-black text-[#15333B] tracking-tight leading-snug">
                   {activeThread.title}
                 </h3>
-                <p className="text-xs text-[#3E5E63] leading-relaxed font-mono whitespace-pre-wrap break-words bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                  {activeThread.content}
-                </p>
+                 <div className="text-sm md:text-base text-[#3E5E63] leading-relaxed break-words bg-gray-50/50 p-5 rounded-2xl border border-gray-100 font-medium">
+                  {renderFormattedContent(activeThread.content)}
+                </div>
+
+                {/* Media Attachments Gallery */}
+                {activeThread.media_urls && activeThread.media_urls.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    {activeThread.media_urls.map((url: string, idx: number) => {
+                      const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com') || url.includes('loom.com');
+                      
+                      return (
+                        <div key={idx} className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-gray-50 flex items-center justify-center min-h-[200px] w-full">
+                          {isVideo ? (
+                            url.includes('youtube.com') || url.includes('youtu.be') ? (
+                              <iframe
+                                src={url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                                className="w-full h-full aspect-video rounded-xl border-none"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <video
+                                src={url}
+                                controls
+                                className="w-full h-full object-contain max-h-[300px]"
+                              />
+                            )
+                          ) : (
+                            <img
+                              src={url}
+                              alt={`Attachment ${idx + 1}`}
+                              className="w-full h-full object-contain max-h-[300px]"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Thread Interaction (Kudos / Upvote) */}
-              {activeThread.is_assignment ? (
-                <div className="flex items-center justify-between p-3.5 bg-[#FDF5DA] border border-[#EAB308]/20 rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#15333B] block">Gửi Kudos động viên đồng đội! 👏</span>
-                    <span className="text-[9px] text-gray-500 font-semibold block">Tặng Kudos sẽ thưởng +15 hải lý cho đồng đội.</span>
-                  </div>
-                  <button
-                    onClick={() => upvoteSubmission(activeThread.id)}
-                    className={`flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-xl border transition-all ${
-                      activeThread.upvoted_by.includes(activeUser.id)
-                        ? 'bg-[#EAB308] text-[#15333B] border-[#EAB308] shadow-sm'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span>👏 Kudos</span>
-                    <span>{activeThread.upvotes_count}</span>
-                  </button>
+              <div className="flex items-center gap-6 py-3 border-t border-b border-gray-100/70 my-4 text-gray-500">
+                <button
+                  onClick={() => activeThread.is_assignment ? upvoteSubmission(activeThread.id) : upvoteDiscussionPost(activeThread.id)}
+                  className={`flex items-center gap-2 hover:text-[#214C54] transition-all select-none cursor-pointer ${
+                    activeThread.upvoted_by.includes(activeUser.id) ? 'text-[#214C54]' : ''
+                  }`}
+                >
+                  <ThumbsUp className={`w-5 h-5 ${activeThread.upvoted_by.includes(activeUser.id) ? 'fill-current' : ''}`} />
+                  <span className="text-sm font-semibold">{activeThread.upvotes_count}</span>
+                </button>
+                <div className="flex items-center gap-2 select-none text-[#3E5E63]">
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="text-sm font-semibold">{threadComments.length}</span>
                 </div>
-              ) : (
-                <div className="flex items-center justify-between p-3.5 bg-[#214C54]/5 border border-[#214C54]/10 rounded-xl">
-                  <div>
-                    <span className="text-xs font-bold text-[#15333B] block">Thấy bài viết hữu ích? 👍</span>
-                    <span className="text-[9px] text-gray-500 font-semibold block">Bấm upvote để đẩy bài viết lên và khích lệ đồng đội.</span>
-                  </div>
-                  <button
-                    onClick={() => upvoteDiscussionPost(activeThread.id)}
-                    className={`flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-xl border transition-all ${
-                      activeThread.upvoted_by.includes(activeUser.id)
-                        ? 'bg-[#214C54] text-white border-[#214C54] shadow-sm'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span>👍 Upvote</span>
-                    <span>{activeThread.upvotes_count}</span>
-                  </button>
-                </div>
-              )}
+              </div>
 
               {/* Comments List Section */}
               <div className="border-t border-gray-100 pt-6 space-y-4">
@@ -725,83 +819,6 @@ export const DiscussionBoard: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Right Column: Sidebar containing Leaderboard & Rules (4 cols) */}
-        <div className="lg:col-span-4 hidden lg:flex flex-col gap-6 overflow-y-auto pr-1 h-full custom-scrollbar">
-          
-          {/* Sidebar Widget 1: Crew Leaderboard */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-1.5 border-b border-gray-100 pb-3">
-              <Award className="w-4.5 h-4.5 text-[#EAB308]" />
-              <h3 className="font-extrabold text-xs text-[#15333B] uppercase tracking-wider">
-                Bảng xếp hạng thủy thủ
-              </h3>
-            </div>
-            
-            <div className="space-y-3.5">
-              {studentRankings.map((student, idx) => {
-                const isSelf = student.id === activeUser.id;
-                return (
-                  <div
-                    key={student.id}
-                    className={`flex items-center justify-between p-2 rounded-xl transition-all border ${
-                      isSelf 
-                        ? 'bg-[#214C54]/5 border-[#214C54]/30' 
-                        : 'border-transparent hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-base font-bold w-5 text-center shrink-0">
-                        {getRankBadge(idx)}
-                      </span>
-                      <img
-                        src={student.avatar_url}
-                        alt=""
-                        className="w-7 h-7 rounded-full object-cover border border-gray-100"
-                      />
-                      <div>
-                        <span className="text-xs font-bold text-[#15333B] block leading-tight">
-                          {student.full_name}
-                        </span>
-                        <span className="text-[9px] text-[#3E5E63] font-medium block">
-                          {idx === 0 ? 'Thủy thủ xuất sắc' : 'Thành viên cốt cán'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-xs font-black text-[#214C54] block">
-                        {student.nautical_miles || 0}
-                      </span>
-                      <span className="text-[8px] font-extrabold uppercase text-gray-400 block tracking-wider">
-                        Hải lý
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Sidebar Widget 2: Tavern Rules */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center gap-1.5 border-b border-gray-100 pb-3">
-              <Info className="w-4 h-4 text-[#214C54]" />
-              <h3 className="font-extrabold text-xs text-[#15333B] uppercase tracking-wider">
-                Luật chơi hội quán
-              </h3>
-            </div>
-            
-            <ul className="space-y-2 text-[11px] text-[#3E5E63] font-semibold list-disc pl-4 leading-relaxed">
-              <li>Mỗi bài nộp bài tập tự động mở ra một luồng thảo luận.</li>
-              <li>Học viên tương trợ gỡ lỗi hoặc cho ý kiến xây dựng bài làm.</li>
-              <li>Hãy tặng **Kudos 👏** cho bài tập bạn thấy ấn tượng để tặng họ +15 Hải Lý.</li>
-              <li>Mentor duyệt **Tích Xanh 🎖️** cho câu trả lời hay sẽ thưởng lớn +200 Hải Lý.</li>
-            </ul>
-          </div>
-
-        </div>
-
       </div>
 
       {/* Add Topic Inline Dialog (only when Admin clicks +, visible above all columns if overlay) */}
@@ -883,11 +900,14 @@ export const DiscussionBoard: React.FC = () => {
                 <div className="col-span-2 space-y-1">
                   <label className="text-[10px] font-bold text-gray-500 uppercase block">Chủ đề thảo luận (Pills)</label>
                   <select
-                    value={selectedTopicId === 'all' ? 'topic-light-support' : selectedTopicId}
-                    onChange={(e) => setSelectedTopicId(e.target.value)}
+                    value={newPostTopicId}
+                    onChange={(e) => {
+                      setNewPostTopicId(e.target.value);
+                      setNewPostTag(''); // Reset tag when topic changes
+                    }}
                     className="form-control text-xs w-full font-bold"
                   >
-                    {topics.filter(t => t.id !== 'topic-assignments').map(t => (
+                    {topics.map(t => (
                       <option key={t.id} value={t.id}>
                         {t.name}
                       </option>
@@ -904,12 +924,27 @@ export const DiscussionBoard: React.FC = () => {
                     onChange={(e) => setNewPostTag(e.target.value)}
                     className="form-control text-xs w-full font-bold"
                   >
-                    <option value="">-- Chọn buổi học liên quan (Nếu có) --</option>
-                    {lessons.map(les => (
-                      <option key={les.id} value={les.id}>
-                        {les.title}
-                      </option>
-                    ))}
+                    {newPostTopicId === 'topic-onboarding' ? (
+                      <>
+                        <option value="">-- Chọn ngày học liên quan (Nếu có) --</option>
+                        <option value="Ngày 1">Ngày 1</option>
+                        <option value="Ngày 2">Ngày 2</option>
+                        <option value="Ngày 3">Ngày 3</option>
+                        <option value="Ngày 4">Ngày 4</option>
+                        <option value="Ngày 5">Ngày 5</option>
+                        <option value="Ngày 6">Ngày 6</option>
+                        <option value="Ngày 7">Ngày 7</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="">-- Chọn buổi học liên quan (Nếu có) --</option>
+                        {lessons.map(les => (
+                          <option key={les.id} value={les.id}>
+                            {les.title}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -923,6 +958,45 @@ export const DiscussionBoard: React.FC = () => {
                   className="form-control text-xs w-full h-32 resize-none"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase block">Đính kèm ảnh / video</label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-3 pb-3">
+                      <span className="text-xl">📁</span>
+                      <p className="text-xs font-bold text-gray-500 mt-1">Chọn ảnh hoặc video từ thiết bị</p>
+                      <p className="text-[9px] text-gray-400">Hỗ trợ tải lên nhiều file cùng lúc</p>
+                    </div>
+                    <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleFileChange} />
+                  </label>
+                </div>
+
+                {/* Selected files preview */}
+                {selectedMediaFiles.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {selectedMediaFiles.map((dataUrl, idx) => {
+                      const isVideo = dataUrl.startsWith('data:video');
+                      return (
+                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+                          {isVideo ? (
+                            <video src={dataUrl} className="w-full h-full object-cover" />
+                          ) : (
+                            <img src={dataUrl} alt="" className="w-full h-full object-cover" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMedia(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-4.5 h-4.5 flex items-center justify-center text-[9px] font-bold hover:bg-red-600 transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 flex justify-end gap-2 border-t border-gray-100">
