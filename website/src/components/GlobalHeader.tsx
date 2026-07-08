@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, LogOut, UserCircle, LayoutDashboard } from 'lucide-react';
+import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu } from 'lucide-react';
 import { useDatabase } from '../context/DatabaseContext';
 
 interface GlobalHeaderProps {
   currentPage: string;
   onPageChange: (page: string) => void;
+  toggleSidebar?: () => void;
 }
 
 // Map page id → { label, parent }
@@ -25,7 +26,7 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
   'internal-team':   { label: 'Quản lý nhân sự' },
 };
 
-export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange }) => {
+export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
   const { activeUser, switchUser, lessons, nauticalTransactions, logout } = useDatabase();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -58,6 +59,17 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-0 flex items-center justify-between shadow-sm z-30 select-none h-14 shrink-0">
+
+      {/* Mobile Hamburger menu */}
+      {toggleSidebar && (
+        <button 
+          onClick={toggleSidebar} 
+          className="p-2 -ml-2 mr-2 text-[#214C54] hover:text-[#15333B] md:hidden focus:outline-none focus:ring-2 focus:ring-[#214C54]/20 rounded-lg"
+          aria-label="Toggle Navigation Menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      )}
 
       {/* LEFT: Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-sm">

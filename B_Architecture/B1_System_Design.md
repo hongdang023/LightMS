@@ -8,6 +8,7 @@ Dựa trên các yêu cầu (Requirements) và quyết định công nghệ mớ
   - **Framework:** **Vite** (kết hợp ReactJS hoặc VueJS + TypeScript). 
   - **Lợi ích:** Build cực nhanh, HMR (Hot Module Replacement) siêu mốc, tối ưu hóa trải nghiệm "Zero Friction".
   - **WYSIWYG Admin UI:** Giao diện Edit Mode/Reading Mode của Admin (Course Builder, Thông báo) sử dụng chung 100% UI Components với Student Mode, đảm bảo tính đồng nhất tuyệt đối.
+  - **Mobile Responsive Design:** Áp dụng phương thức Mobile-first thông qua các breakpoint của Tailwind CSS (`md: 768px`) và media queries tùy chỉnh. Giao diện Sidebar chuyển thành Drawer trượt có bóng đổ (backdrop shadow) và nút kích hoạt Hamburger trên Header, giúp tối ưu hóa diện tích hiển thị trên các thiết bị di động.
 - **Backend & Database (Dữ liệu & Logic):** 
   - **Nền tảng:** **Supabase** (BaaS - Backend as a Service).
   - **Database:** PostgreSQL (Cấu trúc dữ liệu quan hệ mạnh, lý tưởng cho LMS).
@@ -62,9 +63,7 @@ Dựa vào triết lý **Outcome-based Mastery** và **Action-Oriented**, hệ t
 - `feedbacks`: Của Mentor đánh giá cho `submissions`. Cung cấp khung Rich-Text Editor cho Mentor để feedback trực quan, bôi đậm lỗi sai, kèm mức độ đánh giá (Mastery Level: Đạt / Chưa đạt).
 
 ### 3.4. Community & Tracking
-- `discussion_topics`: Các chủ đề thảo luận chung (như Light Support, Assignments) do Admin quản lý.
-- `discussion_posts`: Các bài viết thảo luận trong từng chủ đề, hỗ trợ tag bài tập, lượt upvote, và bình luận.
-- `comments`: Bình luận và thảo luận chéo giữa học viên trên bài viết hoặc bài nộp bài tập. Số lượng Upvotes và trạng thái Verified (Tích xanh cho lên Top).
+- `comments`: Bình luận và thảo luận chéo giữa học viên trên bài nộp bài tập. Số lượng Upvotes và trạng thái Verified (Tích xanh cho lên Top).
 - **Tracking Tiến độ (Progress Tracking):** Hệ thống đánh giá tiến độ và tính điểm của học viên hoàn toàn dựa trên mức độ hoàn thành bài tập về nhà (`submissions` có status = `submitted` hoặc `graded`).
 
 ### 3.5. Gamification & Rewards (Hệ thống phần thưởng)

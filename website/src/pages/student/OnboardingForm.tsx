@@ -36,13 +36,7 @@ export const OnboardingForm: React.FC = () => {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Mascot quotes per step
-  const mascotQuotes = [
-    'Ahoy! Ta cần danh tính của ngươi để ghi chép vào sổ thủy thủ đoàn. Điền đầy đủ thông tin liên hệ nhé! 🦜',
-    'Chọn chính xác vai trò và lĩnh vực từ danh sách thả xuống để ta sắp xếp nhóm phù hợp nhé! 🦜',
-    'Khảo sát nhanh để hiểu rõ hơn về lộ trình hoạt động và hành trang đi biển của ngươi nhé! 🦜',
-    'Đây là phần quan trọng nhất! Khai báo ý tưởng sản phẩm số của ngươi để bắt đầu! 🦜'
-  ];
+
 
   const getProcessedData = () => {
     let referral_source = formData.referral_source;
@@ -132,9 +126,15 @@ export const OnboardingForm: React.FC = () => {
     setStep(prev => prev - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep()) return;
+    if (!validateStep() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     const finalData = getProcessedData();
 
@@ -142,7 +142,7 @@ export const OnboardingForm: React.FC = () => {
     const industry = finalData.work_field;
     const current_job = finalData.current_role;
 
-    updateProfile(activeUser.id, {
+    const success = await updateProfile(activeUser.id, {
       ...finalData,
       industry,
       current_job,
@@ -150,8 +150,16 @@ export const OnboardingForm: React.FC = () => {
       is_profile_completed: true
     });
 
-    setCelebrate(true);
+    setIsSubmitting(false);
+
+    if (success) {
+      setCelebrate(true);
+    } else {
+      setSubmitError('Có lỗi xảy ra khi lưu thông tin lên hệ thống. Vui lòng kiểm tra kết nối mạng và thử lại.');
+    }
   };
+
+
 
   return (
     <div className="relative min-h-screen w-full bg-[#F0F0F0] flex items-center justify-center p-4 md:p-8 select-none font-sans overflow-x-hidden font-medium">
@@ -201,7 +209,7 @@ export const OnboardingForm: React.FC = () => {
               }}
               className="w-full py-4 bg-[#EAB308] hover:bg-[#CA8A04] text-[#15333B] font-black rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              Bước vào Dashboard
+              Bắt đầu khám phá
               <Sparkles className="w-4 h-4" />
             </button>
           </div>
@@ -222,7 +230,7 @@ export const OnboardingForm: React.FC = () => {
             <div className="space-y-4">
               <div className="h-0.5 bg-white/10" />
               <p className="text-xs text-white/60 font-bold tracking-widest uppercase">Hải trình bắt đầu</p>
-              <h3 className="text-lg font-bold leading-snug">Thiết lập tài khoản của bạn</h3>
+              <h3 className="text-lg font-bold leading-snug text-white">Thiết lập tài khoản của bạn</h3>
             </div>
           </div>
 
@@ -512,24 +520,23 @@ export const OnboardingForm: React.FC = () => {
                   <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Ý tưởng sản phẩm dự kiến xây dựng</label>
                   <textarea
                     required
+                    disabled={isSubmitting}
                     value={formData.product_idea}
                     onChange={(e) => setFormData({ ...formData, product_idea: e.target.value })}
                     rows={5}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all disabled:opacity-50"
                     placeholder="VD: Một ứng dụng theo dõi chi tiêu mini kết nối Google Sheet để quản lý tài chính cá nhân tự động bằng AI..."
                   />
                   {errors.product_idea && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.product_idea}</span>}
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Interactive Mascot Speech box for the Step */}
-          <div className="bg-[#FDF5DA] border border-[#EAB308]/40 p-4 rounded-2xl flex items-start gap-3 mt-6 shrink-0">
-            <span className="text-2xl shrink-0">🦜</span>
-            <p className="text-xs text-[#15333B] leading-relaxed font-semibold">
-              {mascotQuotes[step - 1]}
-            </p>
+            
+            {submitError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold animate-fade-in">
+                {submitError}
+              </div>
+            )}
           </div>
 
           {/* Navigation Actions */}
@@ -537,8 +544,9 @@ export const OnboardingForm: React.FC = () => {
             {step > 1 ? (
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={handlePrev}
-                className="py-3 px-5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl font-bold text-xs transition-all flex items-center gap-1"
+                className="py-3 px-5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl font-bold text-xs transition-all flex items-center gap-1 disabled:opacity-50"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Quay lại
@@ -559,9 +567,10 @@ export const OnboardingForm: React.FC = () => {
             ) : (
               <button
                 type="submit"
-                className="py-3 px-6 bg-[#EAB308] hover:bg-[#CA8A04] text-[#15333B] rounded-xl font-black text-xs shadow-sm hover:shadow transition-all flex items-center gap-1.5 ml-auto"
+                disabled={isSubmitting}
+                className="py-3 px-6 bg-[#EAB308] hover:bg-[#CA8A04] text-[#15333B] rounded-xl font-black text-xs shadow-sm hover:shadow transition-all flex items-center gap-1.5 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Hoàn thành & Kích hoạt Thẻ căn cước
+                {isSubmitting ? 'Đang lưu hồ sơ...' : 'Hoàn thành & Kích hoạt Thẻ căn cước'}
                 <Sparkles className="w-4 h-4" />
               </button>
             )}

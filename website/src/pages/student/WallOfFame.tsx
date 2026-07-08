@@ -289,9 +289,6 @@ export const WallOfFame: React.FC = () => {
                         {lvl.percent}% thành viên
                       </span>
                     </div>
-                    <p className="text-[11px] text-muted-teal font-medium mt-0.5 truncate">
-                      {lvl.perk}
-                    </p>
                   </div>
                 </div>
               );

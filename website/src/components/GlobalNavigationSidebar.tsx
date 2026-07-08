@@ -7,7 +7,6 @@ import {
   AboutIcon,
   OnboardingIcon,
   SyllabusIcon,
-  DiscussionsIcon,
   ScheduleIcon,
   LeaderboardIcon,
   SupportIcon,
@@ -22,9 +21,10 @@ import {
 interface GlobalNavigationSidebarProps {
   currentPage: string;
   onPageChange: (page: string) => void;
+  isOpen?: boolean;
 }
 
-export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = ({ currentPage, onPageChange }) => {
+export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = ({ currentPage, onPageChange, isOpen }) => {
   const { activeUser } = useDatabase();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
@@ -48,7 +48,6 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     { id: 'announcements', label: 'Thông báo', icon: AnnouncementsIcon },
     { id: 'onboarding', label: 'Onboarding', icon: OnboardingIcon },
     { id: 'syllabus', label: 'Lộ trình học', icon: SyllabusIcon },
-    { id: 'discussion', label: 'Phòng thảo luận', icon: DiscussionsIcon },
     { id: 'calendar', label: 'Lịch học', icon: ScheduleIcon },
     { id: 'walloffame', label: 'Bảng vinh danh', icon: LeaderboardIcon },
     { id: 'help', label: 'Hỏi đáp & Hỗ trợ', icon: SupportIcon },
@@ -69,12 +68,16 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
   const currentNav = showAdminSidebar ? adminNav : studentNav;
 
   return (
-    <aside className={`relative bg-[#15333B] text-white flex flex-col h-screen border-r border-[#3E5E63]/30 select-none transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-72'}`}>
+    <aside className={`fixed md:relative top-0 bottom-0 left-0 z-40 bg-[#15333B] text-white flex flex-col h-screen border-r border-[#3E5E63]/30 select-none transition-all duration-300 ease-in-out ${
+      isCollapsed ? 'md:w-20' : 'md:w-72'
+    } ${
+      isOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0 w-72 md:w-auto'
+    }`}>
       
       {/* Floating Collapse Toggle */}
       <button 
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-[#15333B] hover:bg-[#214C54] border border-[#3E5E63] text-white flex items-center justify-center z-50 shadow-md transition-colors"
+        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-[#15333B] hover:bg-[#214C54] border border-[#3E5E63] text-white hidden md:flex items-center justify-center z-50 shadow-md transition-colors"
         title={isCollapsed ? "Mở rộng thanh bên" : "Thu hẹp thanh bên"}
       >
         {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}

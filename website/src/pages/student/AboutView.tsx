@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AnchorIcon, RouteIcon, GiftIcon } from '../../components/Icons';
 import { PageHeader } from '../../components/PageHeader';
 import { useDatabase } from '../../context/DatabaseContext';
-import { Save, Undo, Plus, Trash2 } from 'lucide-react';
+import { Save, Undo, Plus, Trash2, BookOpen } from 'lucide-react';
 
 interface AboutViewProps {
   onPageChange: (page: string) => void;
@@ -24,7 +24,7 @@ interface BenefitClub {
 }
 
 export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode = false }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'benefits'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'platforms' | 'benefits'>('overview');
   const { aboutContent, updateAboutContent } = useDatabase();
 
   // Local draft states for raw fields
@@ -88,20 +88,49 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
     // Video Loom Url
     setDraftVideoUrl(getStoredItem('about_draft_video_url', 'https://drive.google.com/file/d/1bhtSzABAjKHPB_1LzzTG0wxiscAilC0a/view?usp=sharing'));
 
+    // Invalidate old platform buttons cache if names are long
+    const cachedPlatforms = localStorage.getItem('about_draft_platform_buttons');
+    if (cachedPlatforms) {
+      try {
+        const parsed = JSON.parse(cachedPlatforms);
+        if (Array.isArray(parsed) && parsed.some(p => p.title.includes('học liệu tổng hợp') || p.title.includes('lớp học'))) {
+          localStorage.removeItem('about_draft_platform_buttons');
+        }
+      } catch (e) {}
+    }
+
     // Dynamic Platform Buttons
     setDraftPlatformButtons(getStoredObject<PlatformButton[]>('about_draft_platform_buttons', [
-      { icon: '📒', title: 'Notion học tập tổng hợp', subtitle: 'Build with the1ight (Batch 3)', url: 'https://app.notion.com/p/f152df46dabf83ceb8788165361bf772?pvs=21' },
-      { icon: '📅', title: 'Google Calendar lớp học', subtitle: 'Nhấp để tích hợp lịch học', url: 'https://calendar.google.com/calendar/u/0?cid=NjMyNjQwNzkyZDc1YzM1ZGM2YWNhMzA2MjVlMWMzNWRlM2Y2ZDRkYmY3OTlmNTBmOTI0MmExMzg4ZDc5NjllZEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t' },
-      { icon: '💬', title: 'Messenger Community Chat', subtitle: 'Thảo luận cùng tập thể lớp', url: 'https://m.me/cm/AbakX4jK92v0eIxm/' },
-      { icon: '👥', title: 'Facebook Group', subtitle: 'Nơi đăng thông tin chính thức', url: 'https://www.facebook.com/share/g/1HyBCrQS9D/' }
+      { icon: '📒', title: 'LightMS', subtitle: 'Nền tảng tổng hợp toàn bộ học liệu của lớp', url: 'https://app.notion.com/p/f152df46dabf83ceb8788165361bf772?pvs=21' },
+      { icon: '📅', title: 'Google Calendar', subtitle: 'Nhắc lịch học và các sự kiện của lớp', url: 'https://calendar.google.com/calendar/u/0?cid=NjMyNjQwNzkyZDc1YzM1ZGM2YWNhMzA2MjVlMWMzNWRlM2Y2ZDRkYmY3OTlmNTBmOTI0MmExMzg4ZDc5NjllZEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t' },
+      { icon: '💬', title: 'Telegram', subtitle: 'Nền tảng nhắn tin giao lưu của lớp', url: 'https://t.me/+C8OUa6qqgNsyYjQ9' },
+      { icon: '👥', title: 'Facebook Group', subtitle: 'Nơi nộp Bài tập về nhà và nhận góp ý', url: 'https://www.facebook.com/groups/27216190438021089' }
     ]));
+
+    // Invalidate old cache
+    const cachedClubs = localStorage.getItem('about_draft_benefit_clubs');
+    if (cachedClubs) {
+      try {
+        const parsed = JSON.parse(cachedClubs);
+        // Invalidate if Office Hour card still present, or too many/few cards
+        if (Array.isArray(parsed) && (parsed.length !== 3 || parsed.some((c: any) => c.name === 'Office Hour'))) {
+          localStorage.removeItem('about_draft_benefit_clubs');
+        }
+      } catch (e) {}
+    }
 
     // Dynamic Benefit Clubs (Benefits Tab)
     setDraftBenefitClubs(getStoredObject<BenefitClub[]>('about_draft_benefit_clubs', [
       {
+        icon: '🔄',
+        name: 'Học lại miễn phí',
+        desc: 'Quyền lợi nâng cấp tư duy và cập nhật công nghệ hoàn toàn miễn phí ở các khoá học tiếp theo.',
+        links: []
+      },
+      {
         icon: '🎪',
         name: '1ight Club',
-        desc: 'Không gian kết nối, chia sẻ ý tưởng sản phẩm, công nghệ mới và các buổi sinh hoạt chuyên sâu giữa các thế hệ cướp biển.',
+        desc: 'Cộng đồng tự chủ sự nghiệp cùng AI trả phí chuyên sâu.',
         links: [
           { label: 'Group Facebook', url: 'https://www.facebook.com/share/g/1BCEoxNoqv/' },
           { label: 'Zalo Group', url: 'https://zalo.me/g/zuydzj265?fbclid=IwZXh0bgNhZW0CMTAAYnJpZBExTnVuakhSOW53WUNmbjE0SXNydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR66E6u7YYxLMEoN0f1iKj2StV_GHxTo7TyyiiHN712xPyg_U0qUaru3EftTqA_aem_bap_taXXL7PXNVn0nfLHGA' }
@@ -110,7 +139,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
       {
         icon: '🎖️',
         name: 'Alumni Club',
-        desc: 'Nơi quy tụ toàn bộ các cựu học viên từ Batch 1 đến nay. Cơ hội cộng tác, tuyển dụng và đồng hành lâu dài.',
+        desc: 'Không gian dành riêng cho cựu học sinh các khoá học tại The1ight.',
         links: [
           { label: 'Group Facebook', url: 'https://www.facebook.com/share/g/1DJpuDdX9s/' },
           { label: 'Messenger Chat', url: 'https://m.me/cm/AbbnQvQATe0KSg2O/' }
@@ -133,21 +162,21 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
       desc: 'Hiểu đúng về sản phẩm – từ lý thuyết đến thực tế. Tư duy như một PM thật sự: đặt câu hỏi đúng, viết Problem Statement, đặt giả định và kiểm chứng từng bước.'
     }));
     setDraftTruCot2(getStoredObject('about_draft_tru_cot_2', {
-      title: '2. Dụng cụ đúng 🧰',
+      title: '2. Công cụ đúng 🧰',
       subtitle: 'TOOLING & PROTOTYPING',
-      desc: 'Làm quen với AI, no-code và các công cụ automation (Lovable, Supabase, Make, Notion...) để bắt đầu xây dựng phiên bản đầu tiên của sản phẩm.'
+      desc: 'Đào sâu hơn vào IDE và các thuật ngữ kĩ thuật để giúp bạn biến sản phẩm của mình từ một prototype chạy được đến xây sản phẩm có cấu trúc hệ thống.'
     }));
     setDraftTruCot3(getStoredObject('about_draft_tru_cot_3', {
       title: '3. Thử nghiệm đúng 🔬',
       subtitle: 'BUILD – TEST – LEARN',
-      desc: 'Tư duy MVP và kiểm nghiệm giả định bằng sản phẩm thật, không cần chờ code hay kỹ thuật cao. Tự tay xây và học được bài học thật từ người dùng thật.'
+      desc: 'Tự tay xây và học được bài học thật từ người dùng thật, không cần chờ code hay kỹ thuật cao.'
     }));
 
     // Outro cam kết
-    setDraftOutro(getStoredItem('about_draft_outro', 'Bạn sẽ rời khỏi lớp học với:\n- 1 sản phẩm thật do chính bạn tự xây dựng.\n- Tư duy đúng để lặp lại quy trình này lần nữa.\n- Sự tự tin để bước ra thế giới và kiếm tiền từ khả năng làm sản phẩm của mình ✨.\n\n* Là một người xây sản phẩm, mình biết cái cảm giác lôi đứa con tinh thần từ trong đầu ra ngoài nó đẹp như thế nào. Mình muốn trong 30 ngày, bạn sẽ làm được và có được trải nghiệm này.\nThân gửi, Đội ngũ The1ight'));
+    setDraftOutro(getStoredItem('about_draft_outro', 'Vibe Coding 201 là một hành trình học – làm – launch thật sự.\n\nVà bạn sẽ rời khỏi lớp học với:\n- 1 sản phẩm thật có cấu trúc do chính bạn tự xây dựng\n- Tư duy đúng để lặp lại quy trình này lần nữa\n\nLà một người xây sản phẩm, mình biết cái cảm giác lôi đứa con tinh thần từ trong đầu ra ngoài nó đẹp như thế nào.\nMình muốn trong 30 ngày, bạn sẽ làm được và có được trải nghiệm này.\n\nThân gửi,\nĐội ngũ The1ight'));
 
     // SĐT Liên hệ & Office hour
-    setDraftSdtNote(getStoredItem('about_draft_sdt_note', '💡 Nếu chưa nhận được quyền truy cập các link trên, vui lòng liên hệ **Ms. Đặng Hồng (Quản lý lớp học)** qua SĐT **0985679417** hoặc [Messenger](https://www.facebook.com/danghong.harunoyuki).'));
+    setDraftSdtNote(getStoredItem('about_draft_sdt_note', 'Nếu chưa nhận được, vui lòng liên hệ **Ms. Đặng Hồng (Quản lý lớp học)** qua SĐT **0985679417** hoặc [Messenger](https://www.facebook.com/danghong.harunoyuki)'));
     setDraftOfficeHourDesc(getStoredItem('about_draft_office_hour_desc', 'Học viên có các vấn đề cần hỏi đáp chuyên sâu hoặc muốn nhận tư vấn trực tiếp từ thầy giáo có thể đăng ký tham gia Office Hour.'));
 
     // Lưu ý màu vàng
@@ -388,7 +417,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in pb-20">
       <PageHeader 
         title="Giới thiệu khoá học"
-        description="01 Giới thiệu khoá học [READ ME FIRST]"
+        description="Tổng quan về khoá học tại The1ight"
         helpTitle="Giới thiệu"
         helpSummary="Tất cả thông tin cần biết trước khi bắt đầu khoá học."
         helpPurpose="Giúp bạn hiểu rõ lộ trình, phương pháp học và cách lấy tối đa giá trị từ khoá học này."
@@ -418,7 +447,18 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
             }`}
           >
             <RouteIcon active={activeTab === 'schedule'} className="w-4 h-4" />
-            <span>Schedule</span>
+            <span>Lộ trình học</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('platforms')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold border-b-2 transition-all ${
+              activeTab === 'platforms'
+                ? 'border-[#214C54] text-[#214C54]'
+                : 'border-transparent text-gray-500 hover:text-[#214C54]'
+            }`}
+          >
+            <BookOpen className={`w-4 h-4 ${activeTab === 'platforms' ? 'text-[#214C54]' : 'text-gray-500'}`} />
+            <span>Nền tảng học tập</span>
           </button>
           <button
             onClick={() => setActiveTab('benefits')}
@@ -429,7 +469,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
             }`}
           >
             <GiftIcon active={activeTab === 'benefits'} className="w-4 h-4" />
-            <span>Benefits</span>
+            <span>Quyền lợi</span>
           </button>
         </div>
 
@@ -437,90 +477,52 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
         {/* Tab Content */}
         <div className="rich-text space-y-4 text-sm leading-relaxed min-h-[300px]">
           {activeTab === 'overview' && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="p-4 bg-[#214C54]/5 border border-l-4 border-[#214C54] rounded-xl text-[#3E5E63]">
-                {isEditMode ? (
-                  <div className="space-y-2">
-                    {activeEditorId === 'editor-overview' && renderEditorToolbar('editor-overview')}
-                    <div
-                      id="editor-overview"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={() => setActiveEditorId('editor-overview')}
-                      onInput={(e) => {
-                        const html = e.currentTarget.innerHTML;
-                        const cleanText = html
-                          .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                          .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-                          .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                          .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-                          .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-                          .replace(/<div><br><\/div>/gi, '\n')
-                          .replace(/<div>(.*?)<\/div>/gi, '\n$1')
-                          .replace(/<br>/gi, '\n')
-                          .replace(/&nbsp;/g, ' ')
-                          .trim();
-                        setDraftOverview(cleanText);
-                      }}
-                      className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none min-h-[100px] text-sm text-[#3E5E63] font-semibold focus:ring-1 focus:ring-[#214C54]"
-                      dangerouslySetInnerHTML={{
-                        __html: draftOverview
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                          .split('\n').join('<br>')
-                      }}
-                    />
-                  </div>
-                ) : (
-                  renderRichText(draftOverview)
-                )}
+            <div className="space-y-6 animate-fade-in text-left">
+              <div className="p-5 md:p-6 bg-gradient-to-r from-[#214C54]/5 to-[#214C54]/10 border border-[#214C54]/15 rounded-2xl text-[#15333B] relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#214C54]/5 rounded-full -mr-8 -mt-8 pointer-events-none" />
+                <div className="font-semibold text-[#15333B] md:text-[15px] leading-relaxed relative z-10">
+                  {isEditMode ? (
+                    <div className="space-y-2">
+                      {activeEditorId === 'editor-overview' && renderEditorToolbar('editor-overview')}
+                      <div
+                        id="editor-overview"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={() => setActiveEditorId('editor-overview')}
+                        onInput={(e) => {
+                          const html = e.currentTarget.innerHTML;
+                          const cleanText = html
+                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                            .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                            .replace(/<i>(.*?)<\/i>/gi, '*$1*')
+                            .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+                            .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
+                            .replace(/<div><br><\/div>/gi, '\n')
+                            .replace(/<div>(.*?)<\/div>/gi, '\n$1')
+                            .replace(/<br>/gi, '\n')
+                            .replace(/&nbsp;/g, ' ')
+                            .trim();
+                          setDraftOverview(cleanText);
+                        }}
+                        className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none min-h-[100px] text-sm text-[#3E5E63] font-semibold focus:ring-1 focus:ring-[#214C54]"
+                        dangerouslySetInnerHTML={{
+                          __html: draftOverview
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
+                            .split('\n').join('<br>')
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    renderRichText(draftOverview)
+                  )}
+                </div>
               </div>
 
-              {/* Editable Quote */}
-              <div className="p-1 rounded-xl">
-                {isEditMode ? (
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-gray-400">TRÍCH DẪN:</span>
-                    {activeEditorId === 'editor-quote' && renderEditorToolbar('editor-quote')}
-                    <div
-                      id="editor-quote"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={() => setActiveEditorId('editor-quote')}
-                      onInput={(e) => {
-                        const html = e.currentTarget.innerHTML;
-                        const cleanText = html
-                          .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                          .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-                          .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                          .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-                          .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-                          .replace(/<div><br><\/div>/gi, '\n')
-                          .replace(/<div>(.*?)<\/div>/gi, '\n$1')
-                          .replace(/<br>/gi, '\n')
-                          .replace(/&nbsp;/g, ' ')
-                          .trim();
-                        setDraftQuote(cleanText);
-                      }}
-                      className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none text-xs italic text-gray-700"
-                      dangerouslySetInnerHTML={{
-                        __html: draftQuote
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                          .split('\n').join('<br>')
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <blockquote className="italic border-l-4 border-gray-300 pl-4 py-1 text-gray-600 font-medium">
-                    {renderRichText(draftQuote)}
-                  </blockquote>
-                )}
-              </div>
 
-              <p className="font-medium text-[#214C54]">
+
+              <p className="font-bold text-sm md:text-[15px] text-[#15333B] pt-2">
                 Không giống như các khoá dạy làm sản phẩm truyền thống, ở <strong>Build With The1ight</strong>, bạn sẽ:
               </p>
               
@@ -543,18 +545,23 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                   ))}
                 </div>
               ) : (
-                <ul className="list-disc pl-5 space-y-1.5 text-[#3E5E63]">
+                <div className="grid grid-cols-1 gap-3 pl-1 pt-1">
                   {draftGachDauDong.map((item, idx) => (
-                    <li key={idx}>{renderRichText(item)}</li>
+                    <div key={idx} className="flex items-start gap-3 p-3.5 bg-slate-50/60 border border-slate-150/80 rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">✓</span>
+                      <div className="font-semibold text-xs md:text-sm text-[#3E5E63] leading-relaxed">{renderRichText(item)}</div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
 
-              <h3 className="font-extrabold text-base text-[#15333B] pt-4">🎯 Tư duy sản phẩm qua 3 trụ cột:</h3>
+              <h3 className="font-extrabold text-sm md:text-base text-[#15333B] pt-6 flex items-center gap-2">
+                <span>🎯</span> Tư duy sản phẩm qua 3 trụ cột:
+              </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                 {/* Trụ Cột 1 */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-150 flex flex-col justify-between">
+                <div className="p-4 bg-white rounded-2xl border-t-4 border-t-[#214C54] border border-gray-150 flex flex-col justify-start shadow-sm hover:shadow-md transition-all duration-300">
                   {isEditMode ? (
                     <div className="space-y-2">
                       <input 
@@ -579,16 +586,16 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                   ) : (
                     <>
                       <div>
-                        <span className="font-bold text-[#214C54] block mb-1">{draftTruCot1.title}</span>
-                        <span className="text-xs text-gray-500 font-semibold block uppercase tracking-wider mb-2">{draftTruCot1.subtitle}</span>
+                        <span className="font-black text-sm text-[#214C54] block mb-1">{draftTruCot1.title}</span>
+                        <span className="text-[10px] text-[#214C54]/60 font-black block uppercase tracking-wider mb-3.5">{draftTruCot1.subtitle}</span>
                       </div>
-                      <p className="text-xs text-[#3E5E63]">{draftTruCot1.desc}</p>
+                      <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-medium">{draftTruCot1.desc}</p>
                     </>
                   )}
                 </div>
 
                 {/* Trụ Cột 2 */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-150 flex flex-col justify-between">
+                <div className="p-4 bg-white rounded-2xl border-t-4 border-t-[#EAB308] border border-gray-150 flex flex-col justify-start shadow-sm hover:shadow-md transition-all duration-300">
                   {isEditMode ? (
                     <div className="space-y-2">
                       <input 
@@ -613,16 +620,16 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                   ) : (
                     <>
                       <div>
-                        <span className="font-bold text-[#214C54] block mb-1">{draftTruCot2.title}</span>
-                        <span className="text-xs text-gray-500 font-semibold block uppercase tracking-wider mb-2">{draftTruCot2.subtitle}</span>
+                        <span className="font-black text-sm text-[#EAB308] block mb-1">{draftTruCot2.title}</span>
+                        <span className="text-[10px] text-[#EAB308]/75 font-black block uppercase tracking-wider mb-3.5">{draftTruCot2.subtitle}</span>
                       </div>
-                      <p className="text-xs text-[#3E5E63]">{draftTruCot2.desc}</p>
+                      <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-medium">{draftTruCot2.desc}</p>
                     </>
                   )}
                 </div>
 
                 {/* Trụ Cột 3 */}
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-150 flex flex-col justify-between">
+                <div className="p-4 bg-white rounded-2xl border-t-4 border-t-[#00B2E2] border border-gray-150 flex flex-col justify-start shadow-sm hover:shadow-md transition-all duration-300">
                   {isEditMode ? (
                     <div className="space-y-2">
                       <input 
@@ -647,17 +654,17 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                   ) : (
                     <>
                       <div>
-                        <span className="font-bold text-[#214C54] block mb-1">{draftTruCot3.title}</span>
-                        <span className="text-xs text-gray-500 font-semibold block uppercase tracking-wider mb-2">{draftTruCot3.subtitle}</span>
+                        <span className="font-black text-sm text-[#00B2E2] block mb-1">{draftTruCot3.title}</span>
+                        <span className="text-[10px] text-[#00B2E2]/60 font-black block uppercase tracking-wider mb-3.5">{draftTruCot3.subtitle}</span>
                       </div>
-                      <p className="text-xs text-[#3E5E63]">{draftTruCot3.desc}</p>
+                      <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-medium">{draftTruCot3.desc}</p>
                     </>
                   )}
                 </div>
               </div>
 
               {/* Editable Outro footer */}
-              <div className="pt-4 border-t border-gray-100 mt-6">
+              <div className="pt-6 border-t border-gray-100 mt-8 relative">
                 {isEditMode ? (
                   <div className="space-y-2">
                     <span className="text-[10px] font-bold text-gray-400">PHẦN CAM KẾT & CHỮ KÝ OUTRO:</span>
@@ -673,7 +680,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                           .replace(/<b>(.*?)<\/b>/gi, '**$1**')
                           .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
                           .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                          .replace(/em>(.*?)<\/em>/gi, '*$1*')
+                          .replace(/<em>(.*?)<\/em>/gi, '*$1*')
                           .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
                           .replace(/<div><br><\/div>/gi, '\n')
                           .replace(/<div>(.*?)<\/div>/gi, '\n$1')
@@ -693,101 +700,150 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                     />
                   </div>
                 ) : (
-                  renderRichText(draftOutro)
+                  <div className="bg-[#214C54]/5 border border-[#214C54]/10 rounded-2xl p-6 md:p-8 space-y-4">
+                    <div className="text-sm md:text-[15px] font-semibold text-[#15333B] leading-relaxed space-y-3">
+                      {draftOutro.split('\n\n').map((paragraph, pIdx) => {
+                        const lines = paragraph.split('\n');
+                        const isBulletList = lines.some(line => line.trim().startsWith('-'));
+                        
+                        if (isBulletList) {
+                          return (
+                            <ul key={pIdx} className="list-none space-y-2.5 my-3.5 pl-1">
+                              {lines.map((line, lIdx) => {
+                                const cleanLine = line.replace(/^-\s*/, '');
+                                return (
+                                  <li key={lIdx} className="flex items-center gap-2.5 text-sm text-[#214C54] font-bold">
+                                    <span className="w-2 h-2 rounded-full bg-[#EAB308] shrink-0" />
+                                    {renderRichText(cleanLine)}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          );
+                        }
+
+                        // Check if it's the personal signature note
+                        const isPersonalNote = paragraph.trim().startsWith('*') || paragraph.trim().includes('Thân gửi,') || paragraph.trim().includes('Đội ngũ The1ight');
+                        if (isPersonalNote) {
+                          return (
+                            <div key={pIdx} className="border-l-2 border-slate-300 pl-4 py-1.5 my-4 italic text-slate-500 font-medium text-xs md:text-sm">
+                              {renderRichText(paragraph.replace(/^\*\s*/, ''))}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <p key={pIdx} className="leading-relaxed">
+                            {renderRichText(paragraph)}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
           )}
 
           {activeTab === 'schedule' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-8 animate-fade-in text-left">
               <div>
-                <div className="p-4 bg-[#214C54]/5 border border-l-4 border-[#214C54] rounded-xl text-sm text-[#3E5E63]">
-                  {isEditMode ? (
-                    <div className="space-y-2">
-                      {activeEditorId === 'editor-schedule' && renderEditorToolbar('editor-schedule')}
-                      <div
-                        id="editor-schedule"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={() => setActiveEditorId('editor-schedule')}
-                        onInput={(e) => {
-                          const html = e.currentTarget.innerHTML;
-                          const cleanText = html
-                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                            .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-                            .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                            .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-                            .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-                            .replace(/<div><br><\/div>/gi, '\n')
-                            .replace(/<div>(.*?)<\/div>/gi, '\n$1')
-                            .replace(/<br>/gi, '\n')
-                            .replace(/&nbsp;/g, ' ')
-                            .trim();
-                          setDraftSchedule(cleanText);
-                        }}
-                        className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none min-h-[120px] text-sm text-[#3E5E63] font-semibold focus:ring-1 focus:ring-[#214C54]"
-                        dangerouslySetInnerHTML={{
-                          __html: draftSchedule
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                            .split('\n').join('<br>')
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    renderRichText(draftSchedule)
-                  )}
-                </div>
-                <div className="flex gap-3 mt-4 select-none">
-                  <button 
-                    onClick={() => onPageChange('onboarding')}
-                    className="inline-block text-xs font-bold text-[#FFD94C] bg-[#15333B] px-3 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer"
-                  >
-                    Đi đến trang Onboarding ➔
-                  </button>
-                  <button 
-                    onClick={() => onPageChange('syllabus')}
-                    className="inline-block text-xs font-bold text-[#FFD94C] bg-[#15333B] px-3 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer"
-                  >
-                    Đi đến trang Syllabus ➔
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-extrabold text-base text-[#15333B] mb-3">🛠️ Hướng dẫn sử dụng & Set-up nền tảng học tập:</h3>
-                <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center gap-2 animate-fade-in">
-                    <span className="text-xl">📹</span>
-                    {isEditMode ? (
-                      <div className="flex-1 flex gap-2">
-                        <span className="text-[10px] font-bold text-gray-400 self-center">LINK VIDEO:</span>
-                        <input
-                          type="text"
-                          value={draftVideoUrl}
-                          onChange={(e) => setDraftVideoUrl(e.target.value)}
-                          className="flex-1 border border-gray-200 rounded px-2 py-1 text-xs"
-                        />
-                      </div>
-                    ) : (
-                      <a 
-                        href={draftVideoUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="font-bold text-[#214C54] hover:underline text-xs"
-                      >
-                        Video Hướng dẫn sử dụng và set-up nền tảng học tập
-                      </a>
-                    )}
+                {isEditMode ? (
+                  <div className="p-4 bg-[#214C54]/5 border border-l-4 border-[#214C54] rounded-xl text-sm text-[#3E5E63]">
+                    {activeEditorId === 'editor-schedule' && renderEditorToolbar('editor-schedule')}
+                    <div
+                      id="editor-schedule"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onFocus={() => setActiveEditorId('editor-schedule')}
+                      onInput={(e) => {
+                        const html = e.currentTarget.innerHTML;
+                        const cleanText = html
+                          .replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                          .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                          .replace(/<i>(.*?)<\/i>/gi, '*$1*')
+                          .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+                          .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
+                          .replace(/<div><br><\/div>/gi, '\n')
+                          .replace(/<div>(.*?)<\/div>/gi, '\n$1')
+                          .replace(/<br>/gi, '\n')
+                          .replace(/&nbsp;/g, ' ')
+                          .trim();
+                        setDraftSchedule(cleanText);
+                      }}
+                      className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none min-h-[120px] text-sm text-[#3E5E63] font-semibold focus:ring-1 focus:ring-[#214C54]"
+                      dangerouslySetInnerHTML={{
+                        __html: draftSchedule
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                          .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
+                          .split('\n').join('<br>')
+                      }}
+                    />
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="font-extrabold text-base text-[#15333B] flex items-center gap-2">
+                      <span>⚓</span> Lộ trình học:
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {draftSchedule.split('\n\n').filter(p => p.trim().includes('Chặng')).map((stage, idx) => {
+                        const cleanStage = stage.replace(/^⚓\s*/, '').replace(/^Lịch trình toàn khoá học:\s*/, '').trim();
+                        if (!cleanStage) return null;
+                        const parts = cleanStage.split(' - ');
+                        const titlePart = parts[0] || '';
+                        const descPart = parts.slice(1).join(' - ') || '';
+                        
+                        const icons = ['🚀', '⛵', '💻', '🎓'];
+                        const borderColors = ['border-t-[#DC2626]', 'border-t-[#7C3AED]', 'border-t-[#EA580C]', 'border-t-[#B45309]'];
+                        
+                        return (
+                          <div key={idx} className={`p-5 rounded-2xl border-t-4 ${borderColors[idx % 4]} border border-gray-150 bg-white shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300`}>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg">{icons[idx % 4]}</span>
+                                <h4 className="font-black text-[#15333B] text-sm md:text-[15px]">{titlePart}</h4>
+                              </div>
+                              <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-semibold mb-4">{descPart}</p>
+                            </div>
+                            
+                            {idx === 1 && (
+                              <button 
+                                onClick={() => onPageChange('onboarding')}
+                                className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors"
+                              >
+                                Đi đến Onboarding ➔
+                              </button>
+                            )}
+                            
+                            {idx === 2 && (
+                              <button 
+                                onClick={() => onPageChange('syllabus')}
+                                className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors"
+                              >
+                                Đi đến Lộ trình học ➔
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                  {/* Editable Dynamic Platform Buttons */}
-                  <div className="space-y-2">
+          {activeTab === 'platforms' && (
+            <div className="space-y-6 animate-fade-in text-left">
+              <div>
+                <h3 className="font-extrabold text-base text-[#15333B] mb-3"> Các nền tảng học tập:</h3>
+
+                {/* Editable Dynamic Platform Buttons */}
+                <div className="space-y-2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                       {draftPlatformButtons.map((btn, idx) => (
-                        <div key={idx} className="relative bg-white rounded-lg border border-gray-100 p-2 group shadow-sm hover:shadow transition-shadow">
+                        <div key={idx} className={isEditMode ? "relative bg-white rounded-lg border border-gray-100 p-2 group shadow-sm hover:shadow transition-shadow" : "flex flex-col"}>
                           {isEditMode ? (
                             <div className="space-y-1.5">
                               <div className="flex gap-1.5">
@@ -846,13 +902,46 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                               </button>
                             </div>
                           ) : (
-                            <a href={btn.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 transition-colors">
-                              <span className="text-lg">{btn.icon}</span>
-                              <div>
-                                <span className="text-xs font-bold text-gray-700 block">{btn.title}</span>
-                                <span className="text-[10px] text-gray-400">{btn.subtitle}</span>
+                            <div className="flex flex-col justify-between h-full p-4 bg-white rounded-2xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-300">
+                              <div className="flex items-start gap-3">
+                                <span className="text-2xl shrink-0 mt-0.5">{btn.icon}</span>
+                                <div className="flex-1 min-w-0">
+                                   <span className="text-sm font-extrabold text-[#15333B] block">{btn.title}</span>
+                                   <span className="text-xs text-gray-400 block mt-1 leading-relaxed">{btn.subtitle}</span>
+                                </div>
                               </div>
-                            </a>
+                              
+                              <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                                {btn.title.toLowerCase().includes('lightms') ? (
+                                   <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded">Không có nút</span>
+                                ) : btn.title.toLowerCase().includes('calendar') ? (
+                                  <button
+                                    onClick={() => onPageChange('calendar')}
+                                    className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                                  >
+                                    Đăng ký / Xem Lịch học ➔
+                                  </button>
+                                ) : btn.title.toLowerCase().includes('telegram') ? (
+                                  <a
+                                    href={btn.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                                  >
+                                    Tham gia Telegram ➔
+                                  </a>
+                                ) : (
+                                  <a
+                                    href={btn.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                                  >
+                                    Đi đến Facebook Group ➔
+                                  </a>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
                       ))}
@@ -913,7 +1002,6 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                       </p>
                     )}
                   </div>
-                </div>
               </div>
 
               <div>
@@ -958,7 +1046,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                       <p className="text-xs text-gray-500 mt-1">{draftOfficeHourDesc}</p>
                     )}
                     <a 
-                      href="https://m.me/ch/AbZBhshrDpB2lylD/" 
+                      href="https://t.me/+C8OUa6qqgNsyYjQ9" 
                       target="_blank" 
                       rel="noreferrer"
                       className="inline-block text-xs font-bold text-[#FFD94C] bg-[#15333B] px-3 py-1.5 rounded-md mt-3 hover:bg-[#214C54] transition-colors"
@@ -972,52 +1060,14 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
           )}
 
           {activeTab === 'benefits' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 animate-fade-in text-left">
               <div>
-                <h3 className="font-extrabold text-base text-[#15333B] mb-2">🎁 Quyền lợi khi gia nhập cộng đồng:</h3>
-                <div className="p-4 bg-gray-50 border border-gray-150 rounded-xl text-sm text-[#3E5E63] mb-4">
-                  {isEditMode ? (
-                    <div className="space-y-2">
-                      {activeEditorId === 'editor-benefits' && renderEditorToolbar('editor-benefits')}
-                      <div
-                        id="editor-benefits"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onFocus={() => setActiveEditorId('editor-benefits')}
-                        onInput={(e) => {
-                          const html = e.currentTarget.innerHTML;
-                          const cleanText = html
-                            .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                            .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-                            .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                            .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-                            .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-                            .replace(/<div><br><\/div>/gi, '\n')
-                            .replace(/<div>(.*?)<\/div>/gi, '\n$1')
-                            .replace(/<br>/gi, '\n')
-                            .replace(/&nbsp;/g, ' ')
-                            .trim();
-                          setDraftBenefits(cleanText);
-                        }}
-                        className="w-full bg-white border border-gray-200 rounded-xl p-3 outline-none min-h-[100px] text-sm text-[#3E5E63] font-semibold focus:ring-1 focus:ring-[#214C54]"
-                        dangerouslySetInnerHTML={{
-                          __html: draftBenefits
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                            .split('\n').join('<br>')
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    renderRichText(draftBenefits)
-                  )}
-                </div>
-
+                <h3 className="font-extrabold text-base text-[#15333B] mb-4">🎁 Quyền lợi học viên:</h3>
+                
                 {/* Editable Dynamic Benefit Clubs */}
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {draftBenefitClubs.map((club, clubIdx) => (
-                    <div key={clubIdx} className="relative flex gap-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm p-4 group">
+                    <div key={clubIdx} className="relative flex flex-col justify-between p-5 bg-white rounded-2xl border border-gray-150 shadow-sm p-4 group hover:shadow-md transition-all duration-300">
                       {isEditMode ? (
                         <div className="flex-1 space-y-2">
                           <div className="flex gap-2">
@@ -1054,7 +1104,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                             }}
                             className="w-full border border-gray-200 rounded px-2 text-xs py-1.5 resize-none"
                             placeholder="Mô tả chi tiết quyền lợi"
-                            rows={2}
+                            rows={3}
                           />
 
                           {/* CTA Links management */}
@@ -1114,40 +1164,43 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                         </div>
                       ) : (
                         <>
-                          <span className="text-2xl pt-1">{club.icon}</span>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-[#15333B] text-sm">{club.name}</h4>
-                            <p className="text-xs text-gray-500 mt-0.5">{club.desc}</p>
-                            <div className="flex gap-2 mt-3 select-none">
-                              {club.links.map((link, idx) => (
-                                <a
-                                  key={idx}
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-[10px] font-bold text-[#214C54] bg-[#214C54]/5 px-2 py-1 rounded hover:bg-[#214C54]/10 transition-colors border border-transparent hover:border-[#214C54]/10"
-                                >
-                                  {link.label}
-                                </a>
-                              ))}
+                            <div className="flex items-center gap-2.5 mb-3 border-b border-gray-150 pb-2.5">
+                              <span className="text-2xl shrink-0">{club.icon}</span>
+                              <h4 className="font-extrabold text-[#15333B] text-sm md:text-[15px]">{club.name}</h4>
                             </div>
+                            <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-semibold mb-4">{club.desc}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-3 select-none">
+                            {club.links.map((link, idx) => (
+                              <a
+                                key={idx}
+                                href={link.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
                           </div>
                         </>
                       )}
                     </div>
                   ))}
-
-                  {isEditMode && (
-                    <button
-                      type="button"
-                      onClick={handleAddBenefitClub}
-                      className="w-full flex items-center justify-center gap-1 py-2 border border-dashed border-[#214C54]/40 hover:border-[#214C54] rounded-xl text-xs text-[#214C54] font-bold bg-white transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Thêm thẻ quyền lợi cộng đồng</span>
-                    </button>
-                  )}
                 </div>
+
+                {isEditMode && (
+                  <button
+                    type="button"
+                    onClick={handleAddBenefitClub}
+                    className="w-full flex items-center justify-center gap-1 py-3 border border-dashed border-[#214C54]/40 hover:border-[#214C54] rounded-2xl text-xs text-[#214C54] font-bold bg-white transition-colors mt-4"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Thêm thẻ quyền lợi cộng đồng</span>
+                  </button>
+                )}
+              </div>
 
                 {/* Lưu Ý Gold */}
                 <div className="mt-6">
@@ -1191,10 +1244,9 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
                   )}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
       {/* Sticky Bottom Action Bar during Edit Mode */}
       {isEditMode && (

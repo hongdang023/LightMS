@@ -8,7 +8,6 @@ import {
   Award, 
   MessageSquare, 
   ChevronRight, 
-  ExternalLink,
   BookMarked,
   Info,
   Layers
@@ -36,7 +35,11 @@ interface CategoryInfo {
   icon: React.ReactNode;
 }
 
-export const HelpDesk: React.FC = () => {
+interface HelpDeskProps {
+  onPageChange?: (page: string) => void;
+}
+
+export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
   // Navigation states: 'home' | 'category' | 'article'
   const [viewState, setViewState] = useState<'home' | 'category' | 'article'>('home');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export const HelpDesk: React.FC = () => {
     { 
       id: 'support-community', 
       label: 'Cộng đồng & Hỗ trợ', 
-      description: 'Kết nối Messenger Community Chat, Telegram Support 24/7 và thông tin hỗ trợ từ Ban tổ chức.',
+      description: 'Kết nối Telegram Support 24/7 và thông tin hỗ trợ từ Ban tổ chức.',
       icon: <MessageSquare className="w-6 h-6 text-white" /> 
     }
   ];
@@ -78,55 +81,16 @@ export const HelpDesk: React.FC = () => {
       id: 'recording-notes',
       category: 'materials-schedule',
       q: "Tôi có thể tìm học liệu (Recording, Study Notes,…) ở đâu?",
-      description: "Hướng dẫn chi tiết vị trí lưu trữ và cập nhật tài liệu học tập sau mỗi buổi học.",
-      lastUpdated: "4 Tháng 7, 2026",
+      description: "Tìm các đường link học tập và tài liệu tại NavItem \"Lộ trình học\".",
+      lastUpdated: "9 Tháng 7, 2026",
       sections: [
         {
-          id: 'notion-workspace',
-          title: "1. Notion Học Tập của Lớp",
+          id: 'roadmap-links',
+          title: "Tìm các đường link trên tại NavItem \"Lộ trình học\"",
           content: (
             <p>
-              Học liệu chính thống luôn được cập nhật đầy đủ và trực quan tại 
-              Notion của lớp, cụ thể tại mục <strong>03 | Tài liệu học tập & BTVN (Update sau từng buổi)</strong>. 
-              Bạn hãy truy cập link Notion được gửi trong email Onboarding để lưu lại.
+              Tất cả các liên kết học liệu quan trọng (Notion học tập của lớp, Facebook Group, và Messenger Chat) đều có thể dễ dàng tìm thấy tại mục <strong>Lộ trình học</strong> trên thanh điều hướng.
             </p>
-          )
-        },
-        {
-          id: 'notification-channels',
-          title: "2. Kênh thông báo chính thức",
-          content: (
-            <div className="space-y-3">
-              <p>Mỗi khi có bài viết hoặc tài liệu mới, đội ngũ vận hành The1ight sẽ thông báo qua các kênh:</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <a 
-                  href="https://www.facebook.com/share/g/18fRTLTSE3/" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="flex items-center gap-3 p-3 bg-white border border-gray-150 rounded-xl hover:shadow-md transition-shadow group"
-                >
-                  <span className="text-xl">👥</span>
-                  <div className="text-left">
-                    <h5 className="font-bold text-xs text-[#15333B] group-hover:underline">Facebook Group</h5>
-                    <p className="text-[10px] text-gray-400">Xem tại mục Đáng chú ý</p>
-                  </div>
-                  <ExternalLink className="w-3.5 h-3.5 ml-auto text-gray-400" />
-                </a>
-                <a 
-                  href="https://m.me/ch/AbYXkhY5TwUcD9zz/" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="flex items-center gap-3 p-3 bg-white border border-gray-150 rounded-xl hover:shadow-md transition-shadow group"
-                >
-                  <span className="text-xl">💬</span>
-                  <div className="text-left">
-                    <h5 className="font-bold text-xs text-[#15333B] group-hover:underline">Messenger Chat</h5>
-                    <p className="text-[10px] text-gray-400">Phòng chat Bảng tin Ánh sáng</p>
-                  </div>
-                  <ExternalLink className="w-3.5 h-3.5 ml-auto text-gray-400" />
-                </a>
-              </div>
-            </div>
           )
         }
       ]
@@ -213,15 +177,13 @@ export const HelpDesk: React.FC = () => {
                 Để duy trì động lực học tập trực tuyến, chúng tôi vận hành một bảng tính theo dõi tiến độ công khai của toàn bộ lớp học. 
                 Tại đây bạn có thể thấy tình trạng nộp BTVN, tích lũy hải trình và thứ hạng Kudos của mình:
               </p>
-              <a 
-                href="https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489" 
-                target="_blank" 
-                rel="noreferrer" 
+              <button 
+                onClick={() => onPageChange?.('dashboard')}
                 className="inline-flex items-center gap-2 font-bold text-xs bg-[#214C54] text-white px-4 py-2.5 rounded-xl hover:bg-[#15333B] transition-all shadow-sm hover:shadow"
               >
                 <Layers className="w-4 h-4" />
                 📊 Bảng Tracking Tiến độ & Leo Rank lớp học
-              </a>
+              </button>
             </div>
           )
         }
@@ -264,30 +226,27 @@ export const HelpDesk: React.FC = () => {
       id: 'contact-support',
       category: 'support-community',
       q: "Nếu gặp vấn đề kỹ thuật hoặc bài học, tôi liên hệ ai và bằng cách nào?",
-      description: "4 phương thức nhận phản hồi và giải đáp thắc mắc hiệu quả từ Mentor, AI và Quản lý lớp học.",
-      lastUpdated: "4 Tháng 7, 2026",
+      description: "3 phương thức nhận phản hồi và giải đáp thắc mắc hiệu quả từ Mentor và Quản lý lớp học.",
+      lastUpdated: "9 Tháng 7, 2026",
       sections: [
         {
-          id: 'four-channels',
-          title: "1. Bốn kênh nhận hỗ trợ đắc lực",
+          id: 'three-channels',
+          title: "1. Ba kênh nhận hỗ trợ đắc lực",
           content: (
             <div className="space-y-3">
               <p>Motto của lớp học là <strong>“Hỏi ngu còn hơn không hỏi”</strong>. Đừng ngần ngại sử dụng các phương án sau:</p>
               <ol className="list-decimal pl-5 space-y-3 text-xs text-[#3E5E63]">
                 <li>
-                  <strong className="text-[#15333B]">Cách 01 (Khuyến khích nhất):</strong> Đặt câu hỏi tại phòng 
-                  <a href="https://m.me/ch/AbZBhshrDpB2lylD/" target="_blank" rel="noreferrer" className="text-[#214C54] font-bold hover:underline mx-1">Light Support</a> 
-                  Messenger Community. Nơi Mentor và các học viên khác hoạt động rất sôi nổi để gỡ rối nhanh.
+                  <strong className="text-[#15333B]">Cách 01 (Khuyến khích nhất):</strong> Đặt câu hỏi tại 
+                  <a href="https://t.me/+C8OUa6qqgNsyYjQ9" target="_blank" rel="noreferrer" className="text-[#214C54] font-bold hover:underline mx-1">Telegram Support 24/7</a>. 
+                  Nơi Mentor và các học viên khác hoạt động rất sôi nổi để gỡ rối nhanh.
                 </li>
                 <li>
-                  <strong className="text-[#15333B]">Cách 02 (Tận dụng AI):</strong> Hỏi Trợ lý AI được tích hợp. Bạn sẽ được hướng dẫn viết prompt hỏi bài tập hiệu quả tại Onboarding Week.
-                </li>
-                <li>
-                  <strong className="text-[#15333B]">Cách 03 (Hỗ trợ vận hành):</strong> Liên hệ trực tiếp với Ms. Đặng Hồng (Quản lý lớp học) qua SĐT <strong>0985679417</strong> hoặc qua trang 
+                  <strong className="text-[#15333B]">Cách 02 (Hỗ trợ vận hành):</strong> Liên hệ trực tiếp với Ms. Đặng Hồng (Quản lý lớp học) qua SĐT <strong>0985679417</strong> hoặc qua trang 
                   <a href="https://www.facebook.com/danghong.harunoyuki" target="_blank" rel="noreferrer" className="text-[#214C54] font-bold hover:underline mx-1">Messenger</a>.
                 </li>
                 <li>
-                  <strong className="text-[#15333B]">Cách 04:</strong> Tham gia buổi <strong>Office Hour</strong> hàng tuần để thảo luận 1-1 trực tiếp cùng giảng viên.
+                  <strong className="text-[#15333B]">Cách 03:</strong> Tham gia buổi <strong>Office Hour</strong> hàng tuần để thảo luận 1-1 trực tiếp cùng giảng viên.
                 </li>
               </ol>
             </div>
@@ -296,11 +255,11 @@ export const HelpDesk: React.FC = () => {
       ]
     },
     {
-      id: 'why-messenger-community',
+      id: 'why-telegram-support',
       category: 'support-community',
-      q: "Tôi ít dùng mạng xã hội, vì sao nên tham gia Messenger Community?",
+      q: "Tôi ít dùng mạng xã hội, vì sao nên tham gia Telegram Support?",
       description: "Lợi ích thực tế của việc kết nối cộng đồng học tập chung trong việc giải đáp nhanh và tiếp thu kiến thức thụ động.",
-      lastUpdated: "30 Tháng 6, 2026",
+      lastUpdated: "9 Tháng 7, 2026",
       sections: [
         {
           id: 'community-benefits',
@@ -378,7 +337,7 @@ export const HelpDesk: React.FC = () => {
                 từ các khóa trước hoàn toàn có thể truy cập hệ thống lưu trữ Notion tổng quan dưới đây:
               </p>
               <a 
-                href="https://www.notion.so/Overall-Syllabus-to-be-updated-264fb1613f7081d4ad7de0541bc29e98" 
+                href="https://app.notion.com/p/T-ng-h-p-h-c-li-u-Vibe-Coding-201-Batch-01-2f83d83cf6bd80f98898e00229718aec" 
                 target="_blank" 
                 rel="noreferrer" 
                 className="inline-flex items-center gap-2 font-bold text-xs bg-[#214C54] text-white px-4 py-2.5 rounded-xl hover:bg-[#15333B] transition-all shadow-sm hover:shadow"
@@ -593,15 +552,26 @@ export const HelpDesk: React.FC = () => {
                 <p className="text-[10px] text-gray-500 mt-0.5 font-semibold">Tự động kết nối trực tiếp đến trợ lý vận hành lớp để giải đáp trong 5 phút.</p>
               </div>
             </div>
-            <a 
-              href="https://t.me/the1ight_support" 
-              target="_blank" 
-              rel="noreferrer"
-              className="btn bg-[#FFD94C] text-[#15333B] hover:bg-[#e6c245] border-0 text-xs font-extrabold flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-xl transition-all shadow-sm"
-            >
-              <span>🚀</span>
-              <span>Liên hệ Telegram Support</span>
-            </a>
+            <div className="flex flex-wrap gap-2">
+              <a 
+                href="https://t.me/+C8OUa6qqgNsyYjQ9" 
+                target="_blank" 
+                rel="noreferrer"
+                className="btn bg-[#FFD94C] text-[#15333B] hover:bg-[#e6c245] border-0 text-xs font-extrabold flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-xl transition-all shadow-sm"
+              >
+                <span>🚀</span>
+                <span>Liên hệ Telegram Support</span>
+              </a>
+              <a 
+                href="https://www.facebook.com/danghong.harunoyuki" 
+                target="_blank" 
+                rel="noreferrer"
+                className="btn bg-[#214C54] text-white hover:bg-[#15333B] border-0 text-xs font-extrabold flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-xl transition-all shadow-sm"
+              >
+                <span>👩‍💼</span>
+                <span>Liên hệ Quản lý lớp học</span>
+              </a>
+            </div>
           </div>
         </div>
       )}

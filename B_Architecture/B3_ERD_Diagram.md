@@ -141,26 +141,6 @@ erDiagram
     }
 
     %% Community & Discussion Room
-    DISCUSSION_TOPICS {
-        uuid id PK
-        text name
-        text description
-        uuid created_by FK
-        timestamp created_at
-    }
-
-    DISCUSSION_POSTS {
-        uuid id PK
-        uuid topic_id FK
-        uuid author_id FK
-        text title
-        text content
-        text[] tags
-        int upvotes_count
-        text[] upvoted_by
-        timestamp created_at
-    }
-
     COMMENTS {
         uuid id PK
         uuid submission_id FK
@@ -218,12 +198,7 @@ erDiagram
     SUBMISSIONS ||--o| FEEDBACKS : "gets (1-to-0..1)"
     PROFILES ||--o{ FEEDBACKS : "evaluates (as mentor)"
     
-    DISCUSSION_TOPICS ||--o{ DISCUSSION_POSTS : "contains"
-    PROFILES ||--o{ DISCUSSION_POSTS : "authors"
-    DISCUSSION_TOPICS ||--o{ PROFILES : "managed_by"
-    
     SUBMISSIONS ||--o{ COMMENTS : "discussed_in (Threads)"
-    DISCUSSION_POSTS ||--o{ COMMENTS : "discussed_in"
     PROFILES ||--o{ COMMENTS : "authors"
     BATCHES ||--o{ COMMENTS : "scopes"
 

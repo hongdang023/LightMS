@@ -14,7 +14,6 @@ import { AboutView } from './pages/student/AboutView';
 import { OnboardingView } from './pages/student/OnboardingView';
 import { SyllabusView } from './pages/student/SyllabusView';
 import { CompetencyFramework } from './pages/student/CompetencyFramework';
-import { DiscussionBoard } from './pages/student/DiscussionBoard';
 import { CalendarView } from './pages/student/CalendarView';
 import { WallOfFame } from './pages/student/WallOfFame';
 import { HelpDesk } from './pages/student/HelpDesk';
@@ -34,6 +33,7 @@ import './App.css';
 function MainAppShell() {
   const { isAuthenticated, activeUser, incrementVisits } = useDatabase();
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -41,10 +41,20 @@ function MainAppShell() {
       if (activeUser.role === 'admin') {
         setCurrentPage('admin-dashboard');
       } else {
-        setCurrentPage('dashboard');
+        // First-time users (visits <= 2) land on the 'about' tab, others land on 'dashboard'
+        if (activeUser.visits <= 2) {
+          setCurrentPage('about');
+        } else {
+          setCurrentPage('dashboard');
+        }
       }
     }
   }, [isAuthenticated, activeUser.role]);
+
+  const handlePageChange = (page: string) => {
+    setCurrentPage(page);
+    setIsSidebarOpen(false);
+  };
 
   // Route guarding
   if (!isAuthenticated) {
@@ -60,31 +70,29 @@ function MainAppShell() {
     switch (currentPage) {
       // Student Portal
       case 'dashboard':
-        return <StudentDashboard onPageChange={setCurrentPage} />;
+        return <StudentDashboard onPageChange={handlePageChange} />;
       case 'announcements':
-        return <AnnouncementsView onPageChange={setCurrentPage} />;
+        return <AnnouncementsView onPageChange={handlePageChange} />;
       case 'about':
-        return <AboutView onPageChange={setCurrentPage} />;
+        return <AboutView onPageChange={handlePageChange} />;
       case 'onboarding':
-        return <OnboardingView />;
+        return <OnboardingView onPageChange={handlePageChange} />;
       case 'syllabus':
-        return <SyllabusView onPageChange={setCurrentPage} />;
+        return <SyllabusView onPageChange={handlePageChange} />;
       case 'competency':
         return <CompetencyFramework />;
-      case 'discussion':
-        return <DiscussionBoard />;
       case 'calendar':
         return <CalendarView />;
       case 'walloffame':
         return <WallOfFame />;
       case 'help':
-        return <HelpDesk />;
+        return <HelpDesk onPageChange={handlePageChange} />;
       case 'profile':
         return <ProfileView />;
 
       // Admin Portal
       case 'admin-dashboard':
-        return <AdminDashboard onPageChange={setCurrentPage} />;
+        return <AdminDashboard onPageChange={handlePageChange} />;
       case 'admin-announcements':
         return <AdminAnnouncements />;
       case 'course-builder':
@@ -101,7 +109,7 @@ function MainAppShell() {
         return <AdminSettings />;
 
       default:
-        return <StudentDashboard onPageChange={setCurrentPage} />;
+        return <StudentDashboard onPageChange={handlePageChange} />;
     }
   };
 
@@ -111,11 +119,27 @@ function MainAppShell() {
       <ProductTour />
 
       {/* Global Navigation Sidebar */}
-      <GlobalNavigationSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+      <GlobalNavigationSidebar 
+        currentPage={currentPage} 
+        onPageChange={handlePageChange} 
+        isOpen={isSidebarOpen}
+      />
+
+      {/* Sidebar Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main content pane */}
       <div className="main-content">
-        <GlobalHeader currentPage={currentPage} onPageChange={setCurrentPage} />
+        <GlobalHeader 
+          currentPage={currentPage} 
+          onPageChange={handlePageChange} 
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
         
         {/* Scrollable page canvas */}
         <main className="page-container custom-scrollbar">

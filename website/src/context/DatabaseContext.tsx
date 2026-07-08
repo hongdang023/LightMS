@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { ONBOARDING_DAYS_DATA } from '../data/onboardingData';
 
 const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -238,6 +239,8 @@ export interface OnboardingDay {
   takeaway: string;
   email_subject?: string;
   email_body?: string;
+  companionHint?: string;
+  bonusResources?: string;
 }
 
 export interface OnboardingUnlockSchedule {
@@ -291,7 +294,7 @@ interface DatabaseContextType {
   activeUser: Profile;
   switchUser: (role: UserRole) => void;
   users: Profile[];
-  updateProfile: (profileId: string, updates: Partial<Profile>) => void;
+  updateProfile: (profileId: string, updates: Partial<Profile>) => Promise<boolean>;
   isAuthenticated: boolean;
   loginWithGmail: (email: string, role?: UserRole) => Profile | null;
   loginWithSupabaseGoogle: (role?: UserRole) => Promise<void>;
@@ -511,7 +514,7 @@ const SEED_BADGES: Badge[] = [
 
 const SEED_COURSES: Course[] = [
   {
-    id: 'a0c00000-0000-0000-0000-000000000101',
+    id: '3f26048a-6689-400e-99fc-e0499161d934',
     title: 'Vibe Coding 201: Build scalable product with AI',
     description: 'Vibe Coding 201 là khóa học 9 buổi nâng cao giúp bạn học cách xây dựng sản phẩm có khả năng scale, thiết lập PRD kỹ thuật, làm chủ IDE/CLI, thiết kế MCP và xây dựng hệ thống automation kết hợp n8n.',
     cover_image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop'
@@ -520,8 +523,8 @@ const SEED_COURSES: Course[] = [
 
 const SEED_BATCHES: Batch[] = [
   {
-    id: 'b0000003-0000-0000-0000-000000000003',
-    course_id: 'a0c00000-0000-0000-0000-000000000101',
+    id: 'e574fea2-9260-4961-8b1d-79ef7e16f784',
+    course_id: '3f26048a-6689-400e-99fc-e0499161d934',
     name: 'Batch 3',
     // We set start date to a future date so the class has not started yet
     start_date: '2026-07-01',
@@ -531,18 +534,18 @@ const SEED_BATCHES: Batch[] = [
 ];
 
 const SEED_MODULES: Module[] = [
-  { id: '00000000-0000-0000-0000-000000000000', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 0: Onboarding & Kick-off', order_index: 1 },
-  { id: '00000000-0000-0000-0000-000000000001', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 1: Tư duy Sản phẩm & Vấn đề', order_index: 2 },
-  { id: '00000000-0000-0000-0000-000000000002', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 2: IDE, CLI & MCP Product Building', order_index: 3 },
-  { id: '00000000-0000-0000-0000-000000000003', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 3: Version Control & Backend Decision', order_index: 4 },
-  { id: '00000000-0000-0000-0000-000000000004', course_id: 'a0c00000-0000-0000-0000-000000000101', title: 'Phần 4: Deployment & Automation Workspace', order_index: 5 }
+  { id: '2501b807-c771-48d2-a886-2be99eb8f8e9', course_id: '3f26048a-6689-400e-99fc-e0499161d934', title: 'Phần 0: Onboarding & Kick-off', order_index: 1 },
+  { id: '8d29e4f3-9212-403b-8c7d-c25f6de6835a', course_id: '3f26048a-6689-400e-99fc-e0499161d934', title: 'Phần 1: Tư duy Sản phẩm & Vấn đề', order_index: 2 },
+  { id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e', course_id: '3f26048a-6689-400e-99fc-e0499161d934', title: 'Phần 2: IDE, CLI & MCP Product Building', order_index: 3 },
+  { id: 'faa519f6-b31c-4ae7-9377-46c041b9c065', course_id: '3f26048a-6689-400e-99fc-e0499161d934', title: 'Phần 3: Version Control & Backend Decision', order_index: 4 },
+  { id: '13ded8da-92ef-4e27-b516-6493ee8743d8', course_id: '3f26048a-6689-400e-99fc-e0499161d934', title: 'Phần 4: Deployment & Automation Workspace', order_index: 5 }
 ];
 
 const SEED_LESSONS: Lesson[] = [
   // Phần 0
   {
-    id: 'de000000-0000-0000-0000-000000000000',
-    module_id: '00000000-0000-0000-0000-000000000000',
+    id: 'c786a9e5-1cc5-416c-9cbc-3839869404e3',
+    module_id: '2501b807-c771-48d2-a886-2be99eb8f8e9',
     title: 'Buổi 0: Kick-off Meeting',
     type: 'video',
     content: 'Tìm hiểu về khóa học Vibe Coding 201, giảng viên và văn hóa học tập chủ động. Định vị lộ trình Onboarding.',
@@ -557,8 +560,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 1
   {
-    id: 'de000000-0000-0000-0000-000000000001',
-    module_id: '00000000-0000-0000-0000-000000000001',
+    id: '1c69ea64-b83b-4519-a545-5030a8360163',
+    module_id: '8d29e4f3-9212-403b-8c7d-c25f6de6835a',
     title: 'Buổi 1: Mindset: Từ MVP đến product có thể scale',
     type: 'video',
     content: 'MVP vs scalable product vs internal workspace system. Các điểm gãy sau prototype: codebase rối, data chưa rõ, auth/permission, deploy tạm, thiếu version control, khó debug, thiếu automation. Tech literacy map cho non-tech: frontend, backend, database, API, auth, deploy, server, automation. Cách học tech với AI: hỏi đúng, kiểm chứng output, không bị thuật ngữ kéo đi.',
@@ -571,8 +574,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false // Class hasn't started, no materials yet
   },
   {
-    id: 'de000000-0000-0000-0000-000000000002',
-    module_id: '00000000-0000-0000-0000-000000000001',
+    id: 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e',
+    module_id: '8d29e4f3-9212-403b-8c7d-c25f6de6835a',
     title: 'Buổi 2: PRD kỹ thuật & 4 Flow',
     type: 'video',
     content: 'PRD v2: problem, user, goal, success criteria, main use case, out-of-scope, user stories, acceptance criteria. Main flow vs secondary flow vs edge case. 4 flow: User Flow, Business Flow, System Flow, Data Flow. Cách dùng AI/skill để review PRD và phát hiện gap.',
@@ -587,22 +590,22 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 2
   {
-    id: 'de000000-0000-0000-0000-000000000003',
-    module_id: '00000000-0000-0000-0000-000000000002',
+    id: '9bd3fd2c-ee49-4176-b951-42e70d4f48ff',
+    module_id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e',
     title: 'Buổi 3: IDE + CLI Product Cockpit',
     type: 'video',
     content: 'Cấu phần IDE: file tree, editor, agent panel, terminal, source control/diff. Workflow giao việc cho agent: context, task breakdown, plan, diff review, accept/reject, run/test/debug. Khi nào dùng IDE, khi nào dùng CLI. Cách yêu cầu AI giải thích lỗi terminal/build log. Cách giới hạn scope để agent không sửa quá rộng.',
     video_url: 'https://drive.google.com/file/d/buoi-3-ide-cli-cockpit',
     order_index: 4,
     start_date: '2026-07-08',
-    target: 'Dạy cách làm việc với IDE/CLI để AI build có kiểm soát thay vì sửa lung tung (học cả Cursor, Antigravity, Codex & Claude Code).',
+    target: 'Dạy cách làm việc với IDE/CLI để AI build có kiểm soát thay vì sửa lung tung. (học cả Cursor, Antigravity, Codex & Claude Code). Riêng Claude code có thể tách 1 buổi nếu muốn',
     demo: 'Mở repo/app mẫu; yêu cầu agent thêm một feature nhỏ; review diff; chạy local; sửa lỗi; commit nháp.',
     scope: 'Chọn một IDE chính để demo. Các IDE khác chỉ overview.',
     has_materials: false
   },
   {
-    id: 'de000000-0000-0000-0000-000000000004',
-    module_id: '00000000-0000-0000-0000-000000000002',
+    id: '8695373a-7625-4883-8a47-4a73c84cb3df',
+    module_id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e',
     title: 'Buổi 4: Skills for Product Building',
     type: 'video',
     content: 'Skill là gì, khác prompt thường ở đâu. Skill cho brainstorm product, sharpen problem statement, MVP scoping, PRD review, acceptance criteria. Skill cho QA app, browser testing, pitch review, build review checklist. Ví dụ Superpowers hoặc MVP/product framework skill. Cách gọi skill đúng lúc trong IDE/agent workflow.',
@@ -615,8 +618,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'de000000-0000-0000-0000-000000000005',
-    module_id: '00000000-0000-0000-0000-000000000002',
+    id: 'a10719c6-edf1-4233-9438-f2e95c5b21c7',
+    module_id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e',
     title: 'Buổi 5: MCP for Product Building',
     type: 'video',
     content: 'MCP trong bức tranh agent/tool. MCP vs Skill vs API vs CLI vs Script. MCP cho design/prototype, browser/app testing, database/schema/docs, repo/GitHub, file/workspace context. Decision rule: khi nào MCP đáng dùng, khi nào không cần.',
@@ -631,8 +634,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 3
   {
-    id: 'de000000-0000-0000-0000-000000000006',
-    module_id: '00000000-0000-0000-0000-000000000003',
+    id: '34a95f25-be91-4627-943f-2e9ccdb1c747',
+    module_id: 'faa519f6-b31c-4ae7-9377-46c041b9c065',
     title: 'Buổi 6: GitHub & Version Control',
     type: 'video',
     content: 'Repo, commit, branch, pull request ở mức non-tech cần hiểu. Issue -> change -> review -> commit -> deploy. AI review code/change. Rollback mindset. Repo hygiene: README, env example, folder structure, issue template, changelog đơn giản.',
@@ -645,8 +648,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'de000000-0000-0000-0000-000000000007',
-    module_id: '00000000-0000-0000-0000-000000000003',
+    id: '352d4c69-bafd-4dbf-b234-abad86c07ad8',
+    module_id: 'faa519f6-b31c-4ae7-9377-46c041b9c065',
     title: 'Buổi 7: Backend Decision Layer',
     type: 'video',
     content: 'Data layer trong app/product. Khi nào dùng Google Sheets, Firebase, Supabase, backend/API custom, hoặc chưa cần backend thật. So sánh theo độ dễ bắt đầu, realtime, auth, permission, SQL/noSQL, cost/free tier, scale, lock-in, AI/agent friendliness. Schema, CRUD, auth, permission/RLS ở mức non-tech cần hiểu.',
@@ -661,8 +664,8 @@ const SEED_LESSONS: Lesson[] = [
   
   // Phần 4
   {
-    id: 'de000000-0000-0000-0000-000000000008',
-    module_id: '00000000-0000-0000-0000-000000000004',
+    id: 'f7fa3d41-a0ef-4b39-8a3c-09457425963d',
+    module_id: '13ded8da-92ef-4e27-b516-6493ee8743d8',
     title: 'Buổi 8: Deploy & Infra Landscape',
     type: 'video',
     content: 'Vercel: managed app hosting. Cloudflare: DNS/CDN/security/Pages/Workers/Tunnel. VPS: thuê server riêng, linh hoạt hơn nhưng phải tự chịu trách nhiệm. Docker: đóng gói app/service để chạy ổn định giữa môi trường khác nhau. SSH, env vars, secrets, domain, logs, local vs production. Khi nào không nên tự host.',
@@ -675,8 +678,8 @@ const SEED_LESSONS: Lesson[] = [
     has_materials: false
   },
   {
-    id: 'de000000-0000-0000-0000-000000000009',
-    module_id: '00000000-0000-0000-0000-000000000004',
+    id: '6acc4c45-e51a-4fdf-a1ca-25847522bdd8',
+    module_id: '13ded8da-92ef-4e27-b516-6493ee8743d8',
     title: 'Buổi 9: Automation with n8n',
     type: 'video',
     content: 'Automation layer là gì. n8n cho form -> sheet/database -> notification; app data -> report; file upload -> OCR/summary; feedback -> action list; daily/weekly digest. Local n8n vs cloud/self-host/server n8n. Webhook, trigger, credential, node, workflow. Khi nào dùng n8n, khi nào dùng code/API/script.',
@@ -691,22 +694,22 @@ const SEED_LESSONS: Lesson[] = [
 ];
 
 const SEED_LESSON_SKILLS: LessonSkill[] = [
-  { lesson_id: 'de000000-0000-0000-0000-000000000001', skill_id: 'skill-problem' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000002', skill_id: 'skill-problem' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000003', skill_id: 'skill-ai' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000004', skill_id: 'skill-ai' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000005', skill_id: 'skill-ai' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000006', skill_id: 'skill-ui' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000007', skill_id: 'skill-ui' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000008', skill_id: 'skill-ui' },
-  { lesson_id: 'de000000-0000-0000-0000-000000000009', skill_id: 'skill-ai' }
+  { lesson_id: '1c69ea64-b83b-4519-a545-5030a8360163', skill_id: 'skill-problem' },
+  { lesson_id: 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e', skill_id: 'skill-problem' },
+  { lesson_id: '9bd3fd2c-ee49-4176-b951-42e70d4f48ff', skill_id: 'skill-ai' },
+  { lesson_id: '8695373a-7625-4883-8a47-4a73c84cb3df', skill_id: 'skill-ai' },
+  { lesson_id: 'a10719c6-edf1-4233-9438-f2e95c5b21c7', skill_id: 'skill-ai' },
+  { lesson_id: '34a95f25-be91-4627-943f-2e9ccdb1c747', skill_id: 'skill-ui' },
+  { lesson_id: '352d4c69-bafd-4dbf-b234-abad86c07ad8', skill_id: 'skill-ui' },
+  { lesson_id: 'f7fa3d41-a0ef-4b39-8a3c-09457425963d', skill_id: 'skill-ui' },
+  { lesson_id: '6acc4c45-e51a-4fdf-a1ca-25847522bdd8', skill_id: 'skill-ai' }
 ];
 
 const SEED_ASSIGNMENTS: Assignment[] = [
   {
     id: 'ae000000-0000-0000-0000-000000000001',
-    lesson_id: 'de000000-0000-0000-0000-000000000001',
-    description: 'Hoàn thành bảng MVP-to-Scale Gap Checklist cho dự án cá nhân bạn chọn để theo suốt khóa học.',
+    lesson_id: '1c69ea64-b83b-4519-a545-5030a8360163',
+    description: 'MVP-to-Scale Gap Checklist cho project cá nhân; chọn project chính để đi xuyên suốt khóa.',
     rubric_checklist: [
       { item: 'Xác định rõ ràng 3 rủi ro kỹ thuật chính của dự án', checked: false },
       { item: 'Đưa ra checklist chuẩn bị scale từ MVP thô ban đầu', checked: false }
@@ -717,8 +720,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000002',
-    lesson_id: 'de000000-0000-0000-0000-000000000002',
-    description: 'Viết tài liệu PRD v2 và phác thảo 4 luồng dữ liệu/vận hành (User Flow, Business Flow, System Flow, Data Flow) cho main use case của dự án.',
+    lesson_id: 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e',
+    description: 'PRD v2 + 4 flow draft cho main use case của project.',
     rubric_checklist: [
       { item: 'PRD v2 bao gồm đầy đủ Problem, User, Goal, Success Criteria, User Stories', checked: false },
       { item: 'Vẽ đủ và đúng 4 flow kỹ thuật bằng Mermaid hoặc công cụ tương đương', checked: false }
@@ -729,8 +732,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000003',
-    lesson_id: 'de000000-0000-0000-0000-000000000003',
-    description: 'Thêm hoặc sửa một feature nhỏ trong project của bạn bằng quy trình IDE/CLI workflow; ghi lại câu lệnh/prompt và phần diff chính.',
+    lesson_id: '9bd3fd2c-ee49-4176-b951-42e70d4f48ff',
+    description: 'Thêm hoặc sửa một feature nhỏ trong project bằng IDE/CLI workflow; ghi lại task/prompt và diff chính.',
     rubric_checklist: [
       { item: 'Sử dụng thành công IDE hoặc CLI (Cursor, Claude Code, Antigravity...) để thay đổi code', checked: false },
       { item: 'Ghi lại chi tiết prompt giao việc cho agent và tóm tắt cách review/chạy thử code', checked: false },
@@ -740,8 +743,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000004',
-    lesson_id: 'de000000-0000-0000-0000-000000000004',
-    description: 'Sử dụng ít nhất 1 skill (như brainstorm, sharpen problem, MVP scoping, PRD review, QA app) để cải thiện tài liệu PRD hoặc ứng dụng của bạn và nộp kết quả before/after.',
+    lesson_id: '8695373a-7625-4883-8a47-4a73c84cb3df',
+    description: 'Dùng ít nhất 1 skill để cải thiện PRD/app; nộp before/after.',
     rubric_checklist: [
       { item: 'Chọn được ít nhất 1 skill phù hợp để cải thiện sản phẩm', checked: false },
       { item: 'Nêu rõ sự khác biệt hoặc cải tiến cụ thể giữa trước và sau khi dùng skill (Before vs After)', checked: false }
@@ -750,8 +753,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000005',
-    lesson_id: 'de000000-0000-0000-0000-000000000005',
-    description: 'Chọn 1 MCP/MCP-like workflow (ví dụ browser testing, DB context, GitHub repo context) để audit/test hoặc hỗ trợ xây dựng một tính năng trong project của bạn.',
+    lesson_id: 'a10719c6-edf1-4233-9438-f2e95c5b21c7',
+    description: 'Chọn 1 MCP/MCP-like workflow để audit/test một phần project. Nếu setup nặng, dùng guided demo + worksheet.',
     rubric_checklist: [
       { item: 'Xác định đúng use case cần dùng MCP và cấu hình thành công công cụ bổ trợ', checked: false },
       { item: 'Mô tả chi tiết kết quả audit/test hoặc dữ liệu thu thập được thông qua MCP', checked: false }
@@ -760,8 +763,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000006',
-    lesson_id: 'de000000-0000-0000-0000-000000000006',
-    description: 'Thực hiện thay đổi trong dự án và theo dõi quy trình quản lý: tạo Issue -> tạo Branch -> tạo Pull Request/Commit -> Merge. Đảm bảo kho lưu trữ (Repo) có tài liệu README hoặc Project Notes tối thiểu.',
+    lesson_id: '34a95f25-be91-4627-943f-2e9ccdb1c747',
+    description: 'Một change trong project được track từ issue đến commit; repo có README hoặc project notes tối thiểu.',
     rubric_checklist: [
       { item: 'Tạo Issue mô tả tính năng/bug và liên kết với branch/PR tương ứng', checked: false },
       { item: 'Thực hiện commit và push thay đổi lên GitHub theo đúng chuẩn đặt tên', checked: false },
@@ -771,8 +774,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000007',
-    lesson_id: 'de000000-0000-0000-0000-000000000007',
-    description: 'Lập bảng phân tích quyết định Backend (Backend Decision Matrix) và phác thảo mô hình dữ liệu (Data model/schema draft) cho các luồng chính của dự án.',
+    lesson_id: '352d4c69-bafd-4dbf-b234-abad86c07ad8',
+    description: 'Backend decision matrix + data model/schema draft cho main use case.',
     rubric_checklist: [
       { item: 'Có bảng so sánh trade-off giữa các phương án Backend (Sheets, Firebase, Supabase, API custom...)', checked: false },
       { item: 'Thiết kế cấu trúc bảng (schema) với đầy đủ trường dữ liệu, kiểu dữ liệu và mối quan hệ giữa các bảng cho tính năng chính', checked: false }
@@ -781,8 +784,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000008',
-    lesson_id: 'de000000-0000-0000-0000-000000000008',
-    description: 'Xây dựng kế hoạch triển khai (Deployment Plan) cho dự án cá nhân: lựa chọn nền tảng, cấu hình tên miền/DNS qua Cloudflare, quản lý biến môi trường (.env) và liệt kê các rủi ro cần lưu ý.',
+    lesson_id: 'f7fa3d41-a0ef-4b39-8a3c-09457425963d',
+    description: 'Deployment plan cho project: platform, domain/DNS, env vars, rủi ro cần lưu ý.',
     rubric_checklist: [
       { item: 'Xác định rõ platform deploy (Vercel, Cloudflare Pages, VPS...) phù hợp với tech stack', checked: false },
       { item: 'Liệt kê đầy đủ các biến môi trường (.env) cần cấu hình trên môi trường production', checked: false },
@@ -792,8 +795,8 @@ const SEED_ASSIGNMENTS: Assignment[] = [
   },
   {
     id: 'ae000000-0000-0000-0000-000000000009',
-    lesson_id: 'de000000-0000-0000-0000-000000000009',
-    description: 'Thiết lập hoặc phác thảo một quy trình tự động hóa (Automation workflow) bằng n8n kết nối các mảnh sản phẩm/workspace để tối ưu hóa quy trình vận hành.',
+    lesson_id: '6acc4c45-e51a-4fdf-a1ca-25847522bdd8',
+    description: 'Một workflow n8n chạy được hoặc automation design đủ rõ nếu setup chưa kịp.',
     rubric_checklist: [
       { item: 'Xác định rõ Trigger node và các Action nodes trong quy trình', checked: false },
       { item: 'Thiết lập thành công kết nối (Credentials) và truyền nhận dữ liệu giữa các node chính xác', checked: false },
@@ -855,64 +858,7 @@ const SEED_NOTIFICATIONS: NotificationLog[] = [];
 
 const SEED_ANNOUNCEMENTS: Announcement[] = [];
 
-const SEED_ONBOARDING_DAYS: OnboardingDay[] = [
-  {
-    day: 1,
-    title: "Ngày 1: Khởi động, làm quen với khoá học",
-    intro: "Tuần Onboarding rất quan trọng cho trải nghiệm học: dù chưa vào học ngay với mình, nhưng sẽ **kích hoạt bạn như một người học chủ động**.",
-    objective: "Đến với Onboarding ngày 1, bạn sẽ làm quen với những người bạn học cùng, và tập kết nối với lớp thông qua việc post vào nhóm cộng đồng và group của lớp.\n\nBạn sẽ:\n- Làm quen với lớp học, cộng đồng, và cách hoạt động\n- Đặt ra \"lý do tại sao\" bạn học khóa này\n- Cam kết với chính mình rằng bạn sẽ hành động – không chỉ đọc lý thuyết",
-    checklist: "- [ ] **Task 1: Set up nền tảng hỗ trợ học tập** (Đọc toàn bộ hướng dẫn tại [Hướng dẫn sử dụng nền tảng học tập](https://app.notion.com/p/H-ng-d-n-s-d-ng-n-n-t-ng-h-c-t-p-2b92df46dabf8386aba0812020fd78d9?pvs=21))\n- [ ] **Task 2:** Điền [form Khảo sát Onboarding](https://forms.gle/U6CKgyQnxNZh4jbAA) để thầy giáo nắm được thông tin và cập nhật giáo trình phù hợp với nhu cầu của bạn.\n- [ ] **Task 3:** Viết 01 post giới thiệu bản thân trong [Group Facebook](https://www.facebook.com/share/g/1AehPRGe9U/) của lớp và ghi hastag **#OB_Ngay1** ở đầu bài viết.\n\n*Nội dung giới thiệu bao gồm:*\n- Tên bạn, công việc hiện tại (ngành nghề), 01 sản phẩm bạn đã từng build bằng AI.\n- Lý do bạn muốn học khóa này - gắn với nỗi đau càng tốt.\n- Một trở ngại lớn nhất của bạn khi tham gia khóa học này - Bạn dự định khắc phục trở ngại này như thế nào?\n- Một điều bạn hy vọng đạt được sau 1 tháng.\n- Một thuận lợi/lợi thế của riêng bạn khi tham gia khóa học này.\n- **Quan trọng**: Cam kết sẽ dành ra bao nhiêu tiếng/tuần/ngày để học build, vào thời gian trống nào trong tuần.\n- **Tạo động lực cho cá nhân** - Đặt cược, thử thách: Nếu không build được do nguyên nhân chủ quan (ví dụ: lười, không đủ quyết tâm), bạn sẽ chấp nhận bị mất gì (ví dụ: khao trà sữa cả lớp, múa bụng, thuyết trình cuốn sách hay...).\n\n- [ ] **Task 4:** Cập nhật **Hoàn Thành** tại [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?usp=sharing) khi hoàn thành nhiệm vụ Ngày 1 🎉\n- [ ] **Task 5 (Optional): Đọc thêm về cách nói chuyện với users và lấy feedback** tại [Substack Article](https://the1ight.substack.com/p/mo-khoa-6-lam-sao-e-thuc-su-noi-chuyen?r=2f46k)",
-    takeaway: "> 📌 **Ghi nhớ nhỏ:**\n>\n> Bạn không cần phải “giỏi” để bắt đầu. Nhưng bạn phải bắt đầu thì mới có thể “giỏi”.\n\n> 💡 **Vẹt Lắm Mồm gợi ý:**\n> Kỹ năng tìm hiểu và nói chuyện với User là cực kỳ quan trọng, hãy rèn luyện từ sớm."
-  },
-  {
-    day: 2,
-    title: "Ngày 2: Làm quen với viết problem statement",
-    intro: "> “Cái khó nhất trên đời không phải là làm cái mình muốn, mà là biết mình muốn gì”\n> \n> — Naval Ravikant\n\n🔑 *Trước khi giải quyết một vấn đề, hãy học cách gọi tên nó rõ ràng.*",
-    objective: "Đến với Onboarding ngày 2, bạn sẽ nghiên cứu luôn một thứ quan trọng nhất trong nghề Product: **viết problem statement**. Đây là bước nền tảng cho mọi sản phẩm.\n\n> ⚠️ **Lưu ý:** Problem Statement hôm nay là bản draft thô đầu tiên của bạn. Đừng áp lực phải viết hoàn hảo. Buổi 1 trên lớp sẽ yêu cầu bạn viết lại 10 vấn đề → lọc xuống 1 vấn đề chính. Cái bạn viết hôm nay là bước khởi động để bạn bắt đầu tư duy.",
-    checklist: "- [ ] **Task 1:** Xem video hướng dẫn ngắn từ giảng viên: [Link video Loom](https://www.loom.com/share/ae9ee3b4dd7e4f62901e904445bbf3d2?sid=5f0311c9-cf13-46de-98f7-2c5fba17361e)\n- [ ] **Task 2:** Đọc slide và bài viết kèm theo để hiểu bối cảnh:\n  - [Slide: Problem Statement](https://drive.google.com/file/d/12n7bjL99wKAeozI-uAmg_yAYJCC_eaxN/view)\n  - [Bài viết Substack](https://the1ight.substack.com/p/10-nam-lam-san-pham-a-day-toi-nhung?r=2f46k)\n- [ ] **Task 3:** Viết 1 problem statement cho sản phẩm của bạn (1 vấn đề bạn muốn solve)\n  - Post lên [Facebook Group](https://www.facebook.com/groups/27216190438021089) & tag **#OB_Ngay2** ở đầu bài viết.\n  - Nhắn trong phòng chat [Vinh Danh, tiếp lửa](https://m.me/ch/AbZBhshrDpB2lylD/) để mời mọi người đọc và bình luận.\n- [ ] **Task 4:** Comment vào bài post của một Problem Statement hoặc một lời giới thiệu (của Ngày 1) của thuyền viên khác khiến bạn ấn tượng nhất và nêu rõ lý do.\n- [ ] **Task 5:** Cập nhật trạng thái hoàn thành vào [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489#gid=1843915489)\n- [ ] **Task 6 (Optional):** Chủ động đặt 01 câu hỏi nào đó cho thầy giáo và cả lớp ở phòng chat Messenger [Light Support](https://m.me/ch/AbZBhshrDpB2lylD/).",
-    takeaway: "> 📌 **Lời nhắc:**\n>\n> Đừng ngại chia sẻ idea còn “chưa chắc chắn”. Mọi sản phẩm tốt đều bắt đầu từ một vấn đề **rất đời thường**. Nếu bạn bí, hãy hỏi trong chat – luôn có người hỗ trợ bạn!\n\n> 💡 **Lời khuyên:**\n> Khóa học sẽ không thể thành công nếu học sinh ngại hỏi và giấu “dốt”. Hãy để mọi thắc mắc được lôi ra ánh sáng."
-  },
-  {
-    day: 3,
-    title: "Ngày 3: Làm quen với AI – Đồng đội mới",
-    intro: "> *Thực tế là, trong tương lai rất gần, nếu bạn không biết cưỡi rồng, thì những người cưỡi rồng và những con rồng sẽ hoàn toàn có thể \"đốt\" và \"ăn thịt\" bạn.*\n> \n> — The1ight",
-    objective: "Hôm nay bạn sẽ bắt đầu làm quen với việc dùng AI như một người trợ lý sản phẩm. Biết cách hỏi để AI giúp bạn rõ vấn đề, gợi ý giải pháp, và thậm chí… viết hộ bạn phần đầu sản phẩm.\n\nĐây là bước khởi động nhẹ. Buổi 2 trên lớp sẽ đi sâu hơn vào AI Prompting, Vibe Coding và cách dùng AI thật sự hiệu quả.",
-    checklist: "- [ ] **Task 1:** Xem video giới thiệu từ giảng viên: [Link video Loom](https://www.loom.com/share/8ca2a0f8c79a40aab00264f2905a411f?sid=d1483399-b437-4070-8e46-461d07b2ad87)\n- [ ] **Task 2:** Đọc Series của bài viết hoặc xem video:\n  - [Link bài viết](https://the1ight.substack.com/p/toi-va-ai-nhung-kien-thuc-nen-tang)\n  - [Link video Youtube](https://www.youtube.com/watch?v=6iNyHHFsyjo&t=12s)\n- [ ] **Task 3:** Đọc kỹ phần 2 để hiểu về công thức CREATE và thử dùng AI viết lại Problem Statement hôm qua:\n  - [Link bài phần 2](https://the1ight.substack.com/p/toi-va-ai-02-lam-sao-e-giao-tiep?r=2f46k&utm_medium=ios&triedRedirect=true)\n  - [Link prompt guide](https://davebirss.com/documents/the_prompt_guide.pdf?kuid=e325a127-c321-4309-8bbf-a0ca6fa9da50-1731576573&lid=35290&kref=mFnEIdDR4sYf)\n- [ ] **Task 4:** Viết 3 dòng cảm nhận sau khi thử dùng AI với công thức CREATE ở trên, post lên Facebook Group với hashtag **#OB_Ngay3** và cập nhật [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489#gid=1843915489)\n- [ ] **Task 5 (Optional):** Đọc bài viết [Vibe Coding 2: Agentic AI](https://the1ight.substack.com/p/vibe-coding-2-agentic-ai-cuoc-cach?r=2f46k) và chia sẻ cảm nghĩ lên Facebook Group với hashtag **#OB_Ngay3**.\n- [ ] **Task 6 (Optional): Đọc Tài liệu tham khảo thêm:** [Lenny's Newsletter: Personal AI Copilot](https://www.lennysnewsletter.com/p/build-your-personal-ai-copilot?r=2f46k), [Operators Handbook](https://www.operatorshandbook.com/p/how-to-work-with-ai-getting-the-most?lli=1), [Maxberry Guide to AI Agents 2025](https://www.maxberry.ca/p/how-to-build-ai-agents-2025-guide?lli=1)",
-    takeaway: "> 📌 **Lưu ý:**\n>\n> AI chính là người thầy khủng khiếp nhất đồng hành cùng bạn trong hành trình build sản phẩm. Nếu bạn biết để hỏi, thì chắc chắn bạn sẽ biết để hiểu. Chỉ cần bạn biết là bạn đang không biết gì, AI sẽ có thể dạy bạn."
-  },
-  {
-    day: 4,
-    title: "Ngày 4: PRD - Tài liệu yêu cầu sản phẩm",
-    intro: "> *\"Plans are useless, but planning is indispensable.\"*\n> — Dwight D. Eisenhower\n\n> 💡 **Nguyên lý:** Trước khi build bất cứ thứ gì, bạn cần hiểu: build kiểu gì mới đúng?",
-    objective: "Hôm nay bạn sẽ tìm hiểu về PRD - Product Requirements Documents.\n\nĐây là thuật ngữ quan trạng nhất cho toàn bộ khoá học. Khi bạn vibe code ở các buổi sau, bạn sẽ tự nhiên làm Agile mà không cần gọi tên nó — nhưng hiểu nó sẽ giúp bạn biết tại sao mình làm vậy.",
-    checklist: "- [ ] **Task 1:** Xem lời khuyên từ giảng viên: [Link Loom](https://www.loom.com/share/5a50410bf85f4e8db861af378a399ffa?sid=765d752f-def9-4238-82ad-8523eddb67d6)\n- [ ] **Task 2:** Xem video buổi học về PRD từ khoá trước:\n  - [Recording tại Daymai.vn](https://daymai.vn/vc/69b959dd8802631b190b3891)\n  - [Slide thuyết trình Canva](https://canva.link/buoi4-prd-problemstatement)\n- [ ] **Task 3:** Viết cảm nghĩ ngắn về những gì mình học được, gắn hashtag **#OB_Ngay4** và post lên Facebook Group.\n- [ ] **Task 4:** Cập nhật **Hoàn Thành** tại [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489#gid=1843915489) 🎉",
-    takeaway: "> 📌 **Tips:**\n>\n> Hãy thử hỏi ChatGPT: *\"PRD là gì? Cho tôi 3 ví dụ, 3 phản ví dụ và 3 điều dễ gây hiểu lầm về nó. Các cấu phần chính của PRD là gì?\"* hoặc sử dụng [Gemini Gems Concept Chopper](https://gemini.google.com/gem/1xaEMN8zNA8A6oCj62qEVHjNh5uLKwt2B?usp=sharing) để đào sâu khái niệm."
-  },
-  {
-    day: 5,
-    title: "Ngày 5: Design xưa và nay",
-    intro: "> “Design is not just what it looks like and feels like. Design is how it works.”\n> \n> — Steve Jobs",
-    objective: "Đến với ngày 5, mục tiêu là giúp bạn:\n- Hiểu sự khác biệt giữa quy trình vẽ **prototype truyền thống** (vẽ tay → giấy → Figma) và **prototype hiện đại** (prompt, AI tool).\n- Biết cách tư duy theo user journey và vẽ user flow cho các sản phẩm.",
-    checklist: "- [ ] **Task 0:** Xem video hướng dẫn từ giảng viên: [Link Loom](https://www.loom.com/share/29bd2076c7b54c9bb18e1fe02034bdfc?sid=3ae24ec4-4a78-4912-a2dc-3733f6db18c1)\n- [ ] **Task 1:** Đọc bài viết để hiểu cách thiết kế truyền thống:\n  - [Phân biệt Sketch, Wireframe, Mockup, Prototype](https://thinhnotes.com/chuyen-nghe-ba/phan-biet-sketch-wireframe-mockup-va-prototype/)\n  - [Tương lai của design trong phát triển sản phẩm](https://app.notion.com/p/T-ng-lai-c-a-design-trong-ph-t-tri-n-s-n-ph-m-3302df46dabf8069ae36f0f39080ab52?pvs=21)\n  - [Video minh họa vẽ mockup](https://www.youtube.com/watch?v=A2yCB9P8E-8&t=1s)\n- [ ] **Task 2:** Xem video tư duy về User Journey và User Flow: [Link Youtube](https://www.youtube.com/watch?si=PytGxUCdsp7sB8mW&v=DNBIcBdKnQo&feature=youtu.be)\n- [ ] **Task 3:** Đọc bài viết về Figma & AI:\n  - [Is Figma Dead?](https://designbuddy.substack.com/p/is-figma-dead?utm_source=substack&utm_campaign=post_embed&utm_medium=web)\n  - [Review các công cụ AI Prototype](https://the1ight.substack.com/p/vibe-coding-3-review-cac-cong-cu?r=2f46k)\n- [ ] **Task 4:** Xem video trình diễn AI tool:\n  - [Figma Make AI Features (Phút 42 đến 53)](https://www.youtube.com/live/5q8YAUTYAyk?si=ktQYaBPpEl1-gv7X&t=2570)\n  - [Canva Code demo](https://youtu.be/RnVsl3PIx8U?si=9Qtq6gwuZbHdoeq3)\n- [ ] **Task 5:** Chia sẻ lên Group Facebook với hashtag **#OB_Ngay5** và cập nhật [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489#gid=1843915489).",
-    takeaway: "> 📌 **Ghi nhớ:**\n>\n> Nguyên tắc bất biến là luôn bắt đầu từ **user problem** trước khi thiết kế UI.\n\n> 💡 **Mở rộng:** Nếu bạn muốn đọc thêm về Design Mindset, hãy tìm đọc:\n> - *Don’t Make Me Think* – Steve Krug\n> - *Designing Your Life* – Bill Burnett & Dave Evans"
-  },
-  {
-    day: 6,
-    title: "Ngày 6: PM & User Testing - Validate sản phẩm",
-    intro: "> *\"Get out of the building.\"*\n> — Steve Blank\n\n> 💡 **Triết lý:** Build sản phẩm mà không nói chuyện với người dùng, giống như nấu ăn mà không nếm thử.",
-    objective: "Hôm nay bạn sẽ tìm hiểu về ngành Product Management và *user testing* — cách kiểm tra xem sản phẩm của bạn có thực sự giải quyết được vấn đề cho người dùng hay không, trước khi bạn đổ quá nhiều thời gian và công sức vào build.",
-    checklist: "- [ ] **Task 1:** Xem video buổi học về thế nào là làm Product: [Link video Youtube](https://youtu.be/y0ukmvWTNw4)\n- [ ] **Task 2:** Đọc bài viết [Làm sao để thực sự nói chuyện với users](https://the1ight.substack.com/p/mo-khoa-6-lam-sao-e-thuc-su-noi-chuyen?r=2f46k).\n- [ ] **Task 3:** Tìm hiểu về một số low tech product qua [Thế nào mới gọi là sản phẩm?](https://www.notion.so/Th-n-o-m-i-g-i-l-s-n-ph-m-20afb1613f7080cb8d61e0b84e2d52c4?pvs=21)\n- [ ] **Task 4:** Viết bài chia sẻ ngắn (3–5 dòng) lên Group Facebook và gắn hashtag **#OB_Ngay6**:\n  - Định nghĩa của bạn về một sản phẩm là gì?\n  - Bạn sẽ test sản phẩm của mình với ai?\n  - Bạn sẽ hỏi họ câu gì để biết vấn đề có thực sự tồn tại?\n- [ ] **Task 5:** Cập nhật **Hoàn Thành** tại [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489#gid=1843915489) 🎉",
-    takeaway: "> 📌 **Ghi nhớ nhỏ:**\n>\n> Sản phẩm tốt nhất không phải do người thông minh nhất build, mà do người chịu khó lắng nghe nhất build."
-  },
-  {
-    day: 7,
-    title: "Ngày 7: MCP, CLI và SDK",
-    intro: "🔑 *Làm chủ các khái niệm công nghệ cốt lõi trong thời đại Vibe Coding.*",
-    objective: "Ngày cuối trong tuần onboarding, bạn sẽ khám phá cách phần mềm, lập trình viên và các mô hình AI giao tiếp với nhau qua CLI, SDK và MCP.",
-    checklist: "- [ ] **Task 1: Xem các video sau:**\n  - [Video 1: MCP, CLI, SDK](https://youtu.be/g9JIUM0MHgQ?si=rp9u4zIBKCaZ0zLP)\n  - [Video 2: Demo thực tế](https://youtu.be/04IqH38SlOI?si=TL79P1H12WaCypN6)\n- [ ] **Task 2: Tìm hiểu thêm về 3 thuật ngữ MCP, CLI và SDK** và dùng ẩn dụ thực tế giải thích sự khác biệt, post lên Facebook Group với hashtag **#OB_Ngay7**.\n- [ ] **Task 3:** Hoàn thành [Khảo sát sau Onboarding Week](https://forms.gle/r9hwfs7fCqnEiggH7).\n- [ ] **Task 4:** Cập nhật tiến độ trên [Tracking Sheet](https://docs.google.com/spreadsheets/d/1MkdyolJBxs8xjvBmRlooO9QmZAnIGZM1oWN_WyD2zJg/edit?gid=1843915489#gid=1843915489).",
-    takeaway: "> 📌 **Ghi nhớ:**\n>\n> Nghĩ như một solopreneur sẽ giúp bạn chủ động hơn, xây hệ thống làm việc hiệu quả và có tư duy ownership cao.\n\n> 🎉 **YAY!!! Bạn đã hoàn thành tuần onboarding rồi!**\n> ⏰ Lớp học chính thức đầu tiên sẽ bắt đầu vào thứ Tư đầu tuần tới lúc 20h30!"
-  }
-];
+const SEED_ONBOARDING_DAYS: OnboardingDay[] = ONBOARDING_DAYS_DATA;
 
 const getPastDateString = (daysAgo: number) => {
   const d = new Date();
@@ -933,7 +879,8 @@ const SEED_ONBOARDING_UNLOCK_SCHEDULES: OnboardingUnlockSchedule[] = [
   { day: 4, scheduled_at: getFutureDateString(1), unlock_email_sent: false },
   { day: 5, scheduled_at: getFutureDateString(2), unlock_email_sent: false },
   { day: 6, scheduled_at: getFutureDateString(3), unlock_email_sent: false },
-  { day: 7, scheduled_at: getFutureDateString(4), unlock_email_sent: false }
+  { day: 7, scheduled_at: getFutureDateString(4), unlock_email_sent: false },
+  { day: 8, scheduled_at: getFutureDateString(5), unlock_email_sent: false }
 ];
 
 const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
@@ -951,9 +898,9 @@ const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
 ];
 
 const SEED_ABOUT_CONTENT: AboutContent = {
-  overviewText: `Build With The1ight (BWT1L) là gì?\nKhóa học dành cho dân văn phòng và người làm nghề tự do (freelancer), giúp bạn học cách xây sản phẩm đầu tay, kiểm định ý tưởng, và khai phá khả năng tạo thu nhập từ chính sản phẩm số do mình xây dựng.`,
-  scheduleText: `⚓ Lộ trình hành trình vượt biển:\n\nChặng 1: Kick-off Meeting - Lập kế hoạch, kết nối đồng đội và thống nhất mục tiêu.\n\nChặng 2: Onboarding Week - Làm quen công cụ, thiết lập tài khoản và chuẩn bị tâm thế cướp biển.\n\nChặng 3: 09 buổi học Live Class - Học liệu (Recording, Slide,...) được update sau mỗi buổi học. Đăng ký Office Hour để trao đổi trực tiếp.\n\nChặng 4: Capstone Project - Bài tốt nghiệp cuối khóa, thử nghiệm thực tế và pitching trước mentor.`,
-  benefitsText: `🎁 Quyền lợi của bạn:\n- Nhận phản hồi trực tiếp từ mentor Đặng Tuyết Hồng\n- Mở khóa các bài học chuyên sâu về AI, n8n, Supabase\n- Tham gia cộng đồng cướp biển cực kỳ năng động và thiện chiến!`
+  overviewText: `Vibe Coding 201 là khoá học dành cho cựu học viên 101 và non-tech builder đã từng build bằng AI, nhưng muốn hiểu tech sâu hơn để tự tin xây sản phẩm với AI.`,
+  scheduleText: `⚓ Lịch trình toàn khoá học:\n\nChặng 1: Kick-off Meeting - Cột mốc đầu tiên để bạn làm quen với đội ngũ điều phối, lộ trình khoá học và các nền tảng học tập.\n\nChặng 2: Onboarding Week - Chuỗi thử thách 07 ngày liên tục giúp làm quen với tinh thần học tập, trang bị kiến thức/mindset nền tảng và hình thành thói quen học tập hằng ngày.\n\nChặng 3: Live Class - Các buổi học online trực tiếp nghe giảng từ giảng viên kết hợp các buổi Office Hour hỗ trợ ngoài giờ học.\n\nChặng 4: Capstone Project - Chia sẻ sản phẩm của mình cho cả lớp vào cuối khoá học để nhận Certificate tốt nghiệp.`,
+  benefitsText: `🎁 Quyền lợi học viên:\n- 1. Office Hour: Nhận hỗ trợ giải đáp thắc mắc trực tiếp ngoài giờ học từ giảng viên.\n- 2. Học lại khoá mới free: Nâng cấp tư duy và công nghệ hoàn toàn miễn phí.\n- 3. Tham gia Miễn phí 1ight Club: Cộng đồng tự chủ sự nghiệp cùng AI chuyên sâu.\n- 4. Tham gia Alumni Club: Không gian dành riêng cho cựu học sinh các khoá học tại The1ight.`
 };
 
 // ==========================================
@@ -985,7 +932,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v7';
+  const DB_VERSION = 'lms_v15';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference
@@ -993,6 +940,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.clear();
     if (savedUserId) localStorage.setItem('lms_active_user_id', savedUserId);
     localStorage.setItem('lms_db_version', DB_VERSION);
+    window.location.reload();
   }
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -1050,7 +998,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v3';
+  const SYLLABUS_VERSION = 'v201_v4';
   const [lessons, setLessons] = useState<Lesson[]>(() => {
     const currentVersion = localStorage.getItem('lms_syllabus_version');
     if (currentVersion !== SYLLABUS_VERSION) {
@@ -1092,13 +1040,26 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeParse('lms_calendar_events', SEED_CALENDAR_EVENTS)
   );
 
-  const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>(() => 
-    safeParse('lms_onboarding_days', SEED_ONBOARDING_DAYS)
-  );
+  const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>(() => {
+    const parsed = safeParse('lms_onboarding_days', SEED_ONBOARDING_DAYS);
+    const hasOutdatedTitle = parsed.some(d => d.day === 2 && d.title.includes("Làm quen với viết"));
+    const hasOutdatedChecklist = parsed.some(d => d.checklist.includes("Xác nhận hoàn thành"));
+    const isMissingDay8 = parsed.length < 8;
+    if (hasOutdatedTitle || hasOutdatedChecklist || isMissingDay8) {
+      localStorage.removeItem('lms_onboarding_days');
+      return SEED_ONBOARDING_DAYS;
+    }
+    return parsed;
+  });
 
-  const [onboardingUnlockSchedules, setOnboardingUnlockSchedules] = useState<OnboardingUnlockSchedule[]>(() => 
-    safeParse('lms_onboarding_unlock_schedules', SEED_ONBOARDING_UNLOCK_SCHEDULES)
-  );
+  const [onboardingUnlockSchedules, setOnboardingUnlockSchedules] = useState<OnboardingUnlockSchedule[]>(() => {
+    const parsed = safeParse('lms_onboarding_unlock_schedules', SEED_ONBOARDING_UNLOCK_SCHEDULES);
+    if (parsed.length < 8) {
+      localStorage.removeItem('lms_onboarding_unlock_schedules');
+      return SEED_ONBOARDING_UNLOCK_SCHEDULES;
+    }
+    return parsed;
+  });
 
   const [aboutContent, setAboutContent] = useState<AboutContent>(() => 
     safeParse('lms_about_content', SEED_ABOUT_CONTENT)
@@ -1225,8 +1186,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         resCalendarEvents,
         resOnboardingDays,
         resUnlockSchedules,
-        resTopics,
-        resDiscussionPosts,
         resBatches,
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
@@ -1242,10 +1201,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         supabase.from('calendar_events').select('*'),
         supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
         supabase.from('onboarding_unlock_schedules').select('*').order('day', { ascending: true }),
-        supabase.from('discussion_topics').select('*').order('created_at', { ascending: true }),
-        supabase.from('discussion_posts').select('*').order('created_at', { ascending: false }),
         supabase.from('batches').select('*'),
       ]);
+
+      const resTopics = { data: [] };
+      const resDiscussionPosts = { data: [] };
 
       if (resProfiles.data && resProfiles.data.length > 0) {
         setProfiles(prev => {
@@ -1294,9 +1254,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchDatabaseState();
-    }
+    fetchDatabaseState();
   }, [isAuthenticated]);
 
   const handleSupabaseSession = async (session: any) => {
@@ -1477,20 +1435,22 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // Profile management
-  const updateProfile = async (profileId: string, updates: Partial<Profile>) => {
+  const updateProfile = async (profileId: string, updates: Partial<Profile>): Promise<boolean> => {
+    let completedNow = false;
+
     setProfiles(prev => prev.map(p => {
       if (p.id === profileId) {
         const updated = { ...p, ...updates };
         
         // Rules Engine check: profile completion
-        if (!p.is_profile_completed && updated.gmail && updated.phone_number && updated.facebook_url && updated.industry && updated.current_job && updated.product_idea) {
+        // If explicitly set to true in updates, or satisfies all requirements
+        const fulfillsAllRequirements = !!(updated.gmail && updated.phone_number && updated.facebook_url && updated.industry && updated.current_job && updated.product_idea);
+        
+        if (updates.is_profile_completed === true || (!p.is_profile_completed && fulfillsAllRequirements)) {
+          if (!p.is_profile_completed) {
+            completedNow = true;
+          }
           updated.is_profile_completed = true;
-          
-          // Award miles
-          addNauticalMiles(profileId, 50, 'profile_completion', 'Hoàn thành 100% hồ sơ cá nhân lần đầu');
-          
-          // Award badge
-          unlockBadge(profileId, 'bada0000-0000-0000-0000-000000000001');
         }
         
         return updated;
@@ -1498,14 +1458,27 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return p;
     }));
 
+    if (completedNow) {
+      // Award miles
+      addNauticalMiles(profileId, 50, 'profile_completion', 'Hoàn thành 100% hồ sơ cá nhân lần đầu');
+      
+      // Award badge
+      unlockBadge(profileId, 'bada0000-0000-0000-0000-000000000001');
+    }
+
     try {
       const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profileId);
-      if (error) console.error('Lỗi khi cập nhật profile lên Supabase:', error);
+      if (error) {
+        console.error('Lỗi khi cập nhật profile lên Supabase:', error);
+        return false;
+      }
+      return true;
     } catch (e) {
       console.error(e);
+      return false;
     }
   };
 

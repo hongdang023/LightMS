@@ -18,7 +18,6 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
       case 'onboarding': return 'Onboarding';
       case 'syllabus': return 'Syllabus';
       case 'competency': return 'Skills';
-      case 'discussion': return 'Discussions';
       case 'calendar': return 'Schedule';
       case 'walloffame': return 'Leaderboard';
       case 'help': return 'Support';

@@ -72,7 +72,6 @@ const DonutChart: React.FC<DonutChartProps> = ({
   );
 };
 
-// Custom Premium SVG/HTML Bar Chart Component
 interface BarChartProps {
   data: {
     label: string;
@@ -85,34 +84,39 @@ interface BarChartProps {
 
 const BarChart: React.FC<BarChartProps> = ({ data, colorClass }) => {
   return (
-    <div className="flex items-end justify-between h-36 pt-6 pb-2 px-1 border-b border-gray-150 relative w-full">
-      {data.map((item, index) => {
-        const percentage = item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0;
-        const uncompleted = item.total - item.completed;
-        return (
-          <div key={index} className="group relative flex flex-col items-center flex-1 mx-0.5 h-full justify-end">
-            {/* Tooltip on hover */}
-            <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#15333B] text-white text-[10px] p-2 rounded-lg shadow-lg z-10 w-36 text-center pointer-events-none transition-all">
-              <span className="font-extrabold mb-1">{item.title}</span>
-              <span className="font-bold text-emerald-400">{item.completed} HV hoàn thành</span>
-              <span className="font-bold text-rose-400">{uncompleted} HV chưa hoàn thành</span>
-              <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
+    <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+      <div 
+        className="flex items-end justify-between h-36 pt-6 pb-2 px-1 border-b border-gray-150 relative"
+        style={{ minWidth: data.length > 8 ? `${data.length * 36}px` : '100%' }}
+      >
+        {data.map((item, index) => {
+          const percentage = item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0;
+          const uncompleted = item.total - item.completed;
+          return (
+            <div key={index} className="group relative flex flex-col items-center flex-1 mx-1 h-full justify-end">
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#15333B] text-white text-[10px] p-2 rounded-lg shadow-lg z-10 w-36 text-center pointer-events-none transition-all left-1/2 transform -translate-x-1/2">
+                <span className="font-extrabold mb-1">{item.title}</span>
+                <span className="font-bold text-emerald-400">{item.completed} HV hoàn thành</span>
+                <span className="font-bold text-rose-400">{uncompleted} HV chưa hoàn thành</span>
+                <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
+              </div>
+              
+              {/* Percentage indicator */}
+              <span className="text-[9px] font-black text-gray-500 mb-1">{percentage}%</span>
+              
+              {/* The bar */}
+              <div 
+                style={{ height: `${Math.max(percentage, 4)}%` }}
+                className={`w-full max-w-[18px] rounded-t-md transition-all duration-300 group-hover:opacity-85 ${colorClass}`}
+              ></div>
+              
+              {/* Label below the bar */}
+              <span className="text-[9px] font-extrabold text-[#3E5E63] mt-2 block whitespace-nowrap">{item.label}</span>
             </div>
-            
-            {/* Percentage indicator */}
-            <span className="text-[9px] font-black text-gray-500 mb-1">{percentage}%</span>
-            
-            {/* The bar */}
-            <div 
-              style={{ height: `${Math.max(percentage, 4)}%` }}
-              className={`w-full max-w-[18px] rounded-t-md transition-all duration-300 group-hover:opacity-85 ${colorClass}`}
-            ></div>
-            
-            {/* Label below the bar */}
-            <span className="text-[9px] font-extrabold text-[#3E5E63] mt-2 block whitespace-nowrap">{item.label}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -120,7 +124,8 @@ const BarChart: React.FC<BarChartProps> = ({ data, colorClass }) => {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) => {
   const { 
     users, submissions, assignments, 
-    onboardingDays, lessons, nauticalTransactions 
+    onboardingDays, lessons, nauticalTransactions,
+    courses, modules
   } = useDatabase();
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -128,15 +133,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Filter lessons and assignments for the current course (Vibe Coding 201)
+  const currentCourse = courses.find(c => c.title.toLowerCase().includes('201')) || courses[0];
+  let filteredModules = currentCourse 
+    ? modules.filter(m => m.course_id === currentCourse.id)
+    : modules;
 
+  if (filteredModules.length === 0 && modules.length > 0) {
+    const fallbackCourseId = modules[0].course_id;
+    filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
+  }
+
+  const courseLessons = currentCourse
+    ? lessons.filter(l => filteredModules.some(m => m.id === l.module_id))
+    : lessons;
+
+  const courseAssignments = assignments.filter(a => courseLessons.some(l => l.id === a.lesson_id));
 
   const students = users.filter(u => u.role === 'student');
   const totalStudents = students.length;
-  const pendingGradesCount = submissions.filter(s => s.status === 'submitted').length;
-  const gradedCount = submissions.filter(s => s.status === 'graded').length;
+  const pendingGradesCount = submissions.filter(s => s.status === 'submitted' && courseAssignments.some(a => a.id === s.assignment_id)).length;
+  const gradedCount = submissions.filter(s => s.status === 'graded' && courseAssignments.some(a => a.id === s.assignment_id)).length;
 
   // Calculate Assignment Completion Rate
-  const totalAssignmentsCount = assignments.length;
+  const totalAssignmentsCount = courseAssignments.length;
   const totalExpectedSubmissions = totalStudents * totalAssignmentsCount;
 
   // Selected student object
@@ -151,15 +171,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
 
   // Helper: Check if a student completed a specific lesson assignment
   const isStudentLessonCompleted = (studentId: string, lessonId: string) => {
-    const asg = assignments.find(a => a.lesson_id === lessonId);
+    const asg = courseAssignments.find(a => a.lesson_id === lessonId);
     if (!asg) return false;
     return submissions.some(s => s.student_id === studentId && s.assignment_id === asg.id && (s.status === 'submitted' || s.status === 'graded'));
   };
 
   // Helper: Get list of unsubmitted homeworks (bottlenecks) for a student
   const getStudentUnsubmittedLessons = (studentId: string) => {
-    return lessons.filter(l => {
-      const asg = assignments.find(a => a.lesson_id === l.id);
+    return courseLessons.filter(l => {
+      const asg = courseAssignments.find(a => a.lesson_id === l.id);
       if (!asg) return false;
       const submitted = submissions.some(s => s.student_id === studentId && s.assignment_id === asg.id);
       return !submitted;
@@ -188,19 +208,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     };
   });
 
-  // Live Class lessons progress data for Bar Chart
-  const liveClassBarData = lessons.map((l, index) => {
-    const asg = assignments.find(a => a.lesson_id === l.id);
-    const completed = asg 
-      ? students.filter(s => isStudentLessonCompleted(s.id, l.id)).length 
-      : 0;
-    return {
-      label: `B${index + 1}`,
-      completed,
-      total: totalStudents,
-      title: l.title
-    };
-  });
+  // Live Class lessons progress data for Bar Chart (Only show lessons that have assignments)
+  const liveClassBarData = courseLessons
+    .map((l, index) => ({ l, originalIndex: index }))
+    .filter(({ l }) => courseAssignments.some(a => a.lesson_id === l.id))
+    .map(({ l, originalIndex }) => {
+      const completed = students.filter(s => isStudentLessonCompleted(s.id, l.id)).length;
+      const match = l.title.match(/Buổi\s+(\d+)/i);
+      const label = match ? `B${match[1]}` : `B${originalIndex}`;
+      return {
+        label,
+        completed,
+        total: totalStudents,
+        title: l.title
+      };
+    });
 
 
 
@@ -357,7 +379,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
             {/* Overall Homework Donut Chart */}
             <div className="col-span-1 flex justify-center">
               <DonutChart 
-                completed={submissions.filter(s => s.status === 'graded').length} 
+                completed={submissions.filter(s => s.status === 'graded' && courseAssignments.some(a => a.id === s.assignment_id)).length} 
                 total={totalExpectedSubmissions} 
                 label="Đã chấm điểm" 
                 sublabel="Bài tập đạt chất lượng"

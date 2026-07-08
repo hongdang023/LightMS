@@ -8,7 +8,7 @@ import { Trash2, Plus, X, Save, Undo, Link as LinkIcon } from 'lucide-react';
 export const SyllabusView: React.FC<{ 
   onPageChange?: (page: string) => void;
   isEditMode?: boolean;
-}> = ({ onPageChange, isEditMode = false }) => {
+}> = ({ onPageChange: _onPageChange, isEditMode = false }) => {
   const { 
     modules, 
     lessons, 
@@ -203,7 +203,7 @@ export const SyllabusView: React.FC<{
 
     setSubmissionText('');
     setReflectionText('');
-    showToast('Đã nộp bài tập & đăng lên Phòng thảo luận! 🚀');
+    showToast('Đã nộp bài tập thành công! 🚀');
   };
 
   const isLessonCompletedByStudent = (lessonId: string): boolean => {
@@ -828,34 +828,7 @@ export const SyllabusView: React.FC<{
                     </form>
                   )}
 
-                  {/* Discussion Thread Button Card */}
-                  <div className="bg-[#214C54]/5 border border-gray-200 p-4 rounded-xl flex items-center justify-between gap-4 mt-4 shadow-sm">
-                    <div className="flex items-start gap-2.5">
-                      <span className="text-xl">💬</span>
-                      <div>
-                        <span className="text-xs font-black text-[#15333B] block">Thảo luận lớp học</span>
-                        <p className="text-[10px] text-[#3E5E63] font-semibold leading-normal">
-                          Tham gia đặt câu hỏi hoặc xem các thảo luận của đồng môn về buổi học này.
-                        </p>
-                      </div>
-                    </div>
-                    {onPageChange ? (
-                      <button
-                        type="button"
-                        onClick={() => onPageChange('discussion')}
-                        className="bg-white hover:bg-gray-50 text-[#214C54] border border-[#214C54]/30 px-3.5 py-1.5 rounded-lg text-xs font-black shadow-sm transition-all hover:shadow hover:-translate-y-0.5 duration-200 transform active:scale-95 shrink-0 select-none cursor-pointer"
-                      >
-                        Mở Thảo Luận ➔
-                      </button>
-                    ) : (
-                      <button
-                        disabled
-                        className="bg-gray-100 text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-black cursor-not-allowed shrink-0"
-                      >
-                        Không khả dụng
-                      </button>
-                    )}
-                  </div>
+
                 </div>
               ) : (
                 <p className="text-xs text-gray-450 italic">Buổi học này không có bài tập về nhà.</p>

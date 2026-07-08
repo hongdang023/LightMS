@@ -62,9 +62,6 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         case 'competency':
           script = `Mắt ta lóa rồi! Nhìn biểu đồ kỹ năng này đi. Phải ráng đạt mốc Competent (Level 3) để ra khơi tự lập nghe chưa!`;
           break;
-        case 'discussion':
-          script = `Đảo thảo luận đây rồi! Xem bài làm của đồng đội khác để học lỏm đi. Nhớ thả tim (Upvote) hoặc comment cứu net nhé!`;
-          break;
         case 'calendar':
           script = `Xem lịch trình để không bỏ lỡ các buổi live meeting. Click nút để đồng bộ vào Google Calendar của ngươi đi!`;
           break;

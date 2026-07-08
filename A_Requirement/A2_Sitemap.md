@@ -25,9 +25,6 @@ Danh sách các Nav Items chính thức trên thanh điều hướng bên (Sideb
     - _Bài tập (Assignments):_ Yêu cầu bài tập và khu vực nộp bài ngay bên dưới. _(US-STU-02)_
     - _Phản hồi (Feedback):_ Điểm số và nhận xét của Mentor trả trực tiếp vào bài nộp. _(US-STU-02)_
 
-- **Phòng thảo luận** (Icon: Tavern Banner / Lá cờ hội quán)
-  - Mỗi lần nộp bài sẽ tự động hiện lên thành các thread chung tại đây. Học viên có thể xem, comment và hỏi đáp trực tiếp vào bài tập của nhau để thảo luận. _(US-STU-08)_
-
 - **Lịch học** (Icon: Astrolabe / Dụng cụ đo tinh tú)
   - Xem tổng quan lịch trình khóa học kèm nút tự động đồng bộ (Add to Calendar) vào lịch cá nhân.
 

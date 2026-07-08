@@ -15,15 +15,7 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 - **FR-STU-05 (All-in-one Lessons):** Mỗi bài học phải tích hợp đầy đủ nội dung: Video bài giảng, tài liệu (slide, pdf), yêu cầu bài tập và khu vực nộp bài trên cùng một giao diện.
 - **FR-STU-06 (Assignment Submission):** Học viên có thể nộp bài trực tiếp thông qua upload file, gửi link hoặc nhập text.
 - **FR-STU-07 (View Feedback):** Học viên có thể xem điểm số và nhận xét chi tiết của Mentor ngay tại khu vực nộp bài.
-
-### 1.3. Phòng thảo luận
-
-- **FR-STU-08 (Topic Categories):** Học viên có thể xem và tham gia thảo luận theo các chủ đề (Topics) được phân loại sẵn (VD: Light Support, Assignments).
-- **FR-STU-09 (Advanced Filtering):** Cung cấp bộ lọc nâng cao để học viên tìm kiếm bài viết theo Chủ đề, Tag (Assignment), hoặc bài có chứa Tích xanh (Verified).
-- **FR-STU-10 (Kudos & Interaction):** Học viên có thể thả Kudos (khen ngợi) và bình luận chéo trên các bài đăng để tăng tính tương tác.
-- **FR-STU-17 (Auto Tagging):** Các bài nộp của học viên sẽ tự động được chuyển thành thread và gắn tag tương ứng của Assignment đó.
-
-### 1.4. Cộng đồng & Hỗ trợ (Hỏi đáp & Hỗ trợ)
+### 1.3. Cộng đồng & Hỗ trợ (Hỏi đáp & Hỗ trợ)
 
 - **FR-STU-11 (FAQ Knowledge Base):** Cung cấp hệ thống câu hỏi thường gặp (FAQ) để giải đáp nhanh.
 - **FR-STU-12 (Live Support Link):** Có nút bấm chuyển hướng trực tiếp đến phòng hỗ trợ Light Support trên Telegram.
@@ -61,7 +53,7 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 ### 2.4. Quản lý Bài tập & Đánh giá (Chấm bài tập)
 
 - **FR-AD-08 (SpeedGrader):** Giao diện chấm bài tập trung cho Mentor, tích hợp hiển thị bài làm, Rubric chấm điểm và khung nhập Feedback trên cùng một màn hình.
-- **FR-AD-09 (Threads Curation):** Công cụ cho phép Mentor "ghim" hoặc chọn lọc các bài xuất sắc trong khu vực Discussion học tập.
+- **FR-AD-09 (Threads Curation):** Công cụ cho phép Mentor "ghim" hoặc chọn lọc các bài nộp xuất sắc làm mẫu cho lớp học.
 
 ### 2.5. Quản lý Học viên & Báo cáo (Quản lý học viên)
 
@@ -75,7 +67,10 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 - **FR-AD-18 (Create Announcements & NavItem Sync):** Admin có mục Thông báo để soạn và đăng tin. Mỗi lần viết xong bài, thông báo sẽ được cập nhật hiển thị ngay tại NavItem "Thông báo" của học viên.
 - **FR-AD-19 (Email Broadcast):** Admin có button chức năng gửi email thông báo hàng loạt cho toàn bộ học viên đối với bài đăng đó.
 
-### 2.7. Quản lý Thảo luận
+---
 
-- **FR-AD-20 (Topic Management):** Admin có quyền tạo mới, chỉnh sửa, hoặc ẩn các chủ đề thảo luận (Topics) để định hướng nội dung của lớp học.
-- **FR-AD-21 (Verified Answers):** Admin và Mentor có thể gắn thẻ "Verified" (Tích xanh) cho các bình luận hoặc bài giải xuất sắc để học viên khác dễ tìm kiếm.
+## 3. Yêu cầu Giao diện Di động (Mobile Responsive UI)
+
+- **FR-SYS-01 (Responsive Navigation Drawer):** Thanh Sidebar điều hướng phải tự động chuyển thành Drawer ẩn trên thiết bị di động (màn hình < 768px), cho phép đóng mở qua nút Hamburger trên Header hoặc chạm vùng ngoài (backdrop).
+- **FR-SYS-02 (Adaptive Screen Layouts):** Giao diện của tất cả các trang (Dashboard, Lộ trình học, Hỏi đáp, Bảng vinh danh, Hồ sơ cá nhân) phải tự động chuyển sang bố cục một cột (Single-column layout) và căn lề tương thích với màn hình hẹp.
+- **FR-SYS-03 (Touch Target Optimization):** Các nút tương tác, đường liên kết, và các thẻ tab lựa chọn trên di động phải có kích thước vùng chạm tối thiểu 44x44px để dễ dàng tương tác bằng ngón tay.
