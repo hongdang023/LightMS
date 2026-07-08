@@ -22,9 +22,21 @@ export const ProductTour: React.FC = () => {
       position: 'center'
     },
     {
+      targetId: 'nav-item-about',
+      title: 'Giới thiệu 🧭',
+      content: 'Nơi giới thiệu về khóa học, triết lý giáo dục của Conan Learning OS, và các thông tin cơ bản giúp bạn làm quen với môi trường học tập.',
+      position: 'right'
+    },
+    {
       targetId: 'nav-item-dashboard',
       title: 'Dashboard học tập 🏠',
-      content: 'Nơi hiển thị tiến độ học tập hàng ngày của bạn, danh sách bài tập Live Class chưa hoàn thành và các nhiệm vụ Onboarding.',
+      content: 'Nơi hiển thị tiến độ học tập hàng ngày của bạn, danh sách bài tập chưa hoàn thành và các nhiệm vụ cần thực hiện.',
+      position: 'right'
+    },
+    {
+      targetId: 'nav-item-announcements',
+      title: 'Thông báo lớp học 📢',
+      content: 'Nơi cập nhật nhanh những thông tin, sự kiện và nhắc nhở quan trọng nhất từ Ban quản lý lớp học và Mentor.',
       position: 'right'
     },
     {
@@ -36,7 +48,25 @@ export const ProductTour: React.FC = () => {
     {
       targetId: 'nav-item-syllabus',
       title: 'Lộ trình học (Syllabus) 📚',
-      content: 'Nơi lưu trữ giáo trình, các buổi học (video bài giảng, slide) và đề bài tập cũng như chấm điểm phản hồi từ Mentor.',
+      content: 'Nơi lưu trữ giáo trình, các buổi học (video bài giảng, slide), đề bài tập cũng như chấm điểm phản hồi từ Mentor.',
+      position: 'right'
+    },
+    {
+      targetId: 'nav-item-calendar',
+      title: 'Lịch học lớp 📅',
+      content: 'Xem lịch các buổi học Live Class, hạn chót nộp bài tập và các sự kiện diễn ra trong suốt khóa học.',
+      position: 'right'
+    },
+    {
+      targetId: 'nav-item-walloffame',
+      title: 'Bảng vinh danh 🏆',
+      content: 'Nơi tôn vinh các học viên xuất sắc, tích lũy nhiều Hải lý nhất và các thành tựu nổi bật trên hành trình chinh phục khóa học.',
+      position: 'right'
+    },
+    {
+      targetId: 'nav-item-help',
+      title: 'Hỏi đáp & Hỗ trợ 💬',
+      content: 'Kênh gửi câu hỏi hỗ trợ kỹ thuật, giải đáp thắc mắc về bài học và tương tác trực tiếp với đội ngũ Mentor.',
       position: 'right'
     },
     {
@@ -50,7 +80,8 @@ export const ProductTour: React.FC = () => {
   useEffect(() => {
     // Only run for student role and when authenticated
     if (isAuthenticated && activeUser && activeUser.role === 'student') {
-      const completed = localStorage.getItem('lms_tour_completed');
+      const tourKey = `lms_tour_completed_${activeUser.id}`;
+      const completed = localStorage.getItem(tourKey);
       if (completed !== 'true') {
         const timer = setTimeout(() => {
           setIsOpen(true);
@@ -58,7 +89,7 @@ export const ProductTour: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [isAuthenticated, activeUser?.role]);
+  }, [isAuthenticated, activeUser?.id, activeUser?.role]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -111,7 +142,11 @@ export const ProductTour: React.FC = () => {
   };
 
   const handleComplete = () => {
-    localStorage.setItem('lms_tour_completed', 'true');
+    if (activeUser) {
+      localStorage.setItem(`lms_tour_completed_${activeUser.id}`, 'true');
+    } else {
+      localStorage.setItem('lms_tour_completed', 'true');
+    }
     setIsOpen(false);
   };
 
