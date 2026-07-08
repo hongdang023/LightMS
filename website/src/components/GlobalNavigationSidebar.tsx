@@ -123,11 +123,6 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
                 className="w-5 h-5 flex-shrink-0" 
               />
               {!isCollapsed && <span className="animate-fade-in truncate">{item.label}</span>}
-              
-              {/* Highlight dot for active item */}
-              {isActive && !isCollapsed && (
-                <span className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[#FFD94C] animate-pulse" />
-              )}
             </button>
           );
         })}
