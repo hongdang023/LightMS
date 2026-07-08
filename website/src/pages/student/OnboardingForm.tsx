@@ -17,7 +17,6 @@ export const OnboardingForm: React.FC = () => {
     industry: activeUser.industry || '',
     current_job: activeUser.current_job || '',
     product_idea: activeUser.product_idea || '',
-    bio: activeUser.bio || 'Thủy thủ mới gia nhập hải trình.',
     
     // New fields (now single values for dropdowns)
     referral_source: activeUser.referral_source || '',

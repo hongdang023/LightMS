@@ -28,7 +28,6 @@ export interface Profile {
   avatar_url: string;
   role: UserRole;
   telegram_id: string;
-  bio: string;
   gmail: string;
   phone_number?: string;
   facebook_url?: string;
@@ -814,7 +813,6 @@ const SEED_PROFILES: Profile[] = [
     avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150&auto=format&fit=crop',
     role: 'admin',
     telegram_id: '@dangtuyethong',
-    bio: 'Founder of The1ight. Đồng hành cùng các bạn trên hải trình tự học và làm sản phẩm số thực chiến.',
     gmail: 'dangtuyethong2324@gmail.com',
     phone_number: '0901234567',
     facebook_url: 'https://facebook.com/dangtuyethong2324',
@@ -1292,7 +1290,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userEmail)}`,
           role: finalRoleRequested,
           telegram_id: '',
-          bio: finalRoleRequested === 'admin' ? 'Giảng viên / Quản trị viên mới từ Supabase.' : 'Thủy thủ mới gia nhập hải trình từ Supabase.',
           gmail: userEmail,
           phone_number: '',
           facebook_url: '',
@@ -1409,7 +1406,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
         role: role,
         telegram_id: '',
-        bio: role === 'admin' ? 'Giảng viên / Quản trị viên mới.' : 'Thủy thủ mới gia nhập hải trình.',
         gmail: cleanEmail,
         phone_number: '',
         facebook_url: '',

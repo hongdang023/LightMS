@@ -105,6 +105,30 @@ export const ProfileView: React.FC = () => {
   const [livingRegion, setLivingRegion] = useState(activeUser.living_region || '');
   const [ageGroup, setAgeGroup] = useState(activeUser.age_group || '');
 
+  // Sync state when activeUser changes (e.g., login, switch user)
+  React.useEffect(() => {
+    const ref = initReferral();
+    const role = initRole();
+    const field = initField();
+    const gen = initGender();
+
+    setFullName(activeUser.full_name);
+    setGmail(activeUser.gmail || '');
+    setPhone(activeUser.phone_number || '');
+    setFbUrl(activeUser.facebook_url || '');
+    setIdea(activeUser.product_idea || '');
+    setReferralSource(ref.main);
+    setOtherReferral(ref.other);
+    setCurrentRole(role.main);
+    setOtherRole(role.other);
+    setWorkField(field.main);
+    setOtherField(field.other);
+    setGender(gen.main);
+    setOtherGender(gen.other);
+    setLivingRegion(activeUser.living_region || '');
+    setAgeGroup(activeUser.age_group || '');
+  }, [activeUser.id]);
+
   // Save changes
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
