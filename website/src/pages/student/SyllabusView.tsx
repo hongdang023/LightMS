@@ -40,8 +40,6 @@ export const SyllabusView: React.FC<{
     : lessons;
 
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
-  const [submissionText, setSubmissionText] = useState('');
-  const [reflectionText, setReflectionText] = useState('');
   const [rubricSelfCheck, setRubricSelfCheck] = useState<{ [key: string]: boolean }>({});
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
@@ -55,20 +53,6 @@ export const SyllabusView: React.FC<{
   const activeAssignment = assignments.find(a => a.lesson_id === activeLesson?.id);
   const activeSubmission = submissions.find(s => s.assignment_id === activeAssignment?.id && s.student_id === activeUser?.id);
   const activeFeedback = feedbacks.find(f => f.submission_id === activeSubmission?.id);
-
-  let displayLink = activeSubmission?.content || '';
-  let displayReflection = '';
-  if (activeSubmission?.content) {
-    try {
-      const parsed = JSON.parse(activeSubmission.content);
-      if (parsed && typeof parsed === 'object' && parsed.url) {
-        displayLink = parsed.url;
-        displayReflection = parsed.reflection || '';
-      }
-    } catch (e) {
-      // Fallback for raw text URLs
-    }
-  }
 
   // Initialize draft when active lesson or edit mode changes
   useEffect(() => {
@@ -179,7 +163,7 @@ export const SyllabusView: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeAssignment || !submissionText.trim()) return;
+    if (!activeAssignment) return;
 
     // Check if rubrics are completed (Self-evaluation check warning, excluding optional checklist items)
     const requiredRubrics = activeAssignment.rubric_checklist.filter(r => !r.is_optional);
@@ -195,15 +179,13 @@ export const SyllabusView: React.FC<{
     }
 
     const submissionPayload = JSON.stringify({
-      url: submissionText.trim(),
-      reflection: reflectionText.trim()
+      url: "https://www.facebook.com/groups/27216190438021089",
+      reflection: ""
     });
 
     submitAssignment(activeAssignment.id, submissionPayload);
 
-    setSubmissionText('');
-    setReflectionText('');
-    showToast('Đã nộp bài tập thành công! 🚀');
+    showToast('Đã ghi nhận hoàn thành bài tập! 🚀');
   };
 
   const isLessonCompletedByStudent = (lessonId: string): boolean => {
@@ -702,32 +684,26 @@ export const SyllabusView: React.FC<{
                         </div>
                       </div>
 
-                      {/* Submitted Text / URL Details */}
-                      <div className="p-4 bg-gray-50 border border-gray-150 rounded-2xl space-y-3">
+                      {/* Completed State Information */}
+                      <div className="p-4 bg-[#214C54]/5 border border-[#214C54]/10 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                          <span className="text-xs text-[#214C54] font-black uppercase tracking-wider block mb-1">🔗 Sản phẩm đã nộp:</span>
-                          <a
-                            href={displayLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-sm text-[#214C54] hover:underline font-bold break-all flex items-center gap-1"
-                          >
-                            {displayLink}
-                            <span>↗</span>
-                          </a>
+                          <span className="text-xs text-[#214C54] font-black uppercase tracking-wider block mb-0.5">🎉 Trạng thái:</span>
+                          <p className="text-sm text-emerald-600 font-bold">Đã hoàn thành bài tập trên hệ thống</p>
                         </div>
-                        {displayReflection && (
-                          <div className="border-t border-gray-200/60 pt-2.5">
-                            <span className="text-xs text-[#214C54] font-black uppercase tracking-wider block mb-1">💬 Cảm nhận của bạn:</span>
-                            <p className="text-sm text-gray-600 font-semibold leading-relaxed whitespace-pre-wrap">{displayReflection}</p>
-                          </div>
-                        )}
+                        <a
+                          href="https://www.facebook.com/groups/27216190438021089"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+                        >
+                          <span>Xem Facebook Group ↗</span>
+                        </a>
                       </div>
 
                       {/* Grade & Feedback card */}
                       {activeSubmission.status === 'graded' && activeFeedback ? (
                         <div className="bg-amber-500/5 border border-amber-500/25 rounded-2xl p-5 space-y-4">
-                          <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+                           <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
                             <div>
                               <span className="text-xs text-amber-800 font-black uppercase tracking-widest block">🏆 Kết quả chấm điểm:</span>
                               <span className="text-sm text-[#3E5E63] font-semibold">Được chấm bởi {users.find(u => u.id === activeFeedback.mentor_id)?.full_name || 'Giảng viên'}</span>
@@ -781,30 +757,22 @@ export const SyllabusView: React.FC<{
                         </div>
                       </div>
 
-                      {/* Submission Link Input */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] text-gray-455 font-bold uppercase tracking-wider block">🔗 Đường dẫn sản phẩm (Facebook post, Loom video, GitHub, Notion...):</label>
-                        <input 
-                          type="url"
-                          required
-                          className="w-full border border-gray-200 focus:outline-none focus:border-[#214C54] rounded-xl px-4 py-3 text-xs font-semibold text-gray-700 placeholder:text-gray-400 placeholder:font-normal transition-all"
-                          placeholder="Nhập đường link bài làm của bạn..."
-                          value={submissionText}
-                          onChange={(e) => setSubmissionText(e.target.value)}
-                        />
-                      </div>
-
-                      {/* Reflection Input */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] text-gray-455 font-bold uppercase tracking-wider block">💬 Chia sẻ cảm nhận & Bài học rút ra (Reflection):</label>
-                        <textarea
-                          required
-                          rows={4}
-                          className="w-full border border-gray-200 focus:outline-none focus:border-[#214C54] rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 placeholder:text-gray-400 placeholder:font-normal transition-all"
-                          placeholder="Bạn học được gì khi làm bài tập này? Có khó khăn gì đã vượt qua hay điều gì thú vị?"
-                          value={reflectionText}
-                          onChange={(e) => setReflectionText(e.target.value)}
-                        />
+                      {/* Facebook Group Navigation Button */}
+                      <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-5 space-y-3">
+                        <div>
+                          <span className="text-[10px] text-blue-800 font-black uppercase tracking-widest block">👥 Đăng bài tập lên Facebook Group lớp:</span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal">
+                            Hãy đăng sản phẩm bài tập của bạn lên Facebook Group để cùng thảo luận và nhận góp ý từ lớp.
+                          </span>
+                        </div>
+                        <a
+                          href="https://www.facebook.com/groups/27216190438021089"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs font-black rounded-xl w-full shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
+                        >
+                          <span>🚀 Đi tới Facebook Group Lớp</span>
+                        </a>
                       </div>
 
                       {isLessonStarted(activeLesson) ? (
@@ -812,8 +780,7 @@ export const SyllabusView: React.FC<{
                           type="submit"
                           className="bg-[#214C54] hover:bg-[#15333B] text-white w-full text-xs font-black flex items-center justify-center gap-1.5 py-3 rounded-xl shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 select-none cursor-pointer"
                         >
-                          <span className="text-xs">🚀</span>
-                          <span>Nộp bài & đăng thảo luận</span>
+                          <span>✅ Hoàn thành bài tập</span>
                         </button>
                       ) : (
                         <button 
@@ -896,7 +863,6 @@ export const SyllabusView: React.FC<{
                   onClick={() => {
                     if (locked) return;
                     setSelectedLessonId(les.id);
-                    setSubmissionText('');
                     setRubricSelfCheck({});
                   }}
                   className={`w-full flex items-center justify-between p-5 text-left transition-all bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md hover:border-[#214C54]/30 ${

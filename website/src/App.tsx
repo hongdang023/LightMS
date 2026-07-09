@@ -21,7 +21,6 @@ import { ProfileView } from './pages/student/ProfileView';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { CourseBuilder } from './pages/admin/CourseBuilder';
-import { SpeedGrader } from './pages/admin/SpeedGrader';
 import { StudentManagement } from './pages/admin/StudentManagement';
 import { InternalTeam } from './pages/admin/InternalTeam';
 import { Announcements as AdminAnnouncements } from './pages/admin/Announcements';
@@ -99,8 +98,6 @@ function MainAppShell() {
         return <CourseBuilder />;
       case 'admin-calendar':
         return <AdminCalendarManagement />;
-      case 'speedgrader':
-        return <SpeedGrader />;
       case 'student-mgmt':
         return <StudentManagement />;
       case 'internal-team':

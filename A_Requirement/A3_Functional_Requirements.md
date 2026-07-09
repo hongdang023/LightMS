@@ -12,9 +12,9 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 ### 1.2. Học tập & Thực hành (Lộ trình học)
 
-- **FR-STU-05 (All-in-one Lessons):** Mỗi bài học phải tích hợp đầy đủ nội dung: Video bài giảng, tài liệu (slide, pdf), yêu cầu bài tập và khu vực nộp bài trên cùng một giao diện.
-- **FR-STU-06 (Assignment Submission):** Học viên có thể nộp bài trực tiếp thông qua upload file, gửi link hoặc nhập text.
-- **FR-STU-07 (View Feedback):** Học viên có thể xem điểm số và nhận xét chi tiết của Mentor ngay tại khu vực nộp bài.
+- **FR-STU-05 (All-in-one Lessons):** Mỗi bài học phải tích hợp đầy đủ nội dung: Video bài giảng, tài liệu (slide, pdf), yêu cầu bài tập và nút điều hướng làm bài, xác nhận hoàn thành trên cùng một giao diện.
+- **FR-STU-06 (Assignment Submission):** Học viên đăng bài tập trực tiếp lên Facebook Group của lớp và bấm nút "Hoàn thành bài tập" trên hệ thống để ghi nhận trạng thái hoàn thành.
+- **FR-STU-07 (View Feedback):** Học viên có thể xem phản hồi đánh giá của Mentor ngay tại khu vực bài tập.
 ### 1.3. Cộng đồng & Hỗ trợ (Hỏi đáp & Hỗ trợ)
 
 - **FR-STU-11 (FAQ Knowledge Base):** Cung cấp hệ thống câu hỏi thường gặp (FAQ) để giải đáp nhanh.
@@ -52,7 +52,6 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 ### 2.4. Quản lý Bài tập & Đánh giá (Chấm bài tập)
 
-- **FR-AD-08 (SpeedGrader):** Giao diện chấm bài tập trung cho Mentor, tích hợp hiển thị bài làm, Rubric chấm điểm và khung nhập Feedback trên cùng một màn hình.
 - **FR-AD-09 (Threads Curation):** Công cụ cho phép Mentor "ghim" hoặc chọn lọc các bài nộp xuất sắc làm mẫu cho lớp học.
 
 ### 2.5. Quản lý Học viên & Báo cáo (Quản lý học viên)

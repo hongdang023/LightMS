@@ -13,7 +13,6 @@ import {
   AnnouncementsIcon,
   AdminDashboardIcon,
   CourseBuilderIcon,
-  SpeedGraderIcon,
   StudentsIcon,
   InternalTeamIcon
 } from './Icons';
@@ -33,7 +32,6 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     'admin-announcements',
     'course-builder',
     'admin-calendar',
-    'speedgrader',
     'student-mgmt',
     'internal-team',
     'admin-settings'
@@ -59,7 +57,6 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     { id: 'admin-announcements', label: 'Thông báo', icon: AnnouncementsIcon },
     { id: 'course-builder', label: 'Soạn lộ trình', icon: CourseBuilderIcon },
     { id: 'admin-calendar', label: 'Lịch học', icon: ScheduleIcon },
-    { id: 'speedgrader', label: 'Chấm bài tập', icon: SpeedGraderIcon },
     { id: 'student-mgmt', label: 'Quản lý học viên', icon: StudentsIcon },
     { id: 'internal-team', label: 'Quản lý nhân sự', icon: InternalTeamIcon },
     { id: 'admin-settings', label: 'Cài đặt', icon: Settings },

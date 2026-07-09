@@ -59,8 +59,8 @@ Dựa vào triết lý **Outcome-based Mastery** và **Action-Oriented**, hệ t
 
 ### 3.3. Assignments & Submissions (Bài tập & Nộp bài)
 - `assignments`: Gắn liền với `lessons`. Yêu cầu bài tập được lưu trữ định dạng **Rich-Text (JSON/HTML)** đảm bảo trình bày đẹp mắt, rõ ràng.
-- `submissions`: Thuộc `assignments` and `users`. Nội dung bài nộp hỗ trợ Rich-Text Editor (cho phép format text, chèn ảnh, đính kèm link, theo dõi lượt upvote từ cộng đồng).
-- `feedbacks`: Của Mentor đánh giá cho `submissions`. Cung cấp khung Rich-Text Editor cho Mentor để feedback trực quan, bôi đậm lỗi sai, kèm mức độ đánh giá (Mastery Level: Đạt / Chưa đạt).
+- `submissions`: Thuộc `assignments` and `users`. Ghi nhận trạng thái hoàn thành bài tập của học viên khi click nút xác nhận (không còn lưu nội dung bài nộp trực tiếp trên hệ thống do đã chuyển sang đăng bài tập trên Facebook Group lớp).
+- `feedbacks`: Đánh giá phản hồi về mức độ hoàn thành bài tập của học viên.
 
 ### 3.4. Community & Tracking
 - `comments`: Bình luận và thảo luận chéo giữa học viên trên bài nộp bài tập. Số lượng Upvotes và trạng thái Verified (Tích xanh cho lên Top).

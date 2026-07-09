@@ -3,7 +3,7 @@
 Dưới đây là các yêu cầu phi chức năng (NFR) nhằm đảm bảo hệ thống The1ight LMS vận hành trơn tru, bảo mật, dễ mở rộng và mang lại trải nghiệm người dùng tối ưu nhất.
 
 ## 1. Usability & User Experience (Tính khả dụng & Trải nghiệm người dùng)
-- **NFR-UX-01 (Zero Friction & Elegance):** Giao diện phải được thiết kế tối giản, loại bỏ các bước click thừa nhưng vẫn phải đảm bảo tính thẩm mỹ cao cấp (Elegance). Bắt buộc sử dụng các thư viện Rich-Text Editor hiện đại để trình bày nội dung bài tập, feedback rõ ràng, đẹp mắt. Áp dụng triết lý "All-in-one Lessons" để học viên không phải chuyển trang liên tục.
+- **NFR-UX-01 (Zero Friction & Elegance):** Giao diện phải được thiết kế tối giản, loại bỏ các bước click thừa nhưng vẫn phải đảm bảo tính thẩm mỹ cao cấp (Elegance). Bắt buộc sử dụng các thành phần trình bày nội dung bài tập rõ ràng, đẹp mắt. Áp dụng triết lý "All-in-one Lessons" để học viên không phải chuyển trang liên tục. Nút chuyển hướng Facebook Group và nút ghi nhận hoàn thành bài tập cần hiển thị trực quan, dễ bấm.
 - **NFR-UX-02 (Mobile Responsiveness):** Nền tảng phải hoạt động mượt mà trên thiết bị di động, đặc biệt đối với việc xem To-do list và đọc tài liệu.
 - **NFR-UX-03 (Accessibility):** Tuân thủ các tiêu chuẩn trợ năng cơ bản (WCAG) để đảm bảo độ tương phản màu sắc và hỗ trợ điều hướng bằng bàn phím.
 - **NFR-UX-04 (Admin UI Consistency/WYSIWYG):** Giao diện Edit Mode/Reading Mode ở luồng Admin cho các mục Giới thiệu, Onboarding, Lộ trình học phải có thiết kế y hệt giao diện Student Mode. Mục đích để Admin nhìn thấy chính xác những gì học viên thấy, giúp điều chỉnh các chi tiết nhỏ dễ dàng.

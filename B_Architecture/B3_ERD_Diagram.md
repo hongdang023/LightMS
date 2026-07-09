@@ -127,7 +127,7 @@ erDiagram
         uuid assignment_id FK
         uuid batch_id FK
         uuid student_id FK
-        text content "Rich-text"
+        text content "Completion link/metadata"
         enum status
         int upvotes_count
         text[] upvoted_by
