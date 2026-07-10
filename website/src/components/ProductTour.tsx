@@ -31,7 +31,7 @@ export const ProductTour: React.FC = () => {
       targetId: "nav-item-about",
       title: "Giới thiệu 🧭",
       content:
-        "Nơi giới thiệu về khóa học, triết lý giáo dục của Conan Learning OS, và các thông tin cơ bản giúp bạn làm quen với môi trường học tập.",
+        "Nơi giới thiệu về khóa học, triết lý giáo dục của The1ight, và các thông tin cơ bản giúp bạn làm quen với môi trường học tập.",
       position: "right",
     },
     {
