@@ -882,7 +882,10 @@ const SEED_ONBOARDING_UNLOCK_SCHEDULES: OnboardingUnlockSchedule[] = [
 ];
 
 const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
-  { id: 'cal-1', title: 'KICK-OFF MEETING', time: '20:00', endTime: '21:30', date: 19, month: 6, year: 2026, colorClass: 'bg-red-600 text-white', type: 'class', eventType: 'kick-off' },
+  // Kick-off Meeting
+  { id: 'cal-1', title: 'KICK-OFF MEETING', time: '14:30', endTime: '16:30', date: 18, month: 6, year: 2026, colorClass: 'bg-red-600 text-white', type: 'class', eventType: 'kick-off', details: 'Kick-off Meeting\nOnline via Zoom\nSự kiện khởi động' },
+  
+  // Onboarding Week
   { id: 'cal-2', title: 'ONBOARDING', time: '00:00', allDay: true, date: 20, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
   { id: 'cal-3', title: 'ONBOARDING', time: '00:00', allDay: true, date: 21, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
   { id: 'cal-4', title: 'ONBOARDING', time: '00:00', allDay: true, date: 22, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
@@ -890,9 +893,44 @@ const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
   { id: 'cal-6', title: 'ONBOARDING', time: '00:00', allDay: true, date: 24, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
   { id: 'cal-7', title: 'ONBOARDING', time: '00:00', allDay: true, date: 25, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
   { id: 'cal-8', title: 'ONBOARDING', time: '00:00', allDay: true, date: 26, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-9', title: 'OFFICE HOUR', time: '20:00', endTime: '21:00', dayOfWeek: 2, startRecur: new Date(2026, 6, 27).getTime(), endRecur: new Date(2026, 7, 31).getTime(), colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour' },
-  { id: 'cal-10', title: 'LIVE CLASS', time: '20:30', endTime: '22:30', dayOfWeek: 4, startRecur: new Date(2026, 6, 27).getTime(), endRecur: new Date(2026, 7, 31).getTime(), colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Thứ 5 — 20:30-22:30\nOnline via Zoom\nSự kiện học thuật' },
-  { id: 'cal-11', title: 'LIVE CLASS', time: '14:30', endTime: '16:30', dayOfWeek: 7, startRecur: new Date(2026, 6, 27).getTime(), endRecur: new Date(2026, 7, 26).getTime(), colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Chủ Nhật — 14:30-16:30\nOnline via Zoom\nSự kiện học thuật' }
+
+  // Live Classes
+  { id: 'cal-live-1', title: 'LIVE CLASS - BUỔI 01', time: '20:30', endTime: '22:30', date: 29, month: 6, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 01: Mindset: MVP -> Product có thể scale\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-2', title: 'LIVE CLASS - BUỔI 02', time: '14:30', endTime: '16:30', date: 1, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 02: PRD kỹ thuật & 4 flow\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-3', title: 'LIVE CLASS - BUỔI 03', time: '20:30', endTime: '22:30', date: 5, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 03: IDE (Codex, Visual Studio & Claude Code) + CLI Product Cockpit\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-4', title: 'LIVE CLASS - BUỔI 04', time: '14:30', endTime: '16:30', date: 8, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 04: MCP for Product Building\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-5', title: 'LIVE CLASS - BUỔI 05', time: '20:30', endTime: '22:30', date: 12, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 05: Skills for Product Building\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-6', title: 'LIVE CLASS - BUỔI 06', time: '14:30', endTime: '16:30', date: 15, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 06: GitHub & Version Control\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-7', title: 'LIVE CLASS - BUỔI 07', time: '20:30', endTime: '22:30', date: 19, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 07: Backend + Database\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-8', title: 'LIVE CLASS - BUỔI 08', time: '14:30', endTime: '16:30', date: 22, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 08: Deploy & Infra Landscape\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-9', title: 'LIVE CLASS - BUỔI 09', time: '20:30', endTime: '22:30', date: 26, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 09: Automation with n8n\nOnline via Zoom\nSự kiện học thuật' },
+  
+  // Tuần nghỉ - Build sản phẩm (27/08 - 04/09)
+  { id: 'cal-break-1', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 27, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-2', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 28, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-3', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 29, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-4', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 30, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-5', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 31, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-6', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 1, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-7', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 2, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-8', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 3, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-9', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 4, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+
+  // Buổi 10
+  { id: 'cal-live-10', title: 'LIVE CLASS - BUỔI 10', time: '14:30', endTime: '16:30', date: 5, month: 8, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 10: Demo hệ thống (theo request của học viên)\nOnline via Zoom\nSự kiện học thuật' },
+
+  // Pitching Days
+  { id: 'cal-pitch-1', title: 'PITCHING DAY 01', time: '14:30', endTime: '16:30', date: 12, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 01\nOnline/Offline' },
+  { id: 'cal-pitch-2', title: 'PITCHING DAY 02', time: '20:30', endTime: '22:30', date: 16, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 02\nOnline/Offline' },
+  { id: 'cal-pitch-3', title: 'PITCHING DAY 03', time: '14:30', endTime: '16:30', date: 19, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 03\nOnline/Offline' },
+
+  // Office Hours
+  { id: 'cal-oh-1', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 2, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-2', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 9, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-3', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 16, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-4', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 23, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-5', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 6, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-6', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 13, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' }
 ];
 
 const SEED_ABOUT_CONTENT: AboutContent = {
@@ -930,7 +968,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v18';
+  const DB_VERSION = 'lms_v19';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference

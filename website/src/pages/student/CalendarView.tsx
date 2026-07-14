@@ -125,7 +125,7 @@ export const CalendarView: React.FC = () => {
       }
       
       if (titleUpper.includes('LIVE CLASS')) {
-        return `Thân gửi học viên,\n\nChào mừng bạn đến với buổi học trong hành trình **Build with The1ight**\n\n**Link Meeting: https://zoom.us/j/the1ight-lms-class**\n🕘 Lịch học cố định:\n\n* 🌙 **Thứ 5 — 20:30-22:30** hàng tuần\n* ☀️ **Chủ Nhật — 14:30-16:30** hàng tuần\n\nHãy chuẩn bị tinh thần thật thoải mái, chủ động học tập – kết nối – sẻ chia để cùng nhau tạo nên một buổi học đầy năng lượng nhé 💡.\n\nThân mến,\nĐội ngũ **The 1ight**`;
+        return `Thân gửi học viên,\n\nChào mừng bạn đến với buổi học trong hành trình **Build with The1ight**\n\n**Link Meeting: https://zoom.us/j/the1ight-lms-class**\n🕘 Lịch học cố định:\n\n* 🌙 **Thứ 4 — 20:30-22:30** hàng tuần\n* ☀️ **Thứ 7 — 14:30-16:30** hàng tuần\n\nHãy chuẩn bị tinh thần thật thoải mái, chủ động học tập – kết nối – sẻ chia để cùng nhau tạo nên một buổi học đầy năng lượng nhé 💡.\n\nThân mến,\nĐội ngũ **The 1ight**`;
       }
       
       if (titleUpper.includes('OFFICE HOUR')) {
@@ -213,13 +213,7 @@ export const CalendarView: React.FC = () => {
   };
 
   const handleAddGoogleCalendar = () => {
-    downloadICSFile('LightMS_Google_Schedule.ics');
-    addNotification(
-      'Đã mở trang import Google Calendar',
-      'File .ics đã được tải xuống. Trang Settings của Google Calendar sẽ mở ra để bạn Import file này.',
-      'system'
-    );
-    window.open('https://calendar.google.com/calendar/r/settings/export', '_blank');
+    window.open('https://drive.google.com/file/d/14oVVGQA7j0Lt9q-IAtIHi2tB9e93TtOQ/view?usp=drive_link', '_blank');
   };
 
   const monthNames = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
