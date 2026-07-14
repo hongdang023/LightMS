@@ -8,7 +8,7 @@ interface StudentDashboardProps {
 }
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange }) => {
-  const { activeUser, lessons, assignments, submissions, users, modules, courses } = useDatabase();
+  const { activeUser, lessons, assignments, submissions, users, modules, courses, calendarEvents } = useDatabase();
 
   const currentCourse = courses.find(c => c.title.toLowerCase().includes('201')) || courses[0];
   let filteredModules = currentCourse 
@@ -113,30 +113,36 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     return list;
   }, [onboardingProgress, onboardingDueDate, assignments, filteredLessons, submissions, activeUser.id]);
 
-  // 3. Find the nearest class session dynamically
+  // 3. Find the nearest session from calendar events dynamically
   const nearestLesson = React.useMemo(() => {
+    // Keep it consistent with system virtual mock date
     const mockNow = new Date('2026-06-25T23:39:06+07:00').getTime();
     
-    // Sort lessons with start_date
-    const upcomingLessons = filteredLessons
-      .filter(l => l.start_date)
-      .sort((a, b) => new Date(a.start_date!).getTime() - new Date(b.start_date!).getTime());
+    // Convert calendarEvents to a list of events with actual timestamps
+    const eventsWithTimestamps = calendarEvents
+      .filter(e => e.date !== undefined && e.month !== undefined && e.year !== undefined)
+      .map(e => {
+        const [hours, minutes] = (e.time && e.time !== 'Cả ngày' && e.time !== '00:00') ? e.time.split(':').map(Number) : [9, 0];
+        const timestamp = new Date(e.year!, e.month!, e.date!, hours, minutes).getTime();
+        return { ...e, timestamp };
+      })
+      .sort((a, b) => a.timestamp - b.timestamp);
 
-    // Find the first lesson starting on or after mockNow
-    const next = upcomingLessons.find(l => new Date(l.start_date!).getTime() >= mockNow);
+    // Find the first event starting on or after mockNow
+    const next = eventsWithTimestamps.find(e => e.timestamp >= mockNow);
 
-    // Default to the last scheduled class if none in future
-    if (!next && upcomingLessons.length > 0) {
-      return upcomingLessons[upcomingLessons.length - 1];
+    // Default to the last scheduled event if none in future
+    if (!next && eventsWithTimestamps.length > 0) {
+      return eventsWithTimestamps[eventsWithTimestamps.length - 1];
     }
     
     return next;
-  }, [filteredLessons]);
+  }, [calendarEvents]);
 
   // Get formatted date details for nearest lesson
   const lessonDateDetails = React.useMemo(() => {
-    if (!nearestLesson || !nearestLesson.start_date) return null;
-    const dateObj = new Date(nearestLesson.start_date);
+    if (!nearestLesson || nearestLesson.date === undefined || nearestLesson.month === undefined || nearestLesson.year === undefined) return null;
+    const dateObj = new Date(nearestLesson.year, nearestLesson.month, nearestLesson.date);
     const day = dateObj.getDate();
     const month = `Th${dateObj.getMonth() + 1}`;
     const weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'long' });
@@ -330,7 +336,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                       {nearestLesson.title}
                     </h4>
                     <p className="text-xs text-gray-500 font-semibold mt-0.5">
-                      Thời gian: 20:00 - 22:00
+                      Thời gian: {nearestLesson.time && nearestLesson.endTime ? `${nearestLesson.time} - ${nearestLesson.endTime}` : (nearestLesson.allDay || nearestLesson.time === '00:00' ? 'Cả ngày' : nearestLesson.time)}
                     </p>
 
                   </div>
