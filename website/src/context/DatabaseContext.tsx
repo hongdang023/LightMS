@@ -550,7 +550,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Tìm hiểu về khóa học Vibe Coding 201, giảng viên và văn hóa học tập chủ động. Định vị lộ trình Onboarding.',
     video_url: 'https://drive.google.com/file/d/kickoff-meeting-vibe-201',
     order_index: 1,
-    start_date: '2026-06-20', // Started in past
+    start_date: '2026-07-18', // Kick-off Meeting
     target: 'Kích hoạt tư duy học chủ động, hướng dẫn luật chơi hải lý và giới thiệu công cụ',
     demo: 'Demo giao diện LMS và giới thiệu các thử thách onboarding',
     scope: 'Giới thiệu tổng quan, chưa đi vào code',
@@ -566,7 +566,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'MVP vs scalable product vs internal workspace system. Các điểm gãy sau prototype: codebase rối, data chưa rõ, auth/permission, deploy tạm, thiếu version control, khó debug, thiếu automation. Tech literacy map cho non-tech: frontend, backend, database, API, auth, deploy, server, automation. Cách học tech với AI: hỏi đúng, kiểm chứng output, không bị thuật ngữ kéo đi.',
     video_url: 'https://drive.google.com/file/d/buoi-1-mindset-scale',
     order_index: 2,
-    start_date: '2026-07-01', // Future date
+    start_date: '2026-07-29', // Buổi 1
     target: 'Giúp học viên hiểu gap giữa prototype/MVP và product hoặc workspace system đáng tin hơn.',
     demo: 'So sánh một prototype đẹp nhưng mong manh với một product/workspace system có cấu trúc hơn.',
     scope: 'Giữ tính mindset + framework. Không đi quá sâu vào từng công nghệ trong buổi này.',
@@ -580,7 +580,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'PRD v2: problem, user, goal, success criteria, main use case, out-of-scope, user stories, acceptance criteria. Main flow vs secondary flow vs edge case. 4 flow: User Flow, Business Flow, System Flow, Data Flow. Cách dùng AI/skill để review PRD và phát hiện gap.',
     video_url: 'https://drive.google.com/file/d/buoi-2-prd-technical',
     order_index: 3,
-    start_date: '2026-07-05', // Future date
+    start_date: '2026-08-01', // Buổi 2
     target: 'Biến ý tưởng/product request thành spec đủ rõ để AI/IDE/agent build đúng hơn.',
     demo: 'Chuyển một app mẫu từ PRD thường sang PRD kỹ thuật; vẽ 4 flow bằng Mermaid/diagrams.net hoặc tool tương đương.',
     scope: 'Buổi này là nền để các buổi backend/deploy/automation không bị loạn.',
@@ -596,7 +596,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Cấu phần IDE: file tree, editor, agent panel, terminal, source control/diff. Workflow giao việc cho agent: context, task breakdown, plan, diff review, accept/reject, run/test/debug. Khi nào dùng IDE, khi nào dùng CLI. Cách yêu cầu AI giải thích lỗi terminal/build log. Cách giới hạn scope để agent không sửa quá rộng.',
     video_url: 'https://drive.google.com/file/d/buoi-3-ide-cli-cockpit',
     order_index: 4,
-    start_date: '2026-07-08',
+    start_date: '2026-08-05', // Buổi 3
     target: 'Dạy cách làm việc với IDE/CLI để AI build có kiểm soát thay vì sửa lung tung. (học cả Cursor, Antigravity, Codex & Claude Code). Riêng Claude code có thể tách 1 buổi nếu muốn',
     demo: 'Mở repo/app mẫu; yêu cầu agent thêm một feature nhỏ; review diff; chạy local; sửa lỗi; commit nháp.',
     scope: 'Chọn một IDE chính để demo. Các IDE khác chỉ overview.',
@@ -610,7 +610,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Skill là gì, khác prompt thường ở đâu. Skill cho brainstorm product, sharpen problem statement, MVP scoping, PRD review, acceptance criteria. Skill cho QA app, browser testing, pitch review, build review checklist. Ví dụ Superpowers hoặc MVP/product framework skill. Cách gọi skill đúng lúc trong IDE/agent workflow.',
     video_url: 'https://drive.google.com/file/d/buoi-4-skills-playbook',
     order_index: 5,
-    start_date: '2026-07-12',
+    start_date: '2026-08-12', // Buổi 5 in calendar
     target: 'Dạy skill như playbook tái sử dụng để AI hỗ trợ brainstorm, scope, QA, review và cải thiện sản phẩm ổn định hơn.',
     demo: 'Dùng skill để review PRD v2; tạo test checklist; dùng browser/testing skill để kiểm tra một flow sản phẩm.',
     scope: 'Nên tách riêng vì phần Skills khóa cũ bị dồn với MCP nên dễ quá tải.',
@@ -624,7 +624,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'MCP trong bức tranh agent/tool. MCP vs Skill vs API vs CLI vs Script. MCP cho design/prototype, browser/app testing, database/schema/docs, repo/GitHub, file/workspace context. Decision rule: khi nào MCP đáng dùng, khi nào không cần.',
     video_url: 'https://drive.google.com/file/d/buoi-5-mcp-integration',
     order_index: 6,
-    start_date: '2026-07-15',
+    start_date: '2026-08-08', // Buổi 4 in calendar
     target: 'Dạy MCP theo use case product: agent chạm vào tool/data/context để làm việc thật hơn.',
     demo: 'Agent dùng browser để test flow; dùng database/docs context để đề xuất schema hoặc kiểm tra lỗi; đọc repo/context để trả lời câu hỏi product/technical.',
     scope: 'Không đi sâu subagents, orchestration, remote agent setup. Các phần đó để workshop/khóa sau.',
@@ -640,7 +640,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Repo, commit, branch, pull request ở mức non-tech cần hiểu. Issue -> change -> review -> commit -> deploy. AI review code/change. Rollback mindset. Repo hygiene: README, env example, folder structure, issue template, changelog đơn giản.',
     video_url: 'https://drive.google.com/file/d/buoi-6-github-versioning',
     order_index: 7,
-    start_date: '2026-07-19',
+    start_date: '2026-08-15', // Buổi 6
     target: 'Dùng GitHub như hệ thống kiểm soát thay đổi, không chỉ là nơi lưu code.',
     demo: 'Tạo issue cho bug/feature; agent sửa code; review diff; commit/push; trigger deploy.',
     scope: 'Không cần dạy Git command line sâu. Ưu tiên mental model + workflow thực dụng.',
@@ -654,7 +654,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Data layer trong app/product. Khi nào dùng Google Sheets, Firebase, Supabase, backend/API custom, hoặc chưa cần backend thật. So sánh theo độ dễ bắt đầu, realtime, auth, permission, SQL/noSQL, cost/free tier, scale, lock-in, AI/agent friendliness. Schema, CRUD, auth, permission/RLS ở mức non-tech cần hiểu.',
     video_url: 'https://drive.google.com/file/d/buoi-7-backend-layers',
     order_index: 8,
-    start_date: '2026-07-22',
+    start_date: '2026-08-19', // Buổi 7
     target: 'Giúp học viên biết chọn Google Sheets, Firebase, Supabase, hay backend thật theo nhu cầu sản phẩm.',
     demo: 'Một use case đơn giản được triển khai hoặc mô phỏng bằng Google Sheets/Firebase/Supabase để thấy trade-off; chọn một path chính để demo kỹ.',
     scope: 'Nên dạy decision-first, sau đó chọn một path demo chính để tránh quá rộng.',
@@ -670,7 +670,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Vercel: managed app hosting. Cloudflare: DNS/CDN/security/Pages/Workers/Tunnel. VPS: thuê server riêng, linh hoạt hơn nhưng phải tự chịu trách nhiệm. Docker: đóng gói app/service để chạy ổn định giữa môi trường khác nhau. SSH, env vars, secrets, domain, logs, local vs production. Khi nào không nên tự host.',
     video_url: 'https://drive.google.com/file/d/buoi-8-deploy-infra',
     order_index: 9,
-    start_date: '2026-07-26',
+    start_date: '2026-08-22', // Buổi 8
     target: 'Cho học viên hiểu bản đồ deploy/infra: Vercel, Cloudflare, VPS, Docker khác nhau ra sao và nên chọn gì.',
     demo: 'Deploy app lên Vercel; giải thích/trỏ domain qua Cloudflare; demo SSH vào VPS hoặc mô phỏng flow; demo Docker chạy service đơn giản.',
     scope: 'Không biến thành Docker/VPS hardcore. Mục tiêu là hiểu bản đồ và biết chọn đường.',
@@ -684,7 +684,7 @@ const SEED_LESSONS: Lesson[] = [
     content: 'Automation layer là gì. n8n cho form -> sheet/database -> notification; app data -> report; file upload -> OCR/summary; feedback -> action list; daily/weekly digest. Local n8n vs cloud/self-host/server n8n. Webhook, trigger, credential, node, workflow. Khi nào dùng n8n, khi nào dùng code/API/script.',
     video_url: 'https://drive.google.com/file/d/buoi-9-n8n-automation',
     order_index: 10,
-    start_date: '2026-07-29',
+    start_date: '2026-08-26', // Buổi 9
     target: 'Dùng automation để nối các mảnh sản phẩm/workspace và giảm việc lặp.',
     demo: 'Workflow mẫu: input/form -> data store -> Telegram/email/Slack notification -> summary. Có thể nối với Personal Work OS Lite.',
     scope: 'Core nên ưu tiên local/cloud demo; self-host/VPS để optional nếu lớp đủ nền.',
@@ -1034,7 +1034,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v4';
+  const SYLLABUS_VERSION = 'v201_v5';
   const [lessons, setLessons] = useState<Lesson[]>(() => {
     const currentVersion = localStorage.getItem('lms_syllabus_version');
     if (currentVersion !== SYLLABUS_VERSION) {
