@@ -279,7 +279,8 @@ export const CalendarView: React.FC = () => {
             const cellMonth = cell.isCurrentMonth ? month : (cell.date > 15 ? month - 1 : month + 1);
             const cellYear = cellMonth < 0 ? year - 1 : cellMonth > 11 ? year + 1 : year;
             const normalizedMonth = (cellMonth + 12) % 12;
-            const isToday = cell.isCurrentMonth && cell.date === 19 && month === 6 && year === 2026; // Kick-off as mock today
+            const today = new Date();
+            const isToday = cell.isCurrentMonth && cell.date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
             const events = getEventsForDate(cellYear, normalizedMonth, cell.date, cell.dayOfWeek);
 
             return (
