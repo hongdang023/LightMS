@@ -353,16 +353,7 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
     localStorage.setItem('lms_bypass_locks', String(bypassLocks));
   }, [bypassLocks]);
 
-  // Track if profile is completed to auto-check profile task in Day 1
-  useEffect(() => {
-    if (activeUser.is_profile_completed) {
-      setCheckedTasks(prev => {
-        const next = { ...prev, 'day-1-task-3': true }; 
-        localStorage.setItem('lms_onboarding_tasks_v2', JSON.stringify(next));
-        return next;
-      });
-    }
-  }, [activeUser.is_profile_completed]);
+
 
   // Helper to extract clean task items from day checklist markdown
   const getTasksForDay = (dayData: OnboardingDay) => {
