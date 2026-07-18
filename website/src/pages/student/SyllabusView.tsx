@@ -195,8 +195,6 @@ export const SyllabusView: React.FC<{
     return hasSubmission;
   };
 
-  const hasMaterials = activeLesson ? activeLesson.has_materials !== false : false;
-
   // Split description into bullet points for the Agenda list
   const agendaItems = activeLesson?.content
     ? activeLesson.content
