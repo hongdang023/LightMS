@@ -111,6 +111,8 @@ Bảng này ánh xạ bài học vào ngày thực tế của lớp, cho phép c
 | `has_materials`| `boolean`| DEFAULT `false`    | Trạng thái có tài liệu học tập     |
 | `slide_url`   | `text` |                       | Đường link tài liệu Slide          |
 | `study_note_url`| `text`|                       | Đường link tài liệu Study Notes    |
+| `key_concepts` | `text[]`|                      | Khái niệm cốt lõi của bài học       |
+
 
 ---
 

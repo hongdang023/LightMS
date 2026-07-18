@@ -167,10 +167,9 @@ export const StudentManagement: React.FC = () => {
   const students = users.filter(u => u.role === 'student');
   const activeStudent = students.find(s => s.id === selectedStudentId);
 
-  // Calculate live class assignments count
   const liveClassAssignments = assignments.filter(a => {
     const lesson = lessons.find(l => l.id === a.lesson_id);
-    return lesson && lesson.module_id !== '00000000-0000-0000-0000-000000000000';
+    return !!lesson;
   });
   const totalLiveClassCount = liveClassAssignments.length || 3;
 

@@ -74,9 +74,9 @@ export interface Module {
 
 export interface Lesson {
   id: string;
-  module_id: string;
+  module_id?: string;
   title: string;
-  type: 'video' | 'document';
+  type?: string;
   content: string;
   video_url: string;
   order_index: number;

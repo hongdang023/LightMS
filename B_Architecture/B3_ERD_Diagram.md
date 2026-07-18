@@ -73,6 +73,7 @@ erDiagram
         boolean has_materials
         text slide_url
         text study_note_url
+        text_array key_concepts
     }
 
     ANNOUNCEMENTS {

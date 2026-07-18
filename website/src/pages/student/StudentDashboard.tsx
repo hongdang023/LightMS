@@ -20,17 +20,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
   }
 
-  const filteredLessons = currentCourse
-    ? lessons.filter(l => filteredModules.some(m => m.id === l.module_id))
-    : lessons;
+  const filteredLessons = lessons;
 
   // Helper to determine if a lesson has started
   const isLessonStarted = (lesson: typeof filteredLessons[0]): boolean => {
     if (!lesson.start_date) return true;
     const start = new Date(lesson.start_date).getTime();
-    // System virtual date mock is June 25, 2026
-    const now = new Date('2026-06-25T23:39:06+07:00').getTime();
+    // Use actual current time
+    const now = new Date().getTime();
     return now >= start;
+
   };
 
   // 1. Calculate Onboarding Week progress & completion
@@ -115,8 +114,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
 
   // 3. Find the nearest session from calendar events dynamically
   const nearestLesson = React.useMemo(() => {
-    // Keep it consistent with system virtual mock date
-    const mockNow = new Date('2026-06-25T23:39:06+07:00').getTime();
+    // Use actual current time
+    const mockNow = new Date().getTime();
+
     
     // Convert calendarEvents to a list of events with actual timestamps
     const eventsWithTimestamps = calendarEvents

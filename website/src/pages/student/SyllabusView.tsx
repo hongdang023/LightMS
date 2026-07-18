@@ -35,9 +35,7 @@ export const SyllabusView: React.FC<{
     filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
   }
 
-  const filteredLessons = currentCourse
-    ? lessons.filter(l => filteredModules.some(m => m.id === l.module_id))
-    : lessons;
+  const filteredLessons = lessons;
 
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
   const [rubricSelfCheck, setRubricSelfCheck] = useState<{ [key: string]: boolean }>({});
@@ -127,8 +125,9 @@ export const SyllabusView: React.FC<{
   const isLessonStarted = (lesson: Lesson): boolean => {
     if (!lesson.start_date) return true;
     const start = new Date(lesson.start_date).getTime();
-    const now = new Date('2026-06-25T23:39:06+07:00').getTime();
+    const now = new Date().getTime();
     return now >= start;
+
   };
 
   // Checks if a lesson is locked based on prerequisite:
@@ -439,7 +438,8 @@ export const SyllabusView: React.FC<{
                     </button>
                   )}
 
-                  {isLessonStarted(activeLesson) && hasMaterials && activeLesson.video_url ? (
+                  {isLessonStarted(activeLesson) && activeLesson.video_url ? (
+
                     <a
                       href={activeLesson.video_url}
                       target="_blank"

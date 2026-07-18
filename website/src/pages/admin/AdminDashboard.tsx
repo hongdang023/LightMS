@@ -144,9 +144,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
   }
 
-  const courseLessons = currentCourse
-    ? lessons.filter(l => filteredModules.some(m => m.id === l.module_id))
-    : lessons;
+  const courseLessons = lessons;
 
   const courseAssignments = assignments.filter(a => courseLessons.some(l => l.id === a.lesson_id));
 
