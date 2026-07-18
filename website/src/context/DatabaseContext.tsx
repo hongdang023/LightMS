@@ -1081,7 +1081,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const hasOutdatedTitle = parsed.some(d => d.day === 2 && d.title.includes("Làm quen với viết"));
     const hasOutdatedChecklist = parsed.some(d => d.checklist.includes("Xác nhận hoàn thành"));
     const isMissingDay8 = parsed.length < 8;
-    if (hasOutdatedTitle || hasOutdatedChecklist || isMissingDay8) {
+    const isMissingTelegramTask = !parsed.some(d => d.day === 1 && d.checklist.includes("Telegram"));
+    if (hasOutdatedTitle || hasOutdatedChecklist || isMissingDay8 || isMissingTelegramTask) {
       localStorage.removeItem('lms_onboarding_days');
       return SEED_ONBOARDING_DAYS;
     }
