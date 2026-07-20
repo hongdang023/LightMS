@@ -872,40 +872,30 @@ export const StudentManagement: React.FC = () => {
                           
                           {isExpanded && (
                             <div className="pl-4 pr-1 py-1 space-y-1 border-l border-gray-200 ml-1.5 mt-1 text-[9px] text-gray-600">
-                              {tasks.length === 0 ? (
-                                <div className="text-gray-400 italic">Không có nhiệm vụ nào</div>
-                              ) : (
-                                tasks.map(t => {
-                                  const isChecked = !!activeStudent.onboarding_tasks?.[t.key];
-                                  const isStop = t.key === currentStopKey;
-                                  
-                                  return (
-                                    <div 
-                                      key={t.key} 
-                                      className={`flex items-start gap-2 p-1.5 rounded transition-all ${
-                                        isStop 
-                                          ? 'bg-amber-50 border border-amber-200 text-amber-900 font-semibold' 
-                                          : isChecked 
-                                            ? 'text-gray-400 line-through' 
-                                            : ''
-                                      }`}
-                                    >
-                                      <span className={`font-bold shrink-0 ${isChecked ? 'text-green-600' : isStop ? 'text-amber-600' : 'text-gray-400'}`}>
-                                        {isChecked ? '✓' : '○'}
-                                      </span>
+                              {isDayCompleted ? (
+                                <div className="flex items-center gap-1.5 p-1.5 text-green-700 font-bold bg-green-50/50 rounded">
+                                  <span>✓</span>
+                                  <span>Đã hoàn thành toàn bộ các nhiệm vụ bắt buộc.</span>
+                                </div>
+                              ) : (() => {
+                                const stopTask = tasks.find(t => t.key === currentStopKey);
+                                if (!stopTask) return <div className="text-gray-400 italic">Không tìm thấy nhiệm vụ đang dừng</div>;
+                                return (
+                                  <div className="space-y-1">
+                                    <span className="text-[8px] font-extrabold text-amber-600 block mb-1">NHIỆM VỤ ĐANG DỪNG:</span>
+                                    <div className="flex items-start gap-2 p-1.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-semibold transition-all">
+                                      <span className="font-bold shrink-0 text-amber-600">○</span>
                                       <div className="flex-1">
-                                        <span>Task {t.idx}: {t.label}</span>
-                                        {t.isOptional && (
-                                          <span className="ml-1 text-[7px] bg-gray-100 text-gray-450 px-1 py-0.5 rounded shrink-0 font-bold">Optional</span>
+                                        <span>Task {stopTask.idx}: {stopTask.label}</span>
+                                        {stopTask.isOptional && (
+                                          <span className="ml-1 text-[7px] bg-gray-100 text-gray-455 px-1 py-0.5 rounded shrink-0 font-bold">Optional</span>
                                         )}
-                                        {isStop && (
-                                          <span className="ml-1.5 px-1 py-0.5 rounded text-[7px] font-extrabold bg-amber-500 text-white animate-pulse inline-block">Đang dừng tại đây</span>
-                                        )}
+                                        <span className="ml-1.5 px-1 py-0.5 rounded text-[7px] font-extrabold bg-amber-500 text-white animate-pulse inline-block">Đang dừng tại đây</span>
                                       </div>
                                     </div>
-                                  );
-                                })
-                              )}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           )}
                         </div>
