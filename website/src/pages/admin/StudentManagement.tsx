@@ -126,7 +126,7 @@ const VerticalProgressBarList: React.FC<{
   return (
     <div className="flex items-end justify-around h-36 w-full pt-4 border-b border-gray-150 pb-1">
       {data.map((item, idx) => (
-        <div key={idx} className="group relative flex flex-col items-center flex-1 mx-1 h-full justify-end">
+        <div key={idx} className="group relative flex flex-col items-center flex-1 min-w-0 mx-1 h-full justify-end">
           <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#15333B] text-white text-[9px] px-2 py-1 rounded-lg shadow-lg z-10 w-24 text-center pointer-events-none transition-all">
             <span className="font-extrabold truncate w-full">{item.label}</span>
             <span className="font-bold text-emerald-400">{item.count} HV ({item.percentage}%)</span>

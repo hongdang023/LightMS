@@ -363,6 +363,21 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
     }
   }, [activeUser?.onboarding_tasks]);
 
+  // Auto sync local tasks to database on mount if database has fewer tasks than local
+  useEffect(() => {
+    if (activeUser?.id) {
+      const saved = localStorage.getItem('lms_onboarding_tasks_v2');
+      const local = saved ? JSON.parse(saved) : {};
+      const db = activeUser.onboarding_tasks || {};
+      
+      const hasNewLocalTasks = Object.keys(local).some(key => local[key] && !db[key]);
+      if (hasNewLocalTasks) {
+        const merged = { ...db, ...local };
+        updateProfile(activeUser.id, { onboarding_tasks: merged });
+      }
+    }
+  }, [activeUser?.id]);
+
   // Save config changes
   useEffect(() => {
     localStorage.setItem('lms_onboarding_start_date', courseStartDate);
