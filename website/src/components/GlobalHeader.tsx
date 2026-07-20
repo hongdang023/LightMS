@@ -30,7 +30,7 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions, logout, submissions, assignments } = useDatabase();
+  const { activeUser, switchUser, lessons, nauticalTransactions, logout, submissions, assignments, onboardingDays } = useDatabase();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -69,11 +69,30 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
     return !!submission;
   }).length;
 
-  const completedOnboardingDays = Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
-    return (nauticalTransactions || []).some(
-      t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
-    );
-  }).length;
+  const completedOnboardingDays = (onboardingDays || []).length > 0
+    ? (onboardingDays || []).filter(day => {
+        const lines = day.checklist.split('\n');
+        const requiredTasks: string[] = [];
+        let taskIdx = 0;
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('- [ ]')) {
+            taskIdx++;
+            const rawLabel = trimmed.replace('- [ ]', '').trim();
+            const isOptional = rawLabel.toLowerCase().includes('optional');
+            if (!isOptional) {
+              requiredTasks.push(`day-${day.day}-task-${taskIdx}`);
+            }
+          }
+        });
+        if (requiredTasks.length === 0) return true;
+        return requiredTasks.every(key => !!activeUser.onboarding_tasks?.[key]);
+      }).length
+    : Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
+        return (nauticalTransactions || []).some(
+          t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
+        );
+      }).length;
 
   const totalCompleted = completedMainLessons + completedOnboardingDays;
   const progressPercent = totalItems > 0 ? Math.min(100, Math.round((totalCompleted / totalItems) * 100)) : 0;
