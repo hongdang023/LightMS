@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu } from 'lucide-react';
 import { useDatabase } from '../context/DatabaseContext';
+import { AnnouncementsIcon } from './Icons';
 
 interface GlobalHeaderProps {
   currentPage: string;
@@ -19,6 +20,8 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
   walloffame:     { label: 'Bảng vinh danh' },
   help:           { label: 'Hỏi đáp & Hỗ trợ' },
   profile:        { label: 'Hồ sơ cá nhân' },
+  announcements:  { label: 'Thông báo' },
+  'admin-announcements': { label: 'Thông báo' },
   'admin-dashboard': { label: 'Tổng quan hệ thống' },
   'course-builder':  { label: 'Soạn lộ trình' },
   'speedgrader':     { label: 'Chấm bài tập' },
@@ -27,12 +30,12 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions, logout } = useDatabase();
+  const { activeUser, switchUser, lessons, nauticalTransactions, logout, submissions, assignments } = useDatabase();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isStudent = activeUser.role === 'student';
-  const isAdmin = activeUser.role === 'admin' || activeUser.role === 'mentor';
+  const isAdmin = activeUser.role === 'mentor' || activeUser.role === 'admin';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -50,12 +53,30 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
   const breadcrumbs: { label: string; id?: string }[] = [{ label: 'LightMS' }];
   if (pageMeta) breadcrumbs.push({ label: pageMeta.label, id: currentPage });
 
-  // Progress bar
-  const completedLessons = nauticalTransactions
-    .filter(t => t.student_id === activeUser.id && t.action_type === 'lesson_complete')
-    .map(t => t.reference_id || '');
-  const uniqueCompleted = Array.from(new Set(completedLessons));
-  const progressPercent = lessons.length > 0 ? Math.min(100, Math.round((uniqueCompleted.length / lessons.length) * 100)) : 0;
+  // Progress bar calculation
+  const totalItems = (lessons || []).length + 7;
+  const completedMainLessons = (lessons || []).filter(lesson => {
+    const hasTx = (nauticalTransactions || []).some(
+      t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
+    );
+    if (hasTx) return true;
+    
+    const assignment = (assignments || []).find(a => a.lesson_id === lesson.id);
+    if (!assignment) return false;
+    const submission = (submissions || []).find(
+      s => s.assignment_id === assignment.id && s.student_id === activeUser.id && s.status !== 'draft'
+    );
+    return !!submission;
+  }).length;
+
+  const completedOnboardingDays = Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
+    return (nauticalTransactions || []).some(
+      t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
+    );
+  }).length;
+
+  const totalCompleted = completedMainLessons + completedOnboardingDays;
+  const progressPercent = totalItems > 0 ? Math.min(100, Math.round((totalCompleted / totalItems) * 100)) : 0;
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-0 flex items-center justify-between shadow-sm z-30 select-none h-14 shrink-0">
@@ -113,8 +134,23 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
         </div>
       )}
 
-      {/* RIGHT: Avatar Dropdown */}
-      <div className="relative" ref={dropdownRef}>
+      {/* RIGHT: Notifications & Avatar Dropdown */}
+      <div className="flex items-center gap-3">
+        {/* Notification Button */}
+        <button
+          onClick={() => onPageChange(isStudent ? 'announcements' : 'admin-announcements')}
+          title="Thông báo"
+          className={`p-2 rounded-full transition-all relative ${
+            ['announcements', 'admin-announcements'].includes(currentPage)
+              ? 'text-[#FFD94C] bg-[#214C54] hover:bg-[#214C54]/90'
+              : 'text-[#3E5E63] hover:text-[#15333B] hover:bg-gray-100'
+          }`}
+        >
+          <AnnouncementsIcon active={['announcements', 'admin-announcements'].includes(currentPage)} className="w-5 h-5" />
+        </button>
+
+        {/* Avatar Dropdown */}
+        <div className="relative" ref={dropdownRef}>
         <button
           id="header-profile-dropdown"
           onClick={() => setDropdownOpen(prev => !prev)}
@@ -236,6 +272,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
             </div>
           </div>
         )}
+        </div>
       </div>
     </header>
   );

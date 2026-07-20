@@ -147,7 +147,10 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
     onboardingUnlockSchedules,
     updateOnboardingDay,
     updateOnboardingUnlockSchedule,
-    users: profiles
+    users: profiles,
+    addNauticalMiles,
+    nauticalTransactions,
+    updateProfile
   } = useDatabase();
 
   // Email template config modal states
@@ -338,11 +341,27 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
 
   const [lockedAlert, setLockedAlert] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
 
-  // Load checklist checked state from localStorage
+  // Load checklist checked state from localStorage and database
   const [checkedTasks, setCheckedTasks] = useState<{ [key: string]: boolean }>(() => {
     const saved = localStorage.getItem('lms_onboarding_tasks_v2');
-    return saved ? JSON.parse(saved) : {};
+    const local = saved ? JSON.parse(saved) : {};
+    const db = activeUser?.onboarding_tasks || {};
+    return { ...db, ...local };
   });
+
+  // Sync from DB if updated elsewhere
+  useEffect(() => {
+    if (activeUser?.onboarding_tasks) {
+      setCheckedTasks(prev => {
+        const merged = { ...prev, ...activeUser.onboarding_tasks };
+        if (JSON.stringify(merged) !== JSON.stringify(prev)) {
+          localStorage.setItem('lms_onboarding_tasks_v2', JSON.stringify(merged));
+          return merged;
+        }
+        return prev;
+      });
+    }
+  }, [activeUser?.onboarding_tasks]);
 
   // Save config changes
   useEffect(() => {
@@ -437,9 +456,43 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
 
     setCheckedTasks(newCheckedState);
     localStorage.setItem('lms_onboarding_tasks_v2', JSON.stringify(newCheckedState));
+    updateProfile(activeUser.id, { onboarding_tasks: newCheckedState });
 
     if (nextChecked) {
       addNotification('Nhiệm vụ hoàn thành!', `Bạn đã check xong một nhiệm vụ của Ngày ${day}!`, 'system');
+      
+      // Check if all required tasks for this day are completed
+      const dayData = onboardingDays.find(d => d.day === day);
+      if (dayData) {
+        const tasks = getTasksForDay(dayData);
+        const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
+        if (requiredTasks.length > 0) {
+          const allCompleted = requiredTasks.every(t => {
+            if (t.key === key) return true;
+            return !!newCheckedState[t.key];
+          });
+          
+          if (allCompleted) {
+            const alreadyLogged = (nauticalTransactions || []).some(
+              t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
+            );
+            if (!alreadyLogged) {
+              addNauticalMiles(
+                activeUser.id, 
+                50, 
+                'lesson_complete', 
+                `Hoàn thành Onboarding Ngày ${day}`, 
+                `onboarding-day-${day}`
+              );
+              addNotification(
+                'Thử thách hoàn thành!', 
+                `Tuyệt vời! Bạn đã hoàn thành tất cả nhiệm vụ bắt buộc của Ngày ${day} và nhận thêm 50 hải lý! ⛵`, 
+                'system'
+              );
+            }
+          }
+        }
+      }
     }
   };
 

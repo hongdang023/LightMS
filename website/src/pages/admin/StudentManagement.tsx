@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { Users, Mail, Award, CheckCircle, Search, Trophy, ShieldAlert, BarChart3 } from 'lucide-react';
+import { Users, Mail, Award, CheckCircle, Search, Trophy, ShieldAlert, BarChart3, Sparkles } from 'lucide-react';
 
 // Custom components & helpers for Demographics Overview
 const getDemographics = (student: any) => {
@@ -155,7 +155,51 @@ export const StudentManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'overview'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'overview' | 'onboarding'>('list');
+  const [expandedDays, setExpandedDays] = useState<{[key: number]: boolean}>({});
+
+  // Helper to extract clean task items from day checklist markdown
+  const getTasksForDay = (dayData: any) => {
+    const lines = dayData.checklist.split('\n');
+    const tasks: { idx: number; label: string; key: string; isOptional: boolean; optionalNote: string }[] = [];
+    let taskIdx = 0;
+    lines.forEach((line: string) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('- [ ]')) {
+        taskIdx++;
+        const rawLabel = trimmed.replace('- [ ]', '').trim();
+        // Detect optional and extract the note after it
+        const optionalMatch = rawLabel.match(/\(optional[^)]*\)/i);
+        const isOptional = !!optionalMatch;
+        const optionalNote = optionalMatch ? optionalMatch[0].replace(/^\(optional\s*[-–]?\s*/i, '').replace(/\)$/, '').trim() : '';
+        const cleanLabel = rawLabel.replace(/\(optional[^)]*\)/i, '').trim().replace(/^[-–:]+\s*/, '').trim();
+        tasks.push({
+          idx: taskIdx,
+          label: cleanLabel,
+          key: `day-${dayData.day}-task-${taskIdx}`,
+          isOptional,
+          optionalNote
+        });
+      } else if (tasks.length > 0 && line.length > 0) {
+        tasks[tasks.length - 1].label += '\n' + line;
+      }
+    });
+    return tasks;
+  };
+
+  const getStudentCurrentStopTask = (student: any) => {
+    for (let d = 1; d <= 7; d++) {
+      const dayData = onboardingDays.find(day => day.day === d);
+      if (!dayData) continue;
+      const tasks = getTasksForDay(dayData);
+      const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
+      const firstUnchecked = requiredTasks.find(t => !student.onboarding_tasks?.[t.key]);
+      if (firstUnchecked) {
+        return firstUnchecked.key;
+      }
+    }
+    return null;
+  };
 
   // Bulk email states
   const [isBulkEmailModalOpen, setIsBulkEmailModalOpen] = useState(false);
@@ -174,9 +218,25 @@ export const StudentManagement: React.FC = () => {
   const totalLiveClassCount = liveClassAssignments.length || 3;
 
   // Helpers to get homework counts
-  const getOnboardingCompletedCount = (nauticalMiles: number) => {
-    // Deterministic progression based on nautical miles
-    return Math.min(7, Math.floor(nauticalMiles / 50));
+  const getOnboardingCompletedCount = (student: typeof students[0]) => {
+    let completedDays = 0;
+    onboardingDays.forEach(day => {
+      const tasks = getTasksForDay(day);
+      if (tasks.length === 0) {
+        completedDays++;
+        return;
+      }
+      const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
+      if (requiredTasks.length === 0) {
+        completedDays++;
+        return;
+      }
+      const allChecked = requiredTasks.every(t => !!student.onboarding_tasks?.[t.key]);
+      if (allChecked) {
+        completedDays++;
+      }
+    });
+    return completedDays;
   };
 
   const getLiveClassCompletedCount = (studentId: string) => {
@@ -189,7 +249,7 @@ export const StudentManagement: React.FC = () => {
 
   // Determine student status
   const getStudentStatus = (student: typeof students[0]) => {
-    const onboardingDone = getOnboardingCompletedCount(student.nautical_miles);
+    const onboardingDone = getOnboardingCompletedCount(student);
     const liveClassDone = getLiveClassCompletedCount(student.id);
     const visits = student.visits || 1;
 
@@ -441,6 +501,14 @@ export const StudentManagement: React.FC = () => {
           >
             <BarChart3 size={14} /> Tổng quan học viên
           </button>
+          <button
+            onClick={() => setViewMode('onboarding')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              viewMode === 'onboarding' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-655 hover:text-gray-900 hover:bg-gray-200/50'
+            }`}
+          >
+            <Sparkles size={14} /> Thống kê Onboarding
+          </button>
         </div>
       </div>
 
@@ -452,7 +520,7 @@ export const StudentManagement: React.FC = () => {
         </div>
       )}
       
-      {viewMode === 'list' ? (
+      {viewMode === 'list' && (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         
         {/* Left Column: Students directory (8 cols) */}
@@ -539,7 +607,7 @@ export const StudentManagement: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-150">
                   {filteredStudents.map((student) => {
-                    const onboardingCount = getOnboardingCompletedCount(student.nautical_miles);
+                    const onboardingCount = getOnboardingCompletedCount(student);
                     const liveClassCount = getLiveClassCompletedCount(student.id);
                     const visits = student.visits || 1;
                     const status = getStudentStatus(student);
@@ -672,7 +740,7 @@ export const StudentManagement: React.FC = () => {
 
               {/* Progress Summary Block */}
               {(() => {
-                const obCount = getOnboardingCompletedCount(activeStudent.nautical_miles);
+                const obCount = getOnboardingCompletedCount(activeStudent);
                 const lcCount = getLiveClassCompletedCount(activeStudent.id);
                 const totalHw = 7 + totalLiveClassCount;
                 const completedHw = obCount + lcCount;
@@ -776,18 +844,70 @@ export const StudentManagement: React.FC = () => {
                     {/* Onboarding Week Progress */}
                     <div className="text-[9px] font-extrabold text-[#214C54] uppercase tracking-wider mb-1 mt-1">Chặng 1: Onboarding Week</div>
                     {onboardingDays.map(day => {
-                      const onboardingCount = getOnboardingCompletedCount(activeStudent.nautical_miles);
-                      const isDayCompleted = day.day <= onboardingCount;
+                      const isExpanded = !!expandedDays[day.day];
+                      const tasks = getTasksForDay(day);
+                      const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
+                      const isDayCompleted = requiredTasks.length > 0 
+                        ? requiredTasks.every(t => !!activeStudent.onboarding_tasks?.[t.key]) 
+                        : true;
+                      const currentStopKey = getStudentCurrentStopTask(activeStudent);
                       
                       const statusLabel = isDayCompleted ? "Đã xong" : "Chưa xong";
                       const badgeColor = isDayCompleted ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400";
                       
                       return (
-                        <div key={`ob-${day.day}`} className="flex justify-between items-center bg-gray-50/50 p-2.5 rounded-lg border border-gray-100 text-[10px]">
-                          <span className="font-bold text-[#15333B] truncate pr-4">Ngày {day.day}: {day.title.split(': ')[1] || day.title}</span>
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold shrink-0 ${badgeColor}`}>
-                            {statusLabel}
-                          </span>
+                        <div key={`ob-${day.day}`} className="space-y-1 bg-gray-50/50 p-2 rounded-lg border border-gray-100">
+                          <div 
+                            onClick={() => setExpandedDays(prev => ({ ...prev, [day.day]: !prev[day.day] }))}
+                            className="flex justify-between items-center text-[10px] cursor-pointer hover:bg-gray-100/50 p-1.5 rounded transition-colors"
+                          >
+                            <span className="font-bold text-[#15333B] truncate pr-4 flex items-center gap-1.5">
+                              <span className="text-[8px] text-gray-400">{isExpanded ? '▼' : '▶'}</span>
+                              Ngày {day.day}: {day.title.split(': ')[1] || day.title}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold shrink-0 ${badgeColor}`}>
+                              {statusLabel}
+                            </span>
+                          </div>
+                          
+                          {isExpanded && (
+                            <div className="pl-4 pr-1 py-1 space-y-1 border-l border-gray-200 ml-1.5 mt-1 text-[9px] text-gray-600">
+                              {tasks.length === 0 ? (
+                                <div className="text-gray-400 italic">Không có nhiệm vụ nào</div>
+                              ) : (
+                                tasks.map(t => {
+                                  const isChecked = !!activeStudent.onboarding_tasks?.[t.key];
+                                  const isStop = t.key === currentStopKey;
+                                  
+                                  return (
+                                    <div 
+                                      key={t.key} 
+                                      className={`flex items-start gap-2 p-1.5 rounded transition-all ${
+                                        isStop 
+                                          ? 'bg-amber-50 border border-amber-200 text-amber-900 font-semibold' 
+                                          : isChecked 
+                                            ? 'text-gray-400 line-through' 
+                                            : ''
+                                      }`}
+                                    >
+                                      <span className={`font-bold shrink-0 ${isChecked ? 'text-green-600' : isStop ? 'text-amber-600' : 'text-gray-400'}`}>
+                                        {isChecked ? '✓' : '○'}
+                                      </span>
+                                      <div className="flex-1">
+                                        <span>Task {t.idx}: {t.label}</span>
+                                        {t.isOptional && (
+                                          <span className="ml-1 text-[7px] bg-gray-100 text-gray-450 px-1 py-0.5 rounded shrink-0 font-bold">Optional</span>
+                                        )}
+                                        {isStop && (
+                                          <span className="ml-1.5 px-1 py-0.5 rounded text-[7px] font-extrabold bg-amber-500 text-white animate-pulse inline-block">Đang dừng tại đây</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -831,7 +951,9 @@ export const StudentManagement: React.FC = () => {
         </div>
 
       </div>
-      ) : (
+      )}
+
+      {viewMode === 'overview' && (
         <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 pr-1">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <DemographicsChartCard title="Giới tính (Gender)">
@@ -857,6 +979,127 @@ export const StudentManagement: React.FC = () => {
             <DemographicsChartCard title="Nguồn giới thiệu (Referral Source)">
               <HorizontalProgressBarList data={stats.referrals} />
             </DemographicsChartCard>
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'onboarding' && (
+        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 pr-1 space-y-6 animate-fade-in">
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
+              <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest block mb-1">Tổng số học viên</span>
+              <span className="text-2xl font-black text-[#15333B]">{students.length}</span>
+            </div>
+            <div className="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
+              <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest block mb-1">Hoàn thành toàn bộ Onboarding (7/7)</span>
+              <span className="text-2xl font-black text-green-600">
+                {students.filter(s => getOnboardingCompletedCount(s) === 7).length} ({students.length > 0 ? Math.round((students.filter(s => getOnboardingCompletedCount(s) === 7).length / students.length) * 100) : 0}%)
+              </span>
+            </div>
+            <div className="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
+              <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest block mb-1">Đang làm dở dang</span>
+              <span className="text-2xl font-black text-amber-500">
+                {students.filter(s => {
+                  const done = getOnboardingCompletedCount(s);
+                  return done > 0 && done < 7;
+                }).length}
+              </span>
+            </div>
+          </div>
+
+          {/* Days Grid */}
+          <div className="space-y-4">
+            {onboardingDays.map(day => {
+              const tasks = getTasksForDay(day);
+              
+              // Calculate day stats
+              const dayCompletions = students.filter(s => {
+                const dayTasks = getTasksForDay(day);
+                const reqTasks = dayTasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
+                return reqTasks.length > 0 ? reqTasks.every(t => !!s.onboarding_tasks?.[t.key]) : true;
+              }).length;
+              const dayPercent = students.length > 0 ? Math.round((dayCompletions / students.length) * 100) : 0;
+
+              return (
+                <div key={`stats-day-${day.day}`} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-4">
+                  {/* Day Header */}
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                    <div>
+                      <h4 className="font-extrabold text-sm text-[#15333B]">
+                        Ngày {day.day}: {day.title.split(': ')[1] || day.title}
+                      </h4>
+                      <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{day.intro}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-[#214C54] block">{dayCompletions}/{students.length} HV hoàn thành ngày này</span>
+                      <div className="w-24 bg-gray-150 h-1.5 rounded-full overflow-hidden mt-1 ml-auto">
+                        <div className="bg-[#214C54] h-full rounded-full" style={{ width: `${dayPercent}%` }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tasks List */}
+                  <div className="space-y-3">
+                    {tasks.length === 0 ? (
+                      <p className="text-xs text-gray-400 italic">Không có nhiệm vụ nào</p>
+                    ) : (
+                      tasks.map((task, index) => {
+                        const checkedCount = students.filter(s => !!s.onboarding_tasks?.[task.key]).length;
+                        const taskPercent = students.length > 0 ? Math.round((checkedCount / students.length) * 100) : 0;
+                        
+                        // Check for drop-off / bottleneck compared to previous task
+                        let isBottleneck = false;
+                        if (index > 0) {
+                          const prevTask = tasks[index - 1];
+                          const prevCheckedCount = students.filter(s => !!s.onboarding_tasks?.[prevTask.key]).length;
+                          const prevPercent = students.length > 0 ? Math.round((prevCheckedCount / students.length) * 100) : 0;
+                          if (prevPercent - taskPercent > 15) {
+                            isBottleneck = true;
+                          }
+                        }
+
+                        return (
+                          <div key={task.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-xl hover:bg-gray-50/50 transition-colors border border-gray-100/50">
+                            <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                              <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-150 flex items-center justify-center text-[9px] font-black text-[#214C54] shrink-0 mt-0.5">
+                                {task.idx}
+                              </span>
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold text-[#15333B] block leading-tight">{task.label}</span>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  {task.isOptional ? (
+                                    <span className="text-[8px] bg-gray-150 text-gray-500 font-bold px-1 py-0.5 rounded uppercase tracking-wider">Tùy chọn</span>
+                                  ) : (
+                                    <span className="text-[8px] bg-red-50 text-red-650 font-bold px-1 py-0.5 rounded uppercase tracking-wider">Bắt buộc</span>
+                                  )}
+                                  {isBottleneck && (
+                                    <span className="text-[8px] bg-amber-100 text-amber-800 border border-amber-200 font-bold px-1 py-0.5 rounded uppercase tracking-wider animate-pulse">⚠️ Điểm nghẽn (Drop-off cao)</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Progress bar / Stats */}
+                            <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto w-full sm:w-48 justify-between sm:justify-end">
+                              <span className="text-[10px] text-gray-500 font-semibold">{checkedCount} học viên tích ({taskPercent}%)</span>
+                              <div className="w-16 bg-gray-100 h-2 rounded-full overflow-hidden shrink-0">
+                                <div 
+                                  className={`h-full rounded-full transition-all ${
+                                    task.isOptional ? 'bg-gray-400' : taskPercent > 70 ? 'bg-green-500' : taskPercent > 40 ? 'bg-amber-400' : 'bg-red-400'
+                                  }`} 
+                                  style={{ width: `${taskPercent}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

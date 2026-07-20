@@ -107,19 +107,24 @@ export const WallOfFame: React.FC = () => {
   }, []);
 
   // Merge database students and mock classmates, filtering duplicates
-  const realStudents = users.filter(u => u.role === 'student');
+  const realStudents = users.filter(u => 
+    u.role === 'student' && 
+    u.gmail !== 'tuyethong.cym@gmail.com' && 
+    u.gmail !== 'dangtuyethong2324@gmail.com'
+  );
   const allStudents = [
     ...realStudents,
     ...MOCK_CLASSMATES.filter(m => !realStudents.some(u => u.full_name === m.full_name))
   ];
 
   // If active user is admin, add them as student for preview purposes
-  const isActiveUserStudent = activeUser.role === 'student';
+  const isAdminEmail = activeUser.gmail === 'tuyethong.cym@gmail.com' || activeUser.gmail === 'dangtuyethong2324@gmail.com';
+  const isActiveUserStudent = activeUser.role === 'student' && !isAdminEmail;
   const displayActiveUser = isActiveUserStudent 
     ? activeUser 
-    : { ...activeUser, role: 'student', nautical_miles: 320 }; // Fallback preview miles for admin
+    : { ...activeUser, role: 'student', nautical_miles: 0 }; // Fallback miles for admin if needed for display
 
-  const finalStudents = allStudents.some(s => s.id === displayActiveUser.id)
+  const finalStudents = (allStudents.some(s => s.id === displayActiveUser.id) || !isActiveUserStudent)
     ? allStudents
     : [...allStudents, displayActiveUser];
 

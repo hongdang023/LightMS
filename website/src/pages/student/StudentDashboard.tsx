@@ -152,7 +152,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
   // 4. Calculate Rank and Voyage progress percentage
   const leaderboard = React.useMemo(() => {
     return [...users]
-      .filter(u => u.role === 'student')
+      .filter(u => 
+        u.role === 'student' && 
+        u.gmail !== 'tuyethong.cym@gmail.com' && 
+        u.gmail !== 'dangtuyethong2324@gmail.com'
+      )
       .sort((a, b) => b.nautical_miles - a.nautical_miles);
   }, [users]);
 
@@ -343,15 +347,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                 </div>
 
                 {/* Direct Action Zoom Link */}
-                <a 
-                  href="https://daymai.vn/meet/0388148327"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full btn btn-accent text-xs font-black shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/20 transform hover:-translate-y-0.5 transition-all text-center py-3 flex items-center justify-center gap-2 group animate-pulse"
-                >
-                  <span className="text-sm">📽️</span>
-                  <span>Tham gia Zoom Class ngay</span>
-                </a>
+                {!nearestLesson.title?.toLowerCase().includes('onboarding') && (
+                  <a 
+                    href="https://daymai.vn/meet/0388148327"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full btn btn-accent text-xs font-black shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/20 transform hover:-translate-y-0.5 transition-all text-center py-3 flex items-center justify-center gap-2 group animate-pulse"
+                  >
+                    <span className="text-sm">📽️</span>
+                    <span>Tham gia Zoom Class ngay</span>
+                  </a>
+                )}
               </div>
             ) : (
               <div className="text-center py-6 text-gray-400 text-xs">

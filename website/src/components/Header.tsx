@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions } = useDatabase();
+  const { activeUser, switchUser, lessons, nauticalTransactions, submissions, assignments } = useDatabase();
 
   // Get current page display title
   const getPageTitle = () => {
@@ -31,14 +31,30 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
     }
   };
 
-  // Calculate learning progress (completed lessons)
-  const completedLessons = nauticalTransactions
-    .filter(t => t.student_id === activeUser.id && t.action_type === 'lesson_complete')
-    .map(t => t.reference_id || '');
+  // Progress bar calculation
+  const totalItems = (lessons || []).length + 7;
+  const completedMainLessons = (lessons || []).filter(lesson => {
+    const hasTx = (nauticalTransactions || []).some(
+      t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
+    );
+    if (hasTx) return true;
     
-  // Deduplicate
-  const uniqueCompleted = Array.from(new Set(completedLessons));
-  const progressPercent = Math.min(100, Math.round((uniqueCompleted.length / lessons.length) * 100));
+    const assignment = (assignments || []).find(a => a.lesson_id === lesson.id);
+    if (!assignment) return false;
+    const submission = (submissions || []).find(
+      s => s.assignment_id === assignment.id && s.student_id === activeUser.id && s.status !== 'draft'
+    );
+    return !!submission;
+  }).length;
+
+  const completedOnboardingDays = Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
+    return (nauticalTransactions || []).some(
+      t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
+    );
+  }).length;
+
+  const totalCompleted = completedMainLessons + completedOnboardingDays;
+  const progressPercent = totalItems > 0 ? Math.min(100, Math.round((totalCompleted / totalItems) * 100)) : 0;
 
   return (
     <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm z-30 select-none">

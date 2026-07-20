@@ -10,7 +10,6 @@ import {
   ScheduleIcon,
   LeaderboardIcon,
   SupportIcon,
-  AnnouncementsIcon,
   AdminDashboardIcon,
   CourseBuilderIcon,
   StudentsIcon,
@@ -43,7 +42,6 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
   const studentNav = [
     { id: 'about', label: 'Giới thiệu', icon: AboutIcon },
     { id: 'dashboard', label: 'Dashboard học tập', icon: HomeIcon },
-    { id: 'announcements', label: 'Thông báo', icon: AnnouncementsIcon },
     { id: 'onboarding', label: 'Onboarding', icon: OnboardingIcon },
     { id: 'syllabus', label: 'Lộ trình học', icon: SyllabusIcon },
     { id: 'calendar', label: 'Lịch học', icon: ScheduleIcon },
@@ -54,7 +52,6 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
   // Navigation Items for Admin Portal (using premium SVG icons)
   const adminNav = [
     { id: 'admin-dashboard', label: 'Tổng quan hệ thống', icon: AdminDashboardIcon },
-    { id: 'admin-announcements', label: 'Thông báo', icon: AnnouncementsIcon },
     { id: 'course-builder', label: 'Soạn lộ trình', icon: CourseBuilderIcon },
     { id: 'admin-calendar', label: 'Lịch học', icon: ScheduleIcon },
     { id: 'student-mgmt', label: 'Quản lý học viên', icon: StudentsIcon },

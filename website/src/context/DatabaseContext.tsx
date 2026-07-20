@@ -46,6 +46,7 @@ export interface Profile {
   living_region?: string;
   gender?: string;
   age_group?: string;
+  onboarding_tasks?: Record<string, boolean>;
   created_at: string;
 }
 
@@ -332,6 +333,7 @@ interface DatabaseContextType {
   upvoteComment: (commentId: string) => void;
   verifyComment: (commentId: string) => void;
   completeLesson: (lessonId: string) => void;
+  addNauticalMiles: (studentId: string, amount: number, actionType: NauticalMilesTransaction['action_type'], description: string, referenceId?: string) => Promise<void>;
   addNotification: (title: string, message: string, type?: 'telegram' | 'system') => void;
   addTopic: (name: string, description: string) => void;
   addDiscussionPost: (topicId: string, title: string, content: string, tags?: string[], mediaUrls?: string[]) => void;
@@ -928,9 +930,7 @@ const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
   { id: 'cal-oh-1', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 2, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
   { id: 'cal-oh-2', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 9, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
   { id: 'cal-oh-3', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 16, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
-  { id: 'cal-oh-4', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 23, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
-  { id: 'cal-oh-5', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 6, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
-  { id: 'cal-oh-6', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 13, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' }
+  { id: 'cal-oh-4', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 23, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' }
 ];
 
 const SEED_ABOUT_CONTENT: AboutContent = {
@@ -1072,9 +1072,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeParse('lms_announcements', SEED_ANNOUNCEMENTS)
   );
 
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => 
-    safeParse('lms_calendar_events', SEED_CALENDAR_EVENTS)
-  );
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => {
+    const parsed = safeParse('lms_calendar_events', SEED_CALENDAR_EVENTS);
+    const filtered = parsed.filter(e => e.id !== 'cal-oh-5' && e.id !== 'cal-oh-6');
+    if (filtered.length !== parsed.length) {
+      localStorage.setItem('lms_calendar_events', JSON.stringify(filtered));
+      return filtered;
+    }
+    return parsed;
+  });
 
   const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>(() => {
     const parsed = safeParse('lms_onboarding_days', SEED_ONBOARDING_DAYS);
@@ -1276,7 +1282,17 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (resComments.data) setComments(resComments.data);
       if (resNauticalMiles.data) setNauticalTransactions(resNauticalMiles.data);
       if (resProfileBadges.data) setProfileBadges(resProfileBadges.data);
-      if (resAnnouncements.data) setAnnouncements(resAnnouncements.data);
+      if (resAnnouncements.data) {
+        const fetchedProfiles = resProfiles.data || [];
+        const mappedAnnouncements = (resAnnouncements.data as any[]).map(ann => {
+          const profile = fetchedProfiles.find(p => p.id === ann.created_by);
+          return {
+            ...ann,
+            author: profile ? (profile.role === 'admin' ? 'Admin Team' : profile.full_name) : 'Admin Team'
+          };
+        });
+        setAnnouncements(mappedAnnouncements);
+      }
       if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
       if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
       if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
@@ -1682,7 +1698,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const completeLesson = (lessonId: string) => {
     // Add NM for learning completion
-    addNauticalMiles(activeUserId, 5, 'lesson_complete', `Đã học xong: ${lessons.find(l => l.id === lessonId)?.title || lessonId}`);
+    addNauticalMiles(activeUserId, 5, 'lesson_complete', `Đã học xong: ${lessons.find(l => l.id === lessonId)?.title || lessonId}`, lessonId);
     
     // Check for Treasure Map badge
     // (requires all lessons to be completed, or simply mimics completion logic here)
@@ -1888,7 +1904,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const studentGmail = studentObj?.gmail;
 
     const newAnn: Announcement = {
-      id: `ann-${Math.random().toString(36).substr(2, 9)}`,
+      id: generateUUID(),
       title: `[Nhận xét bài tập] ${lessonTitle} - ${studentName}`,
       content: `Chào ${studentName},\n\nBài tập "${lessonTitle}" của bạn đã được giáo viên nhận xét chi tiết.\n\n- Mức độ thành thạo: ${gradeLabel}\n- Nội dung nhận xét: ${feedbackContent}\n\nBạn hãy vào xem chi tiết bài làm và nhận xét tại mục Lộ trình học nhé!`,
       author: 'Giáo viên',
@@ -1901,7 +1917,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setAnnouncements(prev => [newAnn, ...prev]);
 
-    supabase.from('announcements').insert([newAnn]).then(({ error }) => {
+    // Omit frontend-only fields for Supabase insertion
+    const { author, isNew, ...dbAnn } = newAnn;
+    supabase.from('announcements').insert([dbAnn]).then(({ error }) => {
       if (error) console.error('Lỗi khi lưu thông báo nhận xét bài lên Supabase:', error.message);
     });
 
@@ -2090,7 +2108,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const addAnnouncement = (title: string, content: string, sendEmail: boolean, mediaUrls: string[] = []) => {
     const newAnn: Announcement = {
-      id: `ann-${Math.random().toString(36).substr(2, 9)}`,
+      id: generateUUID(),
       title,
       content,
       author: activeUser.role === 'admin' ? 'Admin Team' : activeUser.full_name,
@@ -2114,8 +2132,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       );
     }
 
-    // Lưu lên Supabase
-    supabase.from('announcements').insert([newAnn]).then(({ error }) => {
+    // Lưu lên Supabase - lược bỏ các thuộc tính không có trong DB
+    const { author, isNew, ...dbAnn } = newAnn;
+    supabase.from('announcements').insert([dbAnn]).then(({ error }) => {
       if (error) console.error('Lỗi khi lưu thông báo lên Supabase:', error.message);
     });
   };
@@ -2140,8 +2159,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
     addNotification('Cập nhật thông báo', 'Thông báo đã được chỉnh sửa thành công', 'system');
 
-    // Cập nhật lên Supabase
-    supabase.from('announcements').update(updates).eq('id', id).then(({ error }) => {
+    // Cập nhật lên Supabase - lược bỏ các thuộc tính không có trong DB
+    const { author, isNew, ...dbUpdates } = updates as any;
+    supabase.from('announcements').update(dbUpdates).eq('id', id).then(({ error }) => {
       if (error) console.error('Lỗi khi cập nhật thông báo trên Supabase:', error.message);
     });
   };
@@ -2480,6 +2500,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       upvoteComment,
       verifyComment,
       completeLesson,
+      addNauticalMiles,
       addNotification,
       addTopic,
       addDiscussionPost,
