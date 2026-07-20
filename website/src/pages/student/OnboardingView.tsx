@@ -341,39 +341,34 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
 
   const [lockedAlert, setLockedAlert] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
 
-  // Load checklist checked state from localStorage and database
+  // Load checklist checked state from localStorage and database (DB is Source of Truth if not empty)
   const [checkedTasks, setCheckedTasks] = useState<{ [key: string]: boolean }>(() => {
+    const db = activeUser?.onboarding_tasks;
+    if (db && Object.keys(db).length > 0) {
+      return db;
+    }
     const saved = localStorage.getItem('lms_onboarding_tasks_v2');
-    const local = saved ? JSON.parse(saved) : {};
-    const db = activeUser?.onboarding_tasks || {};
-    return { ...db, ...local };
+    return saved ? JSON.parse(saved) : {};
   });
 
-  // Sync from DB if updated elsewhere
+  // Sync from DB if updated elsewhere (DB is Source of Truth)
   useEffect(() => {
-    if (activeUser?.onboarding_tasks) {
-      setCheckedTasks(prev => {
-        const merged = { ...prev, ...activeUser.onboarding_tasks };
-        if (JSON.stringify(merged) !== JSON.stringify(prev)) {
-          localStorage.setItem('lms_onboarding_tasks_v2', JSON.stringify(merged));
-          return merged;
-        }
-        return prev;
-      });
+    if (activeUser?.onboarding_tasks && Object.keys(activeUser.onboarding_tasks).length > 0) {
+      setCheckedTasks(activeUser.onboarding_tasks);
+      localStorage.setItem('lms_onboarding_tasks_v2', JSON.stringify(activeUser.onboarding_tasks));
     }
   }, [activeUser?.onboarding_tasks]);
 
-  // Auto sync local tasks to database on mount if database has fewer tasks than local
+  // Auto sync local tasks to database on mount ONLY IF database is empty (no onboarding tasks at all)
   useEffect(() => {
     if (activeUser?.id) {
-      const saved = localStorage.getItem('lms_onboarding_tasks_v2');
-      const local = saved ? JSON.parse(saved) : {};
       const db = activeUser.onboarding_tasks || {};
-      
-      const hasNewLocalTasks = Object.keys(local).some(key => local[key] && !db[key]);
-      if (hasNewLocalTasks) {
-        const merged = { ...db, ...local };
-        updateProfile(activeUser.id, { onboarding_tasks: merged });
+      if (Object.keys(db).length === 0) {
+        const saved = localStorage.getItem('lms_onboarding_tasks_v2');
+        const local = saved ? JSON.parse(saved) : {};
+        if (Object.keys(local).length > 0) {
+          updateProfile(activeUser.id, { onboarding_tasks: local });
+        }
       }
     }
   }, [activeUser?.id]);
