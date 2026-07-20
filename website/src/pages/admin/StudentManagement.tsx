@@ -236,7 +236,10 @@ export const StudentManagement: React.FC = () => {
         completedDays++;
       }
     });
-    return completedDays;
+    
+    // Fallback to historical nautical miles progression to avoid resetting to 0/7
+    const historicalCount = Math.min(7, Math.floor((student.nautical_miles || 0) / 50));
+    return Math.max(completedDays, historicalCount);
   };
 
   const getLiveClassCompletedCount = (studentId: string) => {
@@ -847,9 +850,10 @@ export const StudentManagement: React.FC = () => {
                       const isExpanded = !!expandedDays[day.day];
                       const tasks = getTasksForDay(day);
                       const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
-                      const isDayCompleted = requiredTasks.length > 0 
+                      const onboardingCount = getOnboardingCompletedCount(activeStudent);
+                      const isDayCompleted = (requiredTasks.length > 0 
                         ? requiredTasks.every(t => !!activeStudent.onboarding_tasks?.[t.key]) 
-                        : true;
+                        : true) || day.day <= onboardingCount;
                       const currentStopKey = getStudentCurrentStopTask(activeStudent);
                       
                       const statusLabel = isDayCompleted ? "Đã xong" : "Chưa xong";
