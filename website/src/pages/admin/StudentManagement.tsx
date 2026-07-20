@@ -236,10 +236,7 @@ export const StudentManagement: React.FC = () => {
         completedDays++;
       }
     });
-    
-    // Fallback to historical nautical miles progression to avoid resetting to 0/7
-    const historicalCount = Math.min(7, Math.floor((student.nautical_miles || 0) / 50));
-    return Math.max(completedDays, historicalCount);
+    return completedDays;
   };
 
   const getLiveClassCompletedCount = (studentId: string) => {
@@ -850,10 +847,9 @@ export const StudentManagement: React.FC = () => {
                       const isExpanded = !!expandedDays[day.day];
                       const tasks = getTasksForDay(day);
                       const requiredTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
-                      const onboardingCount = getOnboardingCompletedCount(activeStudent);
-                      const isDayCompleted = (requiredTasks.length > 0 
+                      const isDayCompleted = requiredTasks.length > 0 
                         ? requiredTasks.every(t => !!activeStudent.onboarding_tasks?.[t.key]) 
-                        : true) || day.day <= onboardingCount;
+                        : true;
                       const currentStopKey = getStudentCurrentStopTask(activeStudent);
                       
                       const statusLabel = isDayCompleted ? "Đã xong" : "Chưa xong";
@@ -1012,98 +1008,149 @@ export const StudentManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Days Grid */}
-          <div className="space-y-4">
-            {onboardingDays.map(day => {
-              const tasks = getTasksForDay(day);
-              
-              // Calculate day stats
-              const dayCompletions = students.filter(s => {
-                const dayTasks = getTasksForDay(day);
-                const reqTasks = dayTasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
-                return reqTasks.length > 0 ? reqTasks.every(t => !!s.onboarding_tasks?.[t.key]) : true;
-              }).length;
-              const dayPercent = students.length > 0 ? Math.round((dayCompletions / students.length) * 100) : 0;
+          {/* Dashboard Table */}
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-150 text-left">
+                <thead className="bg-gray-50/75">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-extrabold text-[#15333B] uppercase tracking-wider">Ngày</th>
+                    <th className="px-6 py-4 text-[10px] font-extrabold text-[#15333B] uppercase tracking-wider">Chủ đề bài học</th>
+                    <th className="px-6 py-4 text-[10px] font-extrabold text-[#15333B] uppercase tracking-wider w-48">Hoàn thành Ngày</th>
+                    <th className="px-6 py-4 text-[10px] font-extrabold text-[#15333B] uppercase tracking-wider">Điểm Drop-off Lớn Nhất</th>
+                    <th className="px-6 py-4 text-[10px] font-extrabold text-[#15333B] uppercase tracking-wider text-right w-64">Tiến độ từng Task</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {onboardingDays.map(day => {
+                    const tasks = getTasksForDay(day);
+                    const reqTasks = tasks.filter(t => !t.label.toLowerCase().includes('optional') && !t.isOptional);
+                    
+                    // Calculate day stats
+                    const dayCompletions = students.filter(s => {
+                      return reqTasks.length > 0 ? reqTasks.every(t => !!s.onboarding_tasks?.[t.key]) : true;
+                    }).length;
+                    const dayPercent = students.length > 0 ? Math.round((dayCompletions / students.length) * 100) : 0;
 
-              return (
-                <div key={`stats-day-${day.day}`} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-4">
-                  {/* Day Header */}
-                  <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                    <div>
-                      <h4 className="font-extrabold text-sm text-[#15333B]">
-                        Ngày {day.day}: {day.title.split(': ')[1] || day.title}
-                      </h4>
-                      <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{day.intro}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-black text-[#214C54] block">{dayCompletions}/{students.length} HV hoàn thành ngày này</span>
-                      <div className="w-24 bg-gray-150 h-1.5 rounded-full overflow-hidden mt-1 ml-auto">
-                        <div className="bg-[#214C54] h-full rounded-full" style={{ width: `${dayPercent}%` }}></div>
-                      </div>
-                    </div>
-                  </div>
+                    // Analyze drop-offs
+                    let maxDrop = 0;
+                    let maxDropTask: any = null;
+                    let previousCompletedCount = students.length;
 
-                  {/* Tasks List */}
-                  <div className="space-y-3">
-                    {tasks.length === 0 ? (
-                      <p className="text-xs text-gray-400 italic">Không có nhiệm vụ nào</p>
-                    ) : (
-                      tasks.map((task, index) => {
-                        const checkedCount = students.filter(s => !!s.onboarding_tasks?.[task.key]).length;
-                        const taskPercent = students.length > 0 ? Math.round((checkedCount / students.length) * 100) : 0;
-                        
-                        // Check for drop-off / bottleneck compared to previous task
-                        let isBottleneck = false;
-                        if (index > 0) {
-                          const prevTask = tasks[index - 1];
-                          const prevCheckedCount = students.filter(s => !!s.onboarding_tasks?.[prevTask.key]).length;
-                          const prevPercent = students.length > 0 ? Math.round((prevCheckedCount / students.length) * 100) : 0;
-                          if (prevPercent - taskPercent > 15) {
-                            isBottleneck = true;
-                          }
-                        }
+                    reqTasks.forEach((task) => {
+                      const currentCompletedCount = students.filter(s => !!s.onboarding_tasks?.[task.key]).length;
+                      const drop = previousCompletedCount - currentCompletedCount;
+                      if (drop > maxDrop) {
+                        maxDrop = drop;
+                        maxDropTask = task;
+                      }
+                      previousCompletedCount = currentCompletedCount;
+                    });
 
-                        return (
-                          <div key={task.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-xl hover:bg-gray-50/50 transition-colors border border-gray-100/50">
-                            <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                              <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-150 flex items-center justify-center text-[9px] font-black text-[#214C54] shrink-0 mt-0.5">
-                                {task.idx}
-                              </span>
-                              <div className="min-w-0">
-                                <span className="text-xs font-bold text-[#15333B] block leading-tight">{task.label}</span>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  {task.isOptional ? (
-                                    <span className="text-[8px] bg-gray-150 text-gray-500 font-bold px-1 py-0.5 rounded uppercase tracking-wider">Tùy chọn</span>
-                                  ) : (
-                                    <span className="text-[8px] bg-red-50 text-red-650 font-bold px-1 py-0.5 rounded uppercase tracking-wider">Bắt buộc</span>
-                                  )}
-                                  {isBottleneck && (
-                                    <span className="text-[8px] bg-amber-100 text-amber-800 border border-amber-200 font-bold px-1 py-0.5 rounded uppercase tracking-wider animate-pulse">⚠️ Điểm nghẽn (Drop-off cao)</span>
-                                  )}
-                                </div>
-                              </div>
+                    const cleanDropTaskName = maxDropTask
+                      ? maxDropTask.label
+                          .replace(/\*\*Task \d+:\*\*/g, '')
+                          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                          .split('\n')[0]
+                          .trim()
+                      : '';
+
+                    return (
+                      <tr key={`stats-day-${day.day}`} className="hover:bg-teal-50/10 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-xs font-black text-[#15333B]">
+                          Ngày {day.day}
+                        </td>
+                        <td className="px-6 py-4 text-xs font-bold text-gray-750 max-w-xs truncate" title={day.title}>
+                          {day.title.split(': ')[1] || day.title}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center text-[10px] font-black text-gray-700">
+                              <span>{dayPercent}%</span>
+                              <span className="text-[#214C54]">{dayCompletions}/{students.length} HV</span>
                             </div>
-
-                            {/* Progress bar / Stats */}
-                            <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto w-full sm:w-48 justify-between sm:justify-end">
-                              <span className="text-[10px] text-gray-500 font-semibold">{checkedCount} học viên tích ({taskPercent}%)</span>
-                              <div className="w-16 bg-gray-100 h-2 rounded-full overflow-hidden shrink-0">
-                                <div 
-                                  className={`h-full rounded-full transition-all ${
-                                    task.isOptional ? 'bg-gray-400' : taskPercent > 70 ? 'bg-green-500' : taskPercent > 40 ? 'bg-amber-400' : 'bg-red-400'
-                                  }`} 
-                                  style={{ width: `${taskPercent}%` }}
-                                ></div>
-                              </div>
+                            <div className="w-full bg-gray-150 h-2 rounded-full overflow-hidden">
+                              <div 
+                                className="bg-[#214C54] h-full rounded-full transition-all duration-500 ease-out" 
+                                style={{ width: `${dayPercent}%` }}
+                              ></div>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                        </td>
+                        <td className="px-6 py-4 text-xs">
+                          {maxDrop > 0 && maxDropTask ? (
+                            <div className="space-y-0.5">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-red-650 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">
+                                ⚠️ Drop {maxDrop} HV
+                              </span>
+                              <span className="block text-[11px] font-bold text-gray-600 truncate max-w-[200px]" title={`Task ${maxDropTask.idx}: ${cleanDropTaskName}`}>
+                                Task {maxDropTask.idx}: {cleanDropTaskName}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-extrabold text-emerald-650 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                              ✅ Ổn định (0 drop)
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {tasks.length === 0 ? (
+                              <span className="text-[10px] text-gray-400 italic">Không có task</span>
+                            ) : (
+                              tasks.map((task) => {
+                                const checkedCount = students.filter(s => !!s.onboarding_tasks?.[task.key]).length;
+                                const taskPercent = students.length > 0 ? Math.round((checkedCount / students.length) * 100) : 0;
+                                const cleanName = task.label
+                                  .replace(/\*\*Task \d+:\*\*/g, '')
+                                  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+                                  .split('\n')[0]
+                                  .trim();
+
+                                let colorClass = 'bg-red-500 hover:bg-red-600';
+                                if (task.isOptional) {
+                                  colorClass = 'bg-gray-400 hover:bg-gray-500';
+                                } else if (taskPercent >= 80) {
+                                  colorClass = 'bg-emerald-500 hover:bg-emerald-600';
+                                } else if (taskPercent >= 45) {
+                                  colorClass = 'bg-amber-500 hover:bg-amber-600';
+                                }
+
+                                return (
+                                  <div
+                                    key={task.key}
+                                    className={`group relative w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black text-white ${colorClass} shadow-sm hover:scale-110 transition-all cursor-help shrink-0`}
+                                  >
+                                    {task.idx}
+                                    <div className="absolute bottom-full right-0 mb-2 hidden group-hover:flex flex-col items-start bg-[#15333B] text-white text-[10px] p-3 rounded-xl shadow-xl z-20 w-64 text-left pointer-events-none whitespace-normal leading-normal">
+                                      <span className="font-extrabold text-teal-400 block mb-1">
+                                        Nhiệm vụ {task.idx} {task.isOptional ? '(Tùy chọn)' : '(Bắt buộc)'}
+                                      </span>
+                                      <p className="font-semibold text-gray-200 text-[10px] mb-2 line-clamp-3">
+                                        {cleanName}
+                                      </p>
+                                      <div className="w-full flex justify-between items-center border-t border-white/10 pt-1.5 mt-0.5">
+                                        <span className="font-black text-white">
+                                          Đã tích: {checkedCount}/{students.length} HV
+                                        </span>
+                                        <span className="font-black text-emerald-400">
+                                          {taskPercent}%
+                                        </span>
+                                      </div>
+                                      <div className="absolute right-2 top-full w-2 h-2 bg-[#15333B] rotate-45 -mt-1"></div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
