@@ -980,6 +980,18 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
   // ─────────────────────────────────────────────────────────────────────────
 
+  const safeParse = <T,>(key: string, fallback: T): T => {
+    try {
+      const value = localStorage.getItem(key);
+      if (!value || value === 'undefined') return fallback;
+      return JSON.parse(value);
+    } catch (e) {
+      console.error(`Error parsing localStorage key "${key}":`, e);
+      localStorage.removeItem(key);
+      return fallback;
+    }
+  };
+
   // Load initial states from LocalStorage or use preloaded seed data
   const [activeUserId, setActiveUserId] = useState<string>(() => {
     return localStorage.getItem('lms_active_user_id') || 'f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e';
@@ -996,18 +1008,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem('lms_allowed_emails', JSON.stringify(allowedEmails));
   }, [allowedEmails]);
-
-  const safeParse = <T,>(key: string, fallback: T): T => {
-    try {
-      const value = localStorage.getItem(key);
-      if (!value || value === 'undefined') return fallback;
-      return JSON.parse(value);
-    } catch (e) {
-      console.error(`Error parsing localStorage key "${key}":`, e);
-      localStorage.removeItem(key);
-      return fallback;
-    }
-  };
 
   const [profiles, setProfiles] = useState<Profile[]>(() => 
     safeParse('lms_profiles', SEED_PROFILES)
