@@ -250,14 +250,68 @@ export const StudentManagement: React.FC = () => {
   // Determine student status
   const getStudentStatus = (student: typeof students[0]) => {
     const onboardingDone = getOnboardingCompletedCount(student);
-    const liveClassDone = getLiveClassCompletedCount(student.id);
     const visits = student.visits || 1;
-
-    // At risk if live class progress is under 50% or visits < 4
-    const isAtRisk = (totalLiveClassCount > 0 && (liveClassDone / totalLiveClassCount) < 0.5) || visits < 4;
+    const now = new Date().getTime();
     
-    // Outstanding if onboarding is complete, live class is 100% complete, and visits >= 8
-    const isOutstanding = onboardingDone === 7 && liveClassDone === totalLiveClassCount && visits >= 8;
+    // Parse student registration date to calculate active days
+    const studentStart = student.created_at ? new Date(student.created_at).getTime() : now;
+    const daysActive = Math.max(1, Math.floor((now - studentStart) / (24 * 60 * 60 * 1000)));
+
+    // Onboarding is overdue if they haven't finished after 7 days
+    const onboardingDeadline = studentStart + 7 * 24 * 60 * 60 * 1000;
+    const onboardingOverdue = now > onboardingDeadline && onboardingDone < 7;
+
+    // Filter live class assignments whose lesson's start date has passed
+    const startedLiveClassAssignments = liveClassAssignments.filter(a => {
+      const lesson = lessons.find(l => l.id === a.lesson_id);
+      if (!lesson || !lesson.start_date) return false;
+      return now >= new Date(lesson.start_date).getTime();
+    });
+
+    // Filter live class assignments whose deadline has passed (start_date + 3 days)
+    const dueLiveClassAssignments = liveClassAssignments.filter(a => {
+      const lesson = lessons.find(l => l.id === a.lesson_id);
+      if (!lesson || !lesson.start_date) return false;
+      const start = new Date(lesson.start_date).getTime();
+      const deadline = start + 3 * 24 * 60 * 60 * 1000;
+      return now >= deadline;
+    });
+
+    const liveClassDoneForStarted = submissions.filter(
+      s => s.student_id === student.id && 
+      startedLiveClassAssignments.some(la => la.id === s.assignment_id) && 
+      (s.status === 'graded' || s.status === 'submitted')
+    ).length;
+
+    const liveClassDoneForDue = submissions.filter(
+      s => s.student_id === student.id && 
+      dueLiveClassAssignments.some(la => la.id === s.assignment_id) && 
+      (s.status === 'graded' || s.status === 'submitted')
+    ).length;
+
+    // At risk if:
+    // 1. Onboarding is overdue
+    // 2. Or completed less than 50% of the live class assignments that are already due
+    // 3. Or visits is less than expected visits (min of 4 or days active)
+    const expectedVisits = Math.min(4, daysActive);
+    const visitsAtRisk = visits < expectedVisits;
+    
+    const liveClassAtRisk = dueLiveClassAssignments.length > 0 && 
+      (liveClassDoneForDue / dueLiveClassAssignments.length) < 0.5;
+
+    const isAtRisk = onboardingOverdue || liveClassAtRisk || visitsAtRisk;
+
+    // Outstanding if:
+    // 1. Onboarding is completed (7/7)
+    // 2. Completed 100% of all started live class assignments
+    // 3. Visits meet expected outstanding visits (min of 8 or days active)
+    const expectedOutstandingVisits = Math.min(8, Math.max(2, daysActive));
+    const visitsOutstanding = visits >= expectedOutstandingVisits;
+
+    const liveClassOutstanding = startedLiveClassAssignments.length === 0 || 
+      (liveClassDoneForStarted === startedLiveClassAssignments.length);
+
+    const isOutstanding = onboardingDone === 7 && liveClassOutstanding && visitsOutstanding;
 
     if (isAtRisk) return 'risk';
     if (isOutstanding) return 'outstanding';
