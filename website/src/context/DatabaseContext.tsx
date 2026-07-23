@@ -17,7 +17,7 @@ const generateUUID = (): string => {
 // Database TypeScript Schemas
 // ==========================================
 
-export type UserRole = 'student' | 'mentor' | 'admin';
+export type UserRole = 'student' | 'mentor' | 'admin' | 'guest';
 export type TechLevel = 'non-tech' | 'low-code' | 'coder';
 export type MasteryLevel = 'none' | 'needs_improvement' | 'meets_expectations' | 'excellent';
 export type SubmissionStatus = 'draft' | 'submitted' | 'graded';
@@ -989,6 +989,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return localStorage.getItem('lms_is_authenticated') === 'true';
   });
 
+  const [allowedEmails, setAllowedEmails] = useState<string[]>(() => {
+    return safeParse('lms_allowed_emails', ['dangtuyethong2324@gmail.com', 'thongdang.upyouth@gmail.com', 'tuyethong.cym@gmail.com']);
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lms_allowed_emails', JSON.stringify(allowedEmails));
+  }, [allowedEmails]);
+
   const safeParse = <T,>(key: string, fallback: T): T => {
     try {
       const value = localStorage.getItem(key);
@@ -1220,35 +1228,28 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         resModules,
         resLessons,
         resAssignments,
-        resSubmissions,
-        resFeedbacks,
-        resComments,
-        resNauticalMiles,
-        resProfileBadges,
         resAnnouncements,
         resCalendarEvents,
         resOnboardingDays,
         resUnlockSchedules,
         resBatches,
+        resAllowedEmails,
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('modules').select('*').order('order_index', { ascending: true }),
         supabase.from('lessons').select('*').order('order_index', { ascending: true }),
         supabase.from('assignments').select('*'),
-        supabase.from('submissions').select('*').order('created_at', { ascending: false }),
-        supabase.from('feedbacks').select('*'),
-        supabase.from('comments').select('*').order('created_at', { ascending: true }),
-        supabase.from('nautical_miles_transactions').select('*').order('created_at', { ascending: false }),
-        supabase.from('profile_badges').select('*'),
         supabase.from('announcements').select('*').order('created_at', { ascending: false }),
         supabase.from('calendar_events').select('*'),
         supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
         supabase.from('onboarding_unlock_schedules').select('*').order('day', { ascending: true }),
         supabase.from('batches').select('*'),
+        supabase.from('allowed_emails').select('email'),
       ]);
 
-      const resTopics = { data: [] };
-      const resDiscussionPosts = { data: [] };
+      if (resAllowedEmails.data) {
+        setAllowedEmails(resAllowedEmails.data.map((row: any) => row.email.toLowerCase()));
+      }
 
       if (resProfiles.data && resProfiles.data.length > 0) {
         setProfiles(prev => {
@@ -1275,13 +1276,16 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (resModules.data && resModules.data.length > 0) setModules(resModules.data);
       if (resLessons.data && resLessons.data.length > 0) setLessons(resLessons.data);
       if (resAssignments.data && resAssignments.data.length > 0) setAssignments(resAssignments.data);
-      
-      // Submissions, feedbacks, comments can be empty array if no student worked yet
-      if (resSubmissions.data) setSubmissions(resSubmissions.data);
-      if (resFeedbacks.data) setFeedbacks(resFeedbacks.data);
-      if (resComments.data) setComments(resComments.data);
-      if (resNauticalMiles.data) setNauticalTransactions(resNauticalMiles.data);
-      if (resProfileBadges.data) setProfileBadges(resProfileBadges.data);
+      if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
+      if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
+      if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
+      if (resBatches.data && resBatches.data.length > 0) setBatches(resBatches.data);
+
+      const resTopics = { data: [] };
+      const resDiscussionPosts = { data: [] };
+      if (resTopics.data && resTopics.data.length > 0) setTopics(resTopics.data);
+      if (resDiscussionPosts.data) setDiscussionPosts(resDiscussionPosts.data);
+
       if (resAnnouncements.data) {
         const fetchedProfiles = resProfiles.data || [];
         const mappedAnnouncements = (resAnnouncements.data as any[]).map(ann => {
@@ -1293,12 +1297,34 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
         setAnnouncements(mappedAnnouncements);
       }
-      if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
-      if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
-      if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
-      if (resTopics.data && resTopics.data.length > 0) setTopics(resTopics.data);
-      if (resDiscussionPosts.data) setDiscussionPosts(resDiscussionPosts.data);
-      if (resBatches.data && resBatches.data.length > 0) setBatches(resBatches.data);
+
+      // Check if current user is guest
+      const currentActiveUser = profiles.find(p => p.id === activeUserId);
+      const currentIsGuest = currentActiveUser ? currentActiveUser.role === 'guest' : false;
+
+      if (!currentIsGuest) {
+        const [
+          resSubmissions,
+          resFeedbacks,
+          resComments,
+          resNauticalMiles,
+          resProfileBadges,
+        ] = await Promise.all([
+          supabase.from('submissions').select('*').order('created_at', { ascending: false }),
+          supabase.from('feedbacks').select('*'),
+          supabase.from('comments').select('*').order('created_at', { ascending: true }),
+          supabase.from('nautical_miles_transactions').select('*').order('created_at', { ascending: false }),
+          supabase.from('profile_badges').select('*'),
+        ]);
+
+        if (resSubmissions.data) setSubmissions(resSubmissions.data);
+        if (resFeedbacks.data) setFeedbacks(resFeedbacks.data);
+        if (resComments.data) setComments(resComments.data);
+        if (resNauticalMiles.data) setNauticalTransactions(resNauticalMiles.data);
+        if (resProfileBadges.data) setProfileBadges(resProfileBadges.data);
+      } else {
+        console.log('Chế độ Sandbox khách hoạt động: Sử dụng dữ liệu cô lập local.');
+      }
 
       console.log('Đã tải xong toàn bộ dữ liệu thực tế từ Supabase.');
     } catch (e) {
@@ -1325,6 +1351,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       let activeProfile: Profile;
 
+      // Query allowed_emails to see if this email is registered
+      const { data: allowedCheck } = await supabase
+        .from('allowed_emails')
+        .select('email')
+        .eq('email', userEmail.toLowerCase())
+        .maybeSingle();
+
+      const isOfficial = !!allowedCheck;
+
       // Check admin emails list
       const adminEmails = ['dangtuyethong2324@gmail.com'];
       const isAdminEmail = adminEmails.includes(userEmail.toLowerCase());
@@ -1335,7 +1370,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.removeItem('lms_signing_in_role');
       }
 
-      const finalRoleRequested = (isAdminEmail || preferredRole === 'admin') ? 'admin' : 'student';
+      // Determine correct role (admin, student, or guest)
+      let finalRole: UserRole = 'guest';
+      if (isAdminEmail || (isOfficial && preferredRole === 'admin')) {
+        finalRole = 'admin';
+      } else if (isOfficial) {
+        finalRole = 'student';
+      }
 
       if (error || !profile) {
         // Create new profile locally & on Supabase
@@ -1343,7 +1384,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           id: userId,
           full_name: user.user_metadata?.full_name || userEmail.split('@')[0],
           avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userEmail)}`,
-          role: finalRoleRequested,
+          role: finalRole,
           telegram_id: '',
           gmail: userEmail,
           phone_number: '',
@@ -1371,13 +1412,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       } else {
         activeProfile = profile as Profile;
-        // Automatically upgrade/sync role if requested role is admin
-        if (activeProfile.role !== finalRoleRequested && finalRoleRequested === 'admin') {
-          activeProfile.role = 'admin'; // Override in memory immediately for correct routing
+        // Automatically upgrade/sync role if allowed list changed or admin role preferred
+        if (activeProfile.role !== finalRole) {
+          activeProfile.role = finalRole; // Override in memory immediately for correct routing
           // Try to sync with DB
           await supabase
             .from('profiles')
-            .update({ role: 'admin' })
+            .update({ role: finalRole })
             .eq('id', userId);
         }
       }
@@ -1444,9 +1485,18 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loginWithGmail = (email: string, role: UserRole = 'student'): Profile | null => {
     const cleanEmail = email.trim().toLowerCase();
+    
+    // Check if official
+    const isOfficial = allowedEmails.map(e => e.toLowerCase()).includes(cleanEmail) || cleanEmail === 'dangtuyethong2324@gmail.com';
+    const finalRole: UserRole = isOfficial ? role : 'guest';
+
     const existingUser = profiles.find(p => p.gmail.toLowerCase() === cleanEmail);
     
     if (existingUser) {
+      if (existingUser.role !== finalRole) {
+        existingUser.role = finalRole;
+        setProfiles(prev => prev.map(p => p.id === existingUser.id ? { ...p, role: finalRole } : p));
+      }
       setActiveUserId(existingUser.id);
       setIsAuthenticated(true);
       localStorage.setItem('lms_active_user_id', existingUser.id);
@@ -1459,7 +1509,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         id: newId,
         full_name: email.split('@')[0], // default name from email prefix
         avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
-        role: role,
+        role: finalRole,
         telegram_id: '',
         gmail: cleanEmail,
         phone_number: '',
@@ -1553,9 +1603,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const newMiles = p.nautical_miles + amount;
         
         // Cập nhật nốt nautical_miles của profile lên Supabase
-        supabase.from('profiles').update({ nautical_miles: newMiles }).eq('id', studentId).then(({ error }) => {
-          if (error) console.error('Lỗi khi cập nhật nautical_miles của profile:', error);
-        });
+        if (activeUser?.role !== 'guest') {
+          supabase.from('profiles').update({ nautical_miles: newMiles }).eq('id', studentId).then(({ error }) => {
+            if (error) console.error('Lỗi khi cập nhật nautical_miles của profile:', error);
+          });
+        }
 
         // Auto unlock level milestone badges (with notification)
         if (newMiles >= 5000) unlockBadge(studentId, 'bada0000-0000-0000-0000-000000000105', false);
@@ -1569,13 +1621,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return p;
     }));
 
-    try {
-      const { error } = await supabase
-        .from('nautical_miles_transactions')
-        .insert([newTx]);
-      if (error) console.error('Lỗi khi lưu nautical miles transaction lên Supabase:', error);
-    } catch (e) {
-      console.error(e);
+    if (activeUser?.role !== 'guest') {
+      try {
+        const { error } = await supabase
+          .from('nautical_miles_transactions')
+          .insert([newTx]);
+        if (error) console.error('Lỗi khi lưu nautical miles transaction lên Supabase:', error);
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
@@ -1611,13 +1665,15 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return [...prev, newPB];
     });
 
-    try {
-      const { error } = await supabase
-        .from('profile_badges')
-        .insert([newPB]);
-      if (error) console.error('Lỗi khi lưu profile badge lên Supabase:', error);
-    } catch (e) {
-      console.error(e);
+    if (activeUser?.role !== 'guest') {
+      try {
+        const { error } = await supabase
+          .from('profile_badges')
+          .insert([newPB]);
+        if (error) console.error('Lỗi khi lưu profile badge lên Supabase:', error);
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
@@ -1683,17 +1739,19 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Upsert lên Supabase
-    supabase.from('submissions').upsert({
-      id,
-      assignment_id: assignmentId,
-      batch_id: 'b0000003-0000-0000-0000-000000000003',
-      student_id: activeUserId,
-      content,
-      status: 'submitted',
-      created_at: newSubmission.created_at
-    }).then(({ error }) => {
-      if (error) console.error('Lỗi khi nộp bài tập lên Supabase:', error.message);
-    });
+    if (activeUser?.role !== 'guest') {
+      supabase.from('submissions').upsert({
+        id,
+        assignment_id: assignmentId,
+        batch_id: 'b0000003-0000-0000-0000-000000000003',
+        student_id: activeUserId,
+        content,
+        status: 'submitted',
+        created_at: newSubmission.created_at
+      }).then(({ error }) => {
+        if (error) console.error('Lỗi khi nộp bài tập lên Supabase:', error.message);
+      });
+    }
   };
 
   const completeLesson = (lessonId: string) => {
@@ -1723,8 +1781,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setComments(prev => [...prev, newComment]);
 
-    const { error } = await supabase.from('comments').insert([newComment]);
-    if (error) console.error('Lỗi khi lưu comment lên Supabase:', error.message);
+    if (activeUser?.role !== 'guest') {
+      const { error } = await supabase.from('comments').insert([newComment]);
+      if (error) console.error('Lỗi khi lưu comment lên Supabase:', error.message);
+    }
     
     // Reward for active crew collaboration
     addNauticalMiles(activeUserId, 5, 'comment_added', 'Bình luận thảo luận chéo bài nộp đồng đội', newComment.id);

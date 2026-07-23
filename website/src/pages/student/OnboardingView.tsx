@@ -483,8 +483,9 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
           });
           
           if (allCompleted) {
+            const onboardingDayUuid = `00000000-0000-0000-0000-0000000000d${day}`;
             const alreadyLogged = (nauticalTransactions || []).some(
-              t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
+              t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && (t.reference_id === onboardingDayUuid || t.reference_id === `onboarding-day-${day}`)
             );
             if (!alreadyLogged) {
               addNauticalMiles(
@@ -492,7 +493,7 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
                 50, 
                 'lesson_complete', 
                 `Hoàn thành Onboarding Ngày ${day}`, 
-                `onboarding-day-${day}`
+                onboardingDayUuid
               );
               addNotification(
                 'Thử thách hoàn thành!', 

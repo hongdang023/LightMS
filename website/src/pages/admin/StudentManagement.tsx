@@ -152,7 +152,7 @@ const VerticalProgressBarList: React.FC<{
 export const StudentManagement: React.FC = () => {
   const { users, submissions, lessons, assignments, onboardingDays, addNotification } = useDatabase();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding' | 'guest'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'overview' | 'onboarding'>('list');
@@ -209,7 +209,8 @@ export const StudentManagement: React.FC = () => {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const students = users.filter(u => u.role === 'student');
-  const activeStudent = students.find(s => s.id === selectedStudentId);
+  const guests = users.filter(u => u.role === 'guest');
+  const activeStudent = users.find(s => s.id === selectedStudentId);
 
   const liveClassAssignments = assignments.filter(a => {
     const lesson = lessons.find(l => l.id === a.lesson_id);
@@ -319,13 +320,21 @@ export const StudentManagement: React.FC = () => {
   };
 
   // Filter students based on active tab and search query
-  const filteredStudents = students.filter(student => {
-    const status = getStudentStatus(student);
-    const matchesTab = activeTab === 'all' || status === activeTab;
-    const matchesSearch = student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          student.gmail.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
+  const filteredStudents = (() => {
+    if (activeTab === 'guest') {
+      return guests.filter(guest => 
+        guest.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        guest.gmail.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return students.filter(student => {
+      const status = getStudentStatus(student);
+      const matchesTab = activeTab === 'all' || status === activeTab;
+      const matchesSearch = student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            student.gmail.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesTab && matchesSearch;
+    });
+  })();
 
   const getRankTitle = (miles: number) => {
     if (miles >= 5000) return 'Huyền thoại biển cả 👑';
@@ -628,6 +637,14 @@ export const StudentManagement: React.FC = () => {
                 >
                   <Trophy size={12} /> Khen thưởng ({students.filter(s => getStudentStatus(s) === 'outstanding').length})
                 </button>
+                <button 
+                  onClick={() => setActiveTab('guest')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                    activeTab === 'guest' ? 'bg-gray-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Users size={12} /> Khách truy cập ({guests.length})
+                </button>
               </div>
 
               {/* Bulk Email Button */}
@@ -664,7 +681,7 @@ export const StudentManagement: React.FC = () => {
                     const onboardingCount = getOnboardingCompletedCount(student);
                     const liveClassCount = getLiveClassCompletedCount(student.id);
                     const visits = student.visits || 1;
-                    const status = getStudentStatus(student);
+                    const status = activeTab === 'guest' ? 'guest' : getStudentStatus(student);
                     const isSelected = student.id === selectedStudentId;
 
                     return (
@@ -711,6 +728,11 @@ export const StudentManagement: React.FC = () => {
 
                         {/* Status Badge */}
                         <td className="py-3.5 px-4">
+                          {status === 'guest' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] bg-gray-150 text-gray-700 font-extrabold flex items-center gap-1 w-fit">
+                              Khách
+                            </span>
+                          )}
                           {status === 'risk' && (
                             <span className="px-2 py-0.5 rounded-full text-[9px] bg-red-100 text-red-850 font-extrabold flex items-center gap-1 w-fit">
                               <ShieldAlert size={10} /> Nguy cơ
@@ -730,6 +752,14 @@ export const StudentManagement: React.FC = () => {
 
                         {/* Quick Actions */}
                         <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          {status === 'guest' && (
+                            <button 
+                              onClick={() => setSelectedStudentId(student.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-100 text-[10px] font-bold border border-gray-200 transition-colors"
+                            >
+                              Chi tiết
+                            </button>
+                          )}
                           {status === 'risk' && (
                             <a 
                               href={getMailtoLink(student)}

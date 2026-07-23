@@ -68,7 +68,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
       }).length
     : Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
         return (nauticalTransactions || []).some(
-          t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === `onboarding-day-${day}`
+          t => t.student_id === activeUser.id && 
+          t.action_type === 'lesson_complete' && 
+          (t.reference_id === `onboarding-day-${day}` || t.reference_id === `00000000-0000-0000-0000-0000000000d${day}`)
         );
       }).length;
 
