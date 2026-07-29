@@ -1362,7 +1362,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const isOfficial = !!allowedCheck;
 
       // Check admin emails list
-      const adminEmails = ['dangtuyethong2324@gmail.com'];
+      const adminEmails = [
+        'dangtuyethong2324@gmail.com',
+        'tuyethong.cym@gmail.com',
+        'thongdang.upyouth@gmail.com',
+        'quangnhatnguyen2403@gmail.com',
+        'chinn2006@gmail.com'
+      ];
       const isAdminEmail = adminEmails.includes(userEmail.toLowerCase());
 
       // Read requested role from localStorage
