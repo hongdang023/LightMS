@@ -1050,10 +1050,11 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v10';
+  const SYLLABUS_VERSION = 'v201_v11';
+  const isVersionMismatch = localStorage.getItem('lms_syllabus_version') !== SYLLABUS_VERSION;
+
   const [lessons, setLessons] = useState<Lesson[]>(() => {
-    const currentVersion = localStorage.getItem('lms_syllabus_version');
-    if (currentVersion !== SYLLABUS_VERSION) {
+    if (isVersionMismatch) {
       localStorage.setItem('lms_syllabus_version', SYLLABUS_VERSION);
       localStorage.setItem('lms_lessons', JSON.stringify(SEED_LESSONS));
       localStorage.setItem('lms_modules', JSON.stringify(SEED_MODULES));
@@ -1064,16 +1065,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [modules, setModules] = useState<Module[]>(() => {
-    const currentVersion = localStorage.getItem('lms_syllabus_version');
-    if (currentVersion !== SYLLABUS_VERSION) {
+    if (isVersionMismatch) {
       return SEED_MODULES;
     }
     return safeParse('lms_modules', SEED_MODULES);
   });
 
   const [assignments, setAssignments] = useState<Assignment[]>(() => {
-    const currentVersion = localStorage.getItem('lms_syllabus_version');
-    if (currentVersion !== SYLLABUS_VERSION) {
+    if (isVersionMismatch) {
       return SEED_ASSIGNMENTS;
     }
     return safeParse('lms_assignments', SEED_ASSIGNMENTS);
