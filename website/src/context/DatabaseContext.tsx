@@ -583,7 +583,7 @@ const SEED_LESSONS: Lesson[] = [
     title: 'Buổi 2: PRD kỹ thuật & 4 flow',
     type: 'video',
     content: 'Cách thiết lập PRD kỹ thuật chuẩn chỉnh cho sản phẩm AI. Làm quen và làm chủ 4 loại Flow cơ bản trong thiết kế phần mềm (User Flow, Data Flow, Logic Flow, System Flow) để giao tiếp hiệu quả với AI IDE.',
-    video_url: '',
+    video_url: 'https://daymai.vn/vc/6a51d5be177b1e1f3c0a961a',
     order_index: 3,
     start_date: '2026-08-01', // Buổi 2
     target: 'Làm chủ tư duy phân tách hệ thống, xây dựng tài liệu kỹ thuật PRD và sơ đồ flow rõ ràng để AI có thể thực thi chính xác.',
@@ -1050,7 +1050,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v11';
+  const SYLLABUS_VERSION = 'v201_v12';
   const isVersionMismatch = localStorage.getItem('lms_syllabus_version') !== SYLLABUS_VERSION;
 
   const [lessons, setLessons] = useState<Lesson[]>(() => {
@@ -1292,11 +1292,17 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Sync local changes to Supabase if the user is an admin
       const activeUserObj = (resProfiles.data || []).find((p: any) => p.id === activeUserId);
       if (activeUserObj && activeUserObj.role === 'admin') {
-        // 1. Sync Lesson 2 to Supabase if it doesn't have the study note
+        // 1. Sync Lesson 2 to Supabase if it doesn't have the study note, video_url or has_materials = false
         const dbLesson2 = currentLessons.find((l: any) => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e');
-        if (dbLesson2 && (!dbLesson2.study_note_url || dbLesson2.study_note_url !== 'https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e' || !dbLesson2.has_materials)) {
-          console.log('Admin phát hiện Lesson 2 chưa có link học liệu hoặc has_materials = false trên Supabase. Đang đồng bộ...');
-          const seedLesson2 = SEED_LESSONS.find(l => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e')!;
+        const seedLesson2 = SEED_LESSONS.find(l => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e')!;
+        if (dbLesson2 && (
+          !dbLesson2.study_note_url || 
+          dbLesson2.study_note_url !== seedLesson2.study_note_url || 
+          !dbLesson2.video_url || 
+          dbLesson2.video_url !== seedLesson2.video_url || 
+          !dbLesson2.has_materials
+        )) {
+          console.log('Admin phát hiện Lesson 2 chưa có link học liệu/video hoặc has_materials = false trên Supabase. Đang đồng bộ...');
           const { target, ...dbUpdates } = seedLesson2 as any;
           await supabase.from('lessons').update(dbUpdates).eq('id', seedLesson2.id);
           currentLessons = currentLessons.map(l => l.id === seedLesson2.id ? { ...l, ...seedLesson2 } : l);
