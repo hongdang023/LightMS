@@ -563,29 +563,32 @@ const SEED_LESSONS: Lesson[] = [
   {
     id: '1c69ea64-b83b-4519-a545-5030a8360163',
     module_id: '8d29e4f3-9212-403b-8c7d-c25f6de6835a',
-    title: 'Buổi 1: Mindset: Từ MVP đến product có thể scale',
+    title: 'Buổi 1: Mindset: MVP -> Product có thể scale',
     type: 'video',
-    content: 'MVP vs scalable product vs internal workspace system. Các điểm gãy sau prototype: codebase rối, data chưa rõ, auth/permission, deploy tạm, thiếu version control, khó debug, thiếu automation. Tech literacy map cho non-tech: frontend, backend, database, API, auth, deploy, server, automation. Cách học tech với AI: hỏi đúng, kiểm chứng output, không bị thuật ngữ kéo đi.',
-    video_url: 'https://drive.google.com/file/d/buoi-1-mindset-scale',
+    content: 'Thay đổi căn tính (Identity Shift): Ngừng tự nhủ "Tôi không biết code", thay vào đó hãy trở thành Product Builder sở hữu các quyết định chiến lược.\nQuản trị Triple Debt: Nhận diện và ngăn chặn ba loại nợ (Nhận thức, Ý định, Vận hành) phát sinh khi tốc độ xây dựng của AI vượt quá tốc độ suy nghĩ của con người.\nSở hữu Outcome (Kết quả): Chuyển trọng tâm từ việc đếm số lượng tính năng (Feature ship) sang đo lường sự thay đổi hành vi của người dùng (User behavior).\nCấu trúc Product Seed: Một sản phẩm vững chắc cần 5 thành phần kiểm chứng được: Target User, Core Pain, Desired Outcome, Success Signal, và MVP.',
+    video_url: 'https://daymai.vn/vc/6a51d590b27fed03b70cba72',
     order_index: 2,
     start_date: '2026-07-29', // Buổi 1
     target: 'Giúp học viên hiểu gap giữa prototype/MVP và product hoặc workspace system đáng tin hơn.',
     demo: 'So sánh một prototype đẹp nhưng mong manh với một product/workspace system có cấu trúc hơn.',
     scope: 'Giữ tính mindset + framework. Không đi quá sâu vào từng công nghệ trong buổi này.',
-    has_materials: false // Class hasn't started, no materials yet
+    has_materials: true,
+    slide_url: 'https://canva.link/lbrdh9zqf1beajt',
+    study_note_url: 'https://docs.google.com/document/d/1FuGpB8Ogwo5FA04M9sDyWd_zu4Clq4dys9WqohjbhZ8/edit?usp=sharing',
+    key_concepts: ['Product Seed', 'Product Hypothesis']
   },
   {
     id: 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e',
     module_id: '8d29e4f3-9212-403b-8c7d-c25f6de6835a',
-    title: 'Buổi 2: PRD kỹ thuật & 4 Flow',
+    title: 'Buổi 2: PRD kỹ thuật & 4 flow',
     type: 'video',
-    content: 'PRD v2: problem, user, goal, success criteria, main use case, out-of-scope, user stories, acceptance criteria. Main flow vs secondary flow vs edge case. 4 flow: User Flow, Business Flow, System Flow, Data Flow. Cách dùng AI/skill để review PRD và phát hiện gap.',
-    video_url: 'https://drive.google.com/file/d/buoi-2-prd-technical',
+    content: '',
+    video_url: '',
     order_index: 3,
     start_date: '2026-08-01', // Buổi 2
-    target: 'Biến ý tưởng/product request thành spec đủ rõ để AI/IDE/agent build đúng hơn.',
-    demo: 'Chuyển một app mẫu từ PRD thường sang PRD kỹ thuật; vẽ 4 flow bằng Mermaid/diagrams.net hoặc tool tương đương.',
-    scope: 'Buổi này là nền để các buổi backend/deploy/automation không bị loạn.',
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   
@@ -593,43 +596,43 @@ const SEED_LESSONS: Lesson[] = [
   {
     id: '9bd3fd2c-ee49-4176-b951-42e70d4f48ff',
     module_id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e',
-    title: 'Buổi 3: IDE + CLI Product Cockpit',
+    title: 'Buổi 3: IDE (Codex, Visual Studio & Claude Code) + CLI Product Cockpit',
     type: 'video',
-    content: 'Cấu phần IDE: file tree, editor, agent panel, terminal, source control/diff. Workflow giao việc cho agent: context, task breakdown, plan, diff review, accept/reject, run/test/debug. Khi nào dùng IDE, khi nào dùng CLI. Cách yêu cầu AI giải thích lỗi terminal/build log. Cách giới hạn scope để agent không sửa quá rộng.',
-    video_url: 'https://drive.google.com/file/d/buoi-3-ide-cli-cockpit',
+    content: '',
+    video_url: '',
     order_index: 4,
     start_date: '2026-08-05', // Buổi 3
-    target: 'Dạy cách làm việc với IDE/CLI để AI build có kiểm soát thay vì sửa lung tung. (học cả Cursor, Antigravity, Codex & Claude Code). Riêng Claude code có thể tách 1 buổi nếu muốn',
-    demo: 'Mở repo/app mẫu; yêu cầu agent thêm một feature nhỏ; review diff; chạy local; sửa lỗi; commit nháp.',
-    scope: 'Chọn một IDE chính để demo. Các IDE khác chỉ overview.',
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   {
     id: '8695373a-7625-4883-8a47-4a73c84cb3df',
     module_id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e',
-    title: 'Buổi 4: Skills for Product Building',
+    title: 'Buổi 4: MCP for Product Building',
     type: 'video',
-    content: 'Skill là gì, khác prompt thường ở đâu. Skill cho brainstorm product, sharpen problem statement, MVP scoping, PRD review, acceptance criteria. Skill cho QA app, browser testing, pitch review, build review checklist. Ví dụ Superpowers hoặc MVP/product framework skill. Cách gọi skill đúng lúc trong IDE/agent workflow.',
-    video_url: 'https://drive.google.com/file/d/buoi-4-skills-playbook',
+    content: '',
+    video_url: '',
     order_index: 5,
-    start_date: '2026-08-12', // Buổi 5 in calendar
-    target: 'Dạy skill như playbook tái sử dụng để AI hỗ trợ brainstorm, scope, QA, review và cải thiện sản phẩm ổn định hơn.',
-    demo: 'Dùng skill để review PRD v2; tạo test checklist; dùng browser/testing skill để kiểm tra một flow sản phẩm.',
-    scope: 'Nên tách riêng vì phần Skills khóa cũ bị dồn với MCP nên dễ quá tải.',
+    start_date: '2026-08-08', // Buổi 4
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   {
     id: 'a10719c6-edf1-4233-9438-f2e95c5b21c7',
     module_id: '1db2992d-70f2-48c5-9f6e-c67a71f7198e',
-    title: 'Buổi 5: MCP for Product Building',
+    title: 'Buổi 5: Skills for Product Building',
     type: 'video',
-    content: 'MCP trong bức tranh agent/tool. MCP vs Skill vs API vs CLI vs Script. MCP cho design/prototype, browser/app testing, database/schema/docs, repo/GitHub, file/workspace context. Decision rule: khi nào MCP đáng dùng, khi nào không cần.',
-    video_url: 'https://drive.google.com/file/d/buoi-5-mcp-integration',
+    content: '',
+    video_url: '',
     order_index: 6,
-    start_date: '2026-08-08', // Buổi 4 in calendar
-    target: 'Dạy MCP theo use case product: agent chạm vào tool/data/context để làm việc thật hơn.',
-    demo: 'Agent dùng browser để test flow; dùng database/docs context để đề xuất schema hoặc kiểm tra lỗi; đọc repo/context để trả lời câu hỏi product/technical.',
-    scope: 'Không đi sâu subagents, orchestration, remote agent setup. Các phần đó để workshop/khóa sau.',
+    start_date: '2026-08-19', // Buổi 5
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   
@@ -639,27 +642,27 @@ const SEED_LESSONS: Lesson[] = [
     module_id: 'faa519f6-b31c-4ae7-9377-46c041b9c065',
     title: 'Buổi 6: GitHub & Version Control',
     type: 'video',
-    content: 'Repo, commit, branch, pull request ở mức non-tech cần hiểu. Issue -> change -> review -> commit -> deploy. AI review code/change. Rollback mindset. Repo hygiene: README, env example, folder structure, issue template, changelog đơn giản.',
-    video_url: 'https://drive.google.com/file/d/buoi-6-github-versioning',
+    content: '',
+    video_url: '',
     order_index: 7,
-    start_date: '2026-08-15', // Buổi 6
-    target: 'Dùng GitHub như hệ thống kiểm soát thay đổi, không chỉ là nơi lưu code.',
-    demo: 'Tạo issue cho bug/feature; agent sửa code; review diff; commit/push; trigger deploy.',
-    scope: 'Không cần dạy Git command line sâu. Ưu tiên mental model + workflow thực dụng.',
+    start_date: '2026-08-22', // Buổi 6
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   {
     id: '352d4c69-bafd-4dbf-b234-abad86c07ad8',
     module_id: 'faa519f6-b31c-4ae7-9377-46c041b9c065',
-    title: 'Buổi 7: Backend Decision Layer',
+    title: 'Buổi 7: Backend + Database',
     type: 'video',
-    content: 'Data layer trong app/product. Khi nào dùng Google Sheets, Firebase, Supabase, backend/API custom, hoặc chưa cần backend thật. So sánh theo độ dễ bắt đầu, realtime, auth, permission, SQL/noSQL, cost/free tier, scale, lock-in, AI/agent friendliness. Schema, CRUD, auth, permission/RLS ở mức non-tech cần hiểu.',
-    video_url: 'https://drive.google.com/file/d/buoi-7-backend-layers',
+    content: '',
+    video_url: '',
     order_index: 8,
-    start_date: '2026-08-19', // Buổi 7
-    target: 'Giúp học viên biết chọn Google Sheets, Firebase, Supabase, hay backend thật theo nhu cầu sản phẩm.',
-    demo: 'Một use case đơn giản được triển khai hoặc mô phỏng bằng Google Sheets/Firebase/Supabase để thấy trade-off; chọn một path chính để demo kỹ.',
-    scope: 'Nên dạy decision-first, sau đó chọn một path demo chính để tránh quá rộng.',
+    start_date: '2026-08-26', // Buổi 7
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   
@@ -669,13 +672,13 @@ const SEED_LESSONS: Lesson[] = [
     module_id: '13ded8da-92ef-4e27-b516-6493ee8743d8',
     title: 'Buổi 8: Deploy & Infra Landscape',
     type: 'video',
-    content: 'Vercel: managed app hosting. Cloudflare: DNS/CDN/security/Pages/Workers/Tunnel. VPS: thuê server riêng, linh hoạt hơn nhưng phải tự chịu trách nhiệm. Docker: đóng gói app/service để chạy ổn định giữa môi trường khác nhau. SSH, env vars, secrets, domain, logs, local vs production. Khi nào không nên tự host.',
-    video_url: 'https://drive.google.com/file/d/buoi-8-deploy-infra',
+    content: '',
+    video_url: '',
     order_index: 9,
-    start_date: '2026-08-22', // Buổi 8
-    target: 'Cho học viên hiểu bản đồ deploy/infra: Vercel, Cloudflare, VPS, Docker khác nhau ra sao và nên chọn gì.',
-    demo: 'Deploy app lên Vercel; giải thích/trỏ domain qua Cloudflare; demo SSH vào VPS hoặc mô phỏng flow; demo Docker chạy service đơn giản.',
-    scope: 'Không biến thành Docker/VPS hardcore. Mục tiêu là hiểu bản đồ và biết chọn đường.',
+    start_date: '2026-08-29', // Buổi 8
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   },
   {
@@ -683,13 +686,27 @@ const SEED_LESSONS: Lesson[] = [
     module_id: '13ded8da-92ef-4e27-b516-6493ee8743d8',
     title: 'Buổi 9: Automation with n8n',
     type: 'video',
-    content: 'Automation layer là gì. n8n cho form -> sheet/database -> notification; app data -> report; file upload -> OCR/summary; feedback -> action list; daily/weekly digest. Local n8n vs cloud/self-host/server n8n. Webhook, trigger, credential, node, workflow. Khi nào dùng n8n, khi nào dùng code/API/script.',
-    video_url: 'https://drive.google.com/file/d/buoi-9-n8n-automation',
+    content: '',
+    video_url: '',
     order_index: 10,
-    start_date: '2026-08-26', // Buổi 9
-    target: 'Dùng automation để nối các mảnh sản phẩm/workspace và giảm việc lặp.',
-    demo: 'Workflow mẫu: input/form -> data store -> Telegram/email/Slack notification -> summary. Có thể nối với Personal Work OS Lite.',
-    scope: 'Core nên ưu tiên local/cloud demo; self-host/VPS để optional nếu lớp đủ nền.',
+    start_date: '2026-09-05', // Buổi 9
+    target: '',
+    demo: '',
+    scope: '',
+    has_materials: false
+  },
+  {
+    id: 'a10719c6-edf1-4233-9438-f2e95c5b21c9',
+    module_id: '13ded8da-92ef-4e27-b516-6493ee8743d8',
+    title: 'Buổi 10: Demo hệ thống (theo request của học viên)',
+    type: 'video',
+    content: '',
+    video_url: '',
+    order_index: 11,
+    start_date: '2026-09-12', // Buổi 10
+    target: '',
+    demo: '',
+    scope: '',
     has_materials: false
   }
 ];
@@ -703,107 +720,49 @@ const SEED_LESSON_SKILLS: LessonSkill[] = [
   { lesson_id: '34a95f25-be91-4627-943f-2e9ccdb1c747', skill_id: 'skill-ui' },
   { lesson_id: '352d4c69-bafd-4dbf-b234-abad86c07ad8', skill_id: 'skill-ui' },
   { lesson_id: 'f7fa3d41-a0ef-4b39-8a3c-09457425963d', skill_id: 'skill-ui' },
-  { lesson_id: '6acc4c45-e51a-4fdf-a1ca-25847522bdd8', skill_id: 'skill-ai' }
+  { lesson_id: '6acc4c45-e51a-4fdf-a1ca-25847522bdd8', skill_id: 'skill-ai' },
+  { lesson_id: 'a10719c6-edf1-4233-9438-f2e95c5b21c9', skill_id: 'skill-ai' }
 ];
 
 const SEED_ASSIGNMENTS: Assignment[] = [
   {
     id: 'ae000000-0000-0000-0000-000000000001',
     lesson_id: '1c69ea64-b83b-4519-a545-5030a8360163',
-    description: 'MVP-to-Scale Gap Checklist cho project cá nhân; chọn project chính để đi xuyên suốt khóa.',
+    description: `Nộp Product Seed version 1.0
+
+Bước 01: Viết nội dung của Product Seed.
+- Target User: Nghề, tuổi, địa lý, thu nhập, tình huống. (VD: NV VP 25-35, HCMC, 15-30M/tháng, dùng Excel track chi tiêu)
+- Core Pain: Quan sát ở 3+ user thật. (VD: Cuối tháng không nhớ tiền hao ở đâu)
+- Desired Outcome: Thay đổi hành vi quan sát được. (VD: Phát hiện 2-3 khoản hao tiền đủ sớm để điều chỉnh)
+- Success Signal: Đo hành vi, không đo cảm nhận. (VD: Quay lại kiểm tra spending lần 2 không cần nhắc)
+- MVP / Test: 1 AI feature nhỏ nhất để bắt đầu. (VD: 1 form + Claude API: paste 20 giao dịch, trả top 3 khoản chi)
+
+Bước 02: Check lại với AI qua 05 cổng kiểm định
+
+Bước 03: Đăng nội dung Product Seed của bạn lên Group Facebook của lớp, gắn hastag #BTVN_Ngay1`,
     rubric_checklist: [
-      { item: 'Xác định rõ ràng 3 rủi ro kỹ thuật chính của dự án', checked: false },
-      { item: 'Đưa ra checklist chuẩn bị scale từ MVP thô ban đầu', checked: false }
+      { item: 'User đủ cụ thể: Tuyển được 5 user trong 1 tuần.', checked: false },
+      { item: 'Pain quan sát được: Nhìn thấy trong hành vi, không chỉ suy đoán.', checked: false },
+      { item: 'Outcome đối hành vi: User làm khác trước, không phải cảm nhận.', checked: false },
+      { item: 'Signal check nhanh: Đo được ngay lập tức, không chờ retention/NPS.', checked: false },
+      { item: 'Validation thật: Action đầu tiên có user THẬT dùng và feedback.', checked: false }
     ],
     scaffolding: {
-      template_url: 'https://docs.google.com/spreadsheets/d/1nrOIqOfdtw83xzOYyRvEg1LETUd1h25fO57ZqL79Ji0/edit'
+      items: [
+        {
+          label: 'Gems Product Seed Generator',
+          url: 'https://gemini.google.com/gem/1093w9uY5z5Cj5o28dxDBBXOBOIfRlx-b?usp=sharing'
+        },
+        {
+          label: 'Product Seed Prompting Template',
+          url: 'https://drive.google.com/file/d/1Q5odipK3Mn7Z8DV2IurErM3I8cCp796A/view?usp=drive_link'
+        },
+        {
+          label: 'Padlet luyện tập trên lớp',
+          url: 'https://padlet.com/dangtuyethong2324/vibe-coding-201-batch-02-z7yk4l9ojhninj1z'
+        }
+      ]
     }
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000002',
-    lesson_id: 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e',
-    description: 'PRD v2 + 4 flow draft cho main use case của project.',
-    rubric_checklist: [
-      { item: 'PRD v2 bao gồm đầy đủ Problem, User, Goal, Success Criteria, User Stories', checked: false },
-      { item: 'Vẽ đủ và đúng 4 flow kỹ thuật bằng Mermaid hoặc công cụ tương đương', checked: false }
-    ],
-    scaffolding: {
-      reference_link: 'https://the1ight.notion.site/PRD-Template-Vibe-Coding-101'
-    }
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000003',
-    lesson_id: '9bd3fd2c-ee49-4176-b951-42e70d4f48ff',
-    description: 'Thêm hoặc sửa một feature nhỏ trong project bằng IDE/CLI workflow; ghi lại task/prompt và diff chính.',
-    rubric_checklist: [
-      { item: 'Sử dụng thành công IDE hoặc CLI (Cursor, Claude Code, Antigravity...) để thay đổi code', checked: false },
-      { item: 'Ghi lại chi tiết prompt giao việc cho agent và tóm tắt cách review/chạy thử code', checked: false },
-      { item: 'Chụp hình hoặc copy phần code diff chính sau khi thay đổi', checked: false }
-    ],
-    scaffolding: {}
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000004',
-    lesson_id: '8695373a-7625-4883-8a47-4a73c84cb3df',
-    description: 'Dùng ít nhất 1 skill để cải thiện PRD/app; nộp before/after.',
-    rubric_checklist: [
-      { item: 'Chọn được ít nhất 1 skill phù hợp để cải thiện sản phẩm', checked: false },
-      { item: 'Nêu rõ sự khác biệt hoặc cải tiến cụ thể giữa trước và sau khi dùng skill (Before vs After)', checked: false }
-    ],
-    scaffolding: {}
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000005',
-    lesson_id: 'a10719c6-edf1-4233-9438-f2e95c5b21c7',
-    description: 'Chọn 1 MCP/MCP-like workflow để audit/test một phần project. Nếu setup nặng, dùng guided demo + worksheet.',
-    rubric_checklist: [
-      { item: 'Xác định đúng use case cần dùng MCP và cấu hình thành công công cụ bổ trợ', checked: false },
-      { item: 'Mô tả chi tiết kết quả audit/test hoặc dữ liệu thu thập được thông qua MCP', checked: false }
-    ],
-    scaffolding: {}
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000006',
-    lesson_id: '34a95f25-be91-4627-943f-2e9ccdb1c747',
-    description: 'Một change trong project được track từ issue đến commit; repo có README hoặc project notes tối thiểu.',
-    rubric_checklist: [
-      { item: 'Tạo Issue mô tả tính năng/bug và liên kết với branch/PR tương ứng', checked: false },
-      { item: 'Thực hiện commit và push thay đổi lên GitHub theo đúng chuẩn đặt tên', checked: false },
-      { item: 'Repo GitHub có tài liệu README.md hoặc Project Notes cơ bản hướng dẫn chạy local', checked: false }
-    ],
-    scaffolding: {}
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000007',
-    lesson_id: '352d4c69-bafd-4dbf-b234-abad86c07ad8',
-    description: 'Backend decision matrix + data model/schema draft cho main use case.',
-    rubric_checklist: [
-      { item: 'Có bảng so sánh trade-off giữa các phương án Backend (Sheets, Firebase, Supabase, API custom...)', checked: false },
-      { item: 'Thiết kế cấu trúc bảng (schema) với đầy đủ trường dữ liệu, kiểu dữ liệu và mối quan hệ giữa các bảng cho tính năng chính', checked: false }
-    ],
-    scaffolding: {}
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000008',
-    lesson_id: 'f7fa3d41-a0ef-4b39-8a3c-09457425963d',
-    description: 'Deployment plan cho project: platform, domain/DNS, env vars, rủi ro cần lưu ý.',
-    rubric_checklist: [
-      { item: 'Xác định rõ platform deploy (Vercel, Cloudflare Pages, VPS...) phù hợp với tech stack', checked: false },
-      { item: 'Liệt kê đầy đủ các biến môi trường (.env) cần cấu hình trên môi trường production', checked: false },
-      { item: 'Đưa ra phương án dự phòng (rollback plan) và giám sát logs nếu xảy ra lỗi', checked: false }
-    ],
-    scaffolding: {}
-  },
-  {
-    id: 'ae000000-0000-0000-0000-000000000009',
-    lesson_id: '6acc4c45-e51a-4fdf-a1ca-25847522bdd8',
-    description: 'Một workflow n8n chạy được hoặc automation design đủ rõ nếu setup chưa kịp.',
-    rubric_checklist: [
-      { item: 'Xác định rõ Trigger node và các Action nodes trong quy trình', checked: false },
-      { item: 'Thiết lập thành công kết nối (Credentials) và truyền nhận dữ liệu giữa các node chính xác', checked: false },
-      { item: 'Chạy thử workflow thành công hoặc có bản mô tả luồng tự động hóa chi tiết, logic', checked: false }
-    ],
-    scaffolding: {}
   }
 ];
 
@@ -888,49 +847,56 @@ const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
   { id: 'cal-1', title: 'KICK-OFF MEETING', time: '14:30', endTime: '16:30', date: 18, month: 6, year: 2026, colorClass: 'bg-red-600 text-white', type: 'class', eventType: 'kick-off', details: 'Kick-off Meeting\nOnline via Zoom\nSự kiện khởi động' },
   
   // Onboarding Week
-  { id: 'cal-2', title: 'ONBOARDING', time: '00:00', allDay: true, date: 20, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-3', title: 'ONBOARDING', time: '00:00', allDay: true, date: 21, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-4', title: 'ONBOARDING', time: '00:00', allDay: true, date: 22, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-5', title: 'ONBOARDING', time: '00:00', allDay: true, date: 23, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-6', title: 'ONBOARDING', time: '00:00', allDay: true, date: 24, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-7', title: 'ONBOARDING', time: '00:00', allDay: true, date: 25, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
-  { id: 'cal-8', title: 'ONBOARDING', time: '00:00', allDay: true, date: 26, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-2', title: 'ONBOARDING', time: '05:00', allDay: true, date: 20, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-3', title: 'ONBOARDING', time: '05:00', allDay: true, date: 21, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-4', title: 'ONBOARDING', time: '05:00', allDay: true, date: 22, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-5', title: 'ONBOARDING', time: '05:00', allDay: true, date: 23, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-6', title: 'ONBOARDING', time: '05:00', allDay: true, date: 24, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-7', title: 'ONBOARDING', time: '05:00', allDay: true, date: 25, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
+  { id: 'cal-8', title: 'ONBOARDING', time: '05:00', allDay: true, date: 26, month: 6, year: 2026, colorClass: 'bg-violet-600 text-white', type: 'community', eventType: 'onboarding' },
 
   // Live Classes
   { id: 'cal-live-1', title: 'LIVE CLASS - BUỔI 01', time: '20:30', endTime: '22:30', date: 29, month: 6, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 01: Mindset: MVP -> Product có thể scale\nOnline via Zoom\nSự kiện học thuật' },
   { id: 'cal-live-2', title: 'LIVE CLASS - BUỔI 02', time: '14:30', endTime: '16:30', date: 1, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 02: PRD kỹ thuật & 4 flow\nOnline via Zoom\nSự kiện học thuật' },
   { id: 'cal-live-3', title: 'LIVE CLASS - BUỔI 03', time: '20:30', endTime: '22:30', date: 5, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 03: IDE (Codex, Visual Studio & Claude Code) + CLI Product Cockpit\nOnline via Zoom\nSự kiện học thuật' },
   { id: 'cal-live-4', title: 'LIVE CLASS - BUỔI 04', time: '14:30', endTime: '16:30', date: 8, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 04: MCP for Product Building\nOnline via Zoom\nSự kiện học thuật' },
-  { id: 'cal-live-5', title: 'LIVE CLASS - BUỔI 05', time: '20:30', endTime: '22:30', date: 12, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 05: Skills for Product Building\nOnline via Zoom\nSự kiện học thuật' },
-  { id: 'cal-live-6', title: 'LIVE CLASS - BUỔI 06', time: '14:30', endTime: '16:30', date: 15, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 06: GitHub & Version Control\nOnline via Zoom\nSự kiện học thuật' },
-  { id: 'cal-live-7', title: 'LIVE CLASS - BUỔI 07', time: '20:30', endTime: '22:30', date: 19, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 07: Backend + Database\nOnline via Zoom\nSự kiện học thuật' },
-  { id: 'cal-live-8', title: 'LIVE CLASS - BUỔI 08', time: '14:30', endTime: '16:30', date: 22, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 08: Deploy & Infra Landscape\nOnline via Zoom\nSự kiện học thuật' },
-  { id: 'cal-live-9', title: 'LIVE CLASS - BUỔI 09', time: '20:30', endTime: '22:30', date: 26, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 09: Automation with n8n\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-5', title: 'LIVE CLASS - BUỔI 05', time: '20:30', endTime: '22:30', date: 19, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 05: Skills for Product Building\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-6', title: 'LIVE CLASS - BUỔI 06', time: '14:30', endTime: '16:30', date: 22, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 06: GitHub & Version Control\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-7', title: 'LIVE CLASS - BUỔI 07', time: '20:30', endTime: '22:30', date: 26, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 07: Backend + Database\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-8', title: 'LIVE CLASS - BUỔI 08', time: '14:30', endTime: '16:30', date: 29, month: 7, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 08: Deploy & Infra Landscape\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-9', title: 'LIVE CLASS - BUỔI 09', time: '14:30', endTime: '16:30', date: 5, month: 8, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 09: Automation with n8n\nOnline via Zoom\nSự kiện học thuật' },
   
-  // Tuần nghỉ - Build sản phẩm (27/08 - 04/09)
-  { id: 'cal-break-1', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 27, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-2', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 28, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-3', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 29, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-4', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 30, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-5', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 31, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-6', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 1, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-7', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 2, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-8', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 3, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
-  { id: 'cal-break-9', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 4, month: 8, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  // Tuần nghỉ - Build sản phẩm (12/08 - 16/08)
+  { id: 'cal-break-1', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 12, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-2', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 13, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-3', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 14, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-4', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 15, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+  { id: 'cal-break-5', title: 'TUẦN NGHỈ - BUILD SẢN PHẨM', time: '00:00', allDay: true, date: 16, month: 7, year: 2026, colorClass: 'bg-gray-500 text-white', type: 'other' },
+
+  // Nghỉ lễ Quốc Khánh (01/09 - 03/09)
+  { id: 'cal-holiday-1', title: 'NGHỈ QUỐC KHÁNH', time: '00:00', allDay: true, date: 1, month: 8, year: 2026, colorClass: 'bg-red-700 text-white', type: 'other' },
+  { id: 'cal-holiday-2', title: 'NGHỈ QUỐC KHÁNH', time: '00:00', allDay: true, date: 2, month: 8, year: 2026, colorClass: 'bg-red-700 text-white', type: 'other' },
+  { id: 'cal-holiday-3', title: 'NGHỈ QUỐC KHÁNH', time: '00:00', allDay: true, date: 3, month: 8, year: 2026, colorClass: 'bg-red-700 text-white', type: 'other' },
 
   // Buổi 10
-  { id: 'cal-live-10', title: 'LIVE CLASS - BUỔI 10', time: '14:30', endTime: '16:30', date: 5, month: 8, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 10: Demo hệ thống (theo request của học viên)\nOnline via Zoom\nSự kiện học thuật' },
+  { id: 'cal-live-10', title: 'LIVE CLASS - BUỔI 10', time: '14:30', endTime: '16:30', date: 12, month: 8, year: 2026, colorClass: 'bg-orange-600 text-white', type: 'class', eventType: 'live-class', details: 'Buổi 10: Demo hệ thống (theo request của học viên)\nOnline via Zoom\nSự kiện học thuật' },
 
   // Pitching Days
-  { id: 'cal-pitch-1', title: 'PITCHING DAY 01', time: '14:30', endTime: '16:30', date: 12, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 01\nOnline/Offline' },
-  { id: 'cal-pitch-2', title: 'PITCHING DAY 02', time: '20:30', endTime: '22:30', date: 16, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 02\nOnline/Offline' },
-  { id: 'cal-pitch-3', title: 'PITCHING DAY 03', time: '14:30', endTime: '16:30', date: 19, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 03\nOnline/Offline' },
+  { id: 'cal-pitch-1', title: 'PITCHING DAY 01', time: '20:30', endTime: '22:30', date: 16, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 01\nOnline/Offline' },
+  { id: 'cal-pitch-2', title: 'PITCHING DAY 02', time: '14:30', endTime: '16:30', date: 19, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 02\nOnline/Offline' },
+  { id: 'cal-pitch-3', title: 'PITCHING DAY 03', time: '20:30', endTime: '22:30', date: 23, month: 8, year: 2026, colorClass: 'bg-amber-600 text-white', type: 'class', eventType: 'capstone', details: 'Pitching Day 03\nOnline/Offline' },
 
   // Office Hours
-  { id: 'cal-oh-1', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 2, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
-  { id: 'cal-oh-2', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 9, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
-  { id: 'cal-oh-3', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 16, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
-  { id: 'cal-oh-4', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 23, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' }
+  { id: 'cal-oh-1', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 19, month: 6, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-2', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 26, month: 6, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-3', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 2, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-4', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 9, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-5', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 16, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-6', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 23, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-7', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 30, month: 7, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-8', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 6, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-9', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 13, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' },
+  { id: 'cal-oh-10', title: 'OFFICE HOUR', time: '15:30', endTime: '16:30', date: 20, month: 8, year: 2026, colorClass: 'bg-blue-600 text-white', type: 'community', eventType: 'office-hour', details: 'Office Hour hỗ trợ học tập' }
 ];
 
 const SEED_ABOUT_CONTENT: AboutContent = {
@@ -968,7 +934,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v21';
+  const DB_VERSION = 'lms_v23';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference
@@ -1042,7 +1008,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v5';
+  const SYLLABUS_VERSION = 'v201_v7';
   const [lessons, setLessons] = useState<Lesson[]>(() => {
     const currentVersion = localStorage.getItem('lms_syllabus_version');
     if (currentVersion !== SYLLABUS_VERSION) {
@@ -1256,17 +1222,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setProfiles(prev => {
           const fetchedProfiles = resProfiles.data as Profile[];
           const newProfiles = fetchedProfiles.map(dbP => {
-            const existing = prev.find(p => p.id === dbP.id);
-            // Nếu local đang lưu là admin (được cấp quyền ở quá trình đăng nhập) thì bảo toàn quyền admin
-            if (existing && existing.role === 'admin' && dbP.role !== 'admin') {
-              return { ...dbP, role: 'admin' as UserRole };
-            }
             return dbP;
           });
           
           // Giữ lại profile đang được active ở local (nhưng do lỗi insert chưa kịp lên DB)
           prev.forEach(p => {
-            if (!newProfiles.some(np => np.id === p.id)) {
+            if (p.id === activeUserId && !newProfiles.some(np => np.id === p.id)) {
               newProfiles.push(p);
             }
           });
@@ -1371,15 +1332,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ];
       const isAdminEmail = adminEmails.includes(userEmail.toLowerCase());
 
-      // Read requested role from localStorage
-      const preferredRole = localStorage.getItem('lms_signing_in_role') as UserRole || 'student';
+      // Clean up requested role from localStorage
       if (localStorage.getItem('lms_signing_in_role')) {
         localStorage.removeItem('lms_signing_in_role');
       }
 
       // Determine correct role (admin, student, or guest)
       let finalRole: UserRole = 'guest';
-      if (isAdminEmail || (isOfficial && preferredRole === 'admin')) {
+      if (isAdminEmail) {
         finalRole = 'admin';
       } else if (isOfficial) {
         finalRole = 'student';
@@ -1490,12 +1450,26 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const loginWithGmail = (email: string, role: UserRole = 'student'): Profile | null => {
+  const loginWithGmail = (email: string, _role: UserRole = 'student'): Profile | null => {
     const cleanEmail = email.trim().toLowerCase();
     
-    // Check if official
+    // Check if official & admin
     const isOfficial = allowedEmails.map(e => e.toLowerCase()).includes(cleanEmail) || cleanEmail === 'dangtuyethong2324@gmail.com';
-    const finalRole: UserRole = isOfficial ? role : 'guest';
+    const adminEmails = [
+      'dangtuyethong2324@gmail.com',
+      'tuyethong.cym@gmail.com',
+      'thongdang.upyouth@gmail.com',
+      'quangnhatnguyen2403@gmail.com',
+      'chinn2006@gmail.com'
+    ];
+    const isAdminEmail = adminEmails.includes(cleanEmail);
+
+    let finalRole: UserRole = 'guest';
+    if (isAdminEmail) {
+      finalRole = 'admin';
+    } else if (isOfficial) {
+      finalRole = 'student';
+    }
 
     const existingUser = profiles.find(p => p.gmail.toLowerCase() === cleanEmail);
     
@@ -2376,8 +2350,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
     addNotification('Cập nhật bài học', 'Nội dung bài học đã được cập nhật', 'system');
 
-    // Cập nhật trên Supabase
-    supabase.from('lessons').update(updates).eq('id', id).then(({ error }) => {
+    // Cập nhật trên Supabase (loại bỏ target vì cột này đã bị xóa)
+    const { target, ...dbUpdates } = updates as any;
+    supabase.from('lessons').update(dbUpdates).eq('id', id).then(({ error }) => {
       if (error) console.error('Lỗi khi cập nhật lesson trên Supabase:', error.message);
     });
   };
@@ -2443,8 +2418,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLessons(prev => [...prev, lesson]);
     addNotification('Thêm bài giảng', `Bài giảng "${lesson.title}" đã được thêm thành công`, 'system');
 
-    // Lưu bài giảng lên Supabase
-    supabase.from('lessons').insert([lesson]).then(({ error }) => {
+    // Lưu bài giảng lên Supabase (loại bỏ target vì cột này đã bị xóa)
+    const { target, ...dbLesson } = lesson as any;
+    supabase.from('lessons').insert([dbLesson]).then(({ error }) => {
       if (error) console.error('Lỗi khi thêm bài giảng lên Supabase:', error.message);
     });
   };

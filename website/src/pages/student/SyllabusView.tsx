@@ -8,7 +8,7 @@ import { Trash2, Plus, X, Save, Undo, Link as LinkIcon } from 'lucide-react';
 export const SyllabusView: React.FC<{ 
   onPageChange?: (page: string) => void;
   isEditMode?: boolean;
-}> = ({ onPageChange: _onPageChange, isEditMode = false }) => {
+}> = ({ onPageChange, isEditMode = false }) => {
   const { 
     modules, 
     lessons, 
@@ -270,7 +270,16 @@ export const SyllabusView: React.FC<{
             helpPurpose="Giúp bạn học lý thuyết, tiếp cận tài nguyên và làm bài tập về nhà."
           />
 
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
+          {!isLessonStarted(activeLesson) ? (
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center text-center space-y-3">
+              <span className="text-4xl animate-bounce">⏳</span>
+              <h3 className="text-base font-black text-[#214C54]">Buổi học chưa diễn ra</h3>
+              <p className="text-xs text-gray-500 max-w-md leading-relaxed">
+                Nội dung chi tiết, tài nguyên học tập và bài tập về nhà của buổi học này sẽ được cập nhật sớm. Vui lòng quay lại sau!
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
             {/* Agenda */}
             <div className="space-y-2.5">
               <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📋 Nội dung chính</h4>
@@ -721,8 +730,20 @@ export const SyllabusView: React.FC<{
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-gray-50 border border-gray-150 p-4 rounded-2xl flex items-center justify-center text-sm text-gray-400 font-semibold select-none">
-                          ⏳ Bài nộp đang chờ được chấm và đánh giá năng lực.
+                        <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-emerald-800 font-semibold shadow-sm">
+                          <div className="flex items-center gap-2">
+                            <span>🎉</span>
+                            <span>Chúc mừng bạn hoàn thành, đến xem bảng vinh danh!</span>
+                          </div>
+                          {onPageChange && (
+                            <button
+                              type="button"
+                              onClick={() => onPageChange('walloffame')}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow transition-all cursor-pointer border-0 select-none whitespace-nowrap"
+                            >
+                              🏆 Xem Bảng vinh danh
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -771,6 +792,14 @@ export const SyllabusView: React.FC<{
                         >
                           <span>🚀 Đi tới Facebook Group Lớp</span>
                         </a>
+                        <a
+                          href="https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-xl w-full shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
+                        >
+                          <span>📝 Điền Form Khảo Sát Buổi Học</span>
+                        </a>
                       </div>
 
                       {isLessonStarted(activeLesson) ? (
@@ -800,6 +829,7 @@ export const SyllabusView: React.FC<{
               )}
             </div>
           </div>
+          )}
         </div>
       ) : (
         // List View of all lessons as Cards
