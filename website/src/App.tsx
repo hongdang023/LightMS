@@ -95,7 +95,7 @@ function MainAppShell() {
       case 'admin-announcements':
         return <AdminAnnouncements />;
       case 'course-builder':
-        return <CourseBuilder />;
+        return <CourseBuilder onPageChange={handlePageChange} />;
       case 'admin-calendar':
         return <AdminCalendarManagement />;
       case 'student-mgmt':

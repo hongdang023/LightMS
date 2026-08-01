@@ -4,7 +4,7 @@ import { OnboardingView } from '../student/OnboardingView';
 import { SyllabusView } from '../student/SyllabusView';
 import { Eye, Edit2, Anchor, Sparkles, BookOpen } from 'lucide-react';
 
-export const CourseBuilder: React.FC = () => {
+export const CourseBuilder: React.FC<{ onPageChange?: (page: string) => void }> = ({ onPageChange }) => {
   const [activeTab, setActiveTab] = useState<'about' | 'onboarding' | 'syllabus'>('about');
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -78,7 +78,7 @@ export const CourseBuilder: React.FC = () => {
 
         {/* SYLLABUS TAB */}
         {activeTab === 'syllabus' && (
-          <SyllabusView isEditMode={isEditMode} />
+          <SyllabusView isEditMode={isEditMode} onPageChange={onPageChange} />
         )}
       </div>
 
