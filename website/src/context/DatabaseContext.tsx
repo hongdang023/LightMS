@@ -582,14 +582,15 @@ const SEED_LESSONS: Lesson[] = [
     module_id: '8d29e4f3-9212-403b-8c7d-c25f6de6835a',
     title: 'Buổi 2: PRD kỹ thuật & 4 flow',
     type: 'video',
-    content: '',
+    content: 'Cách thiết lập PRD kỹ thuật chuẩn chỉnh cho sản phẩm AI. Làm quen và làm chủ 4 loại Flow cơ bản trong thiết kế phần mềm (User Flow, Data Flow, Logic Flow, System Flow) để giao tiếp hiệu quả với AI IDE.',
     video_url: '',
     order_index: 3,
     start_date: '2026-08-01', // Buổi 2
-    target: '',
-    demo: '',
-    scope: '',
-    has_materials: false
+    target: 'Làm chủ tư duy phân tách hệ thống, xây dựng tài liệu kỹ thuật PRD và sơ đồ flow rõ ràng để AI có thể thực thi chính xác.',
+    demo: 'Demo xây dựng PRD và vẽ sơ đồ 4 flow cho một tính năng thực tế.',
+    scope: 'Tập trung vào cấu trúc PRD kỹ thuật và cách vẽ/mô tả 4 flow cốt lõi.',
+    has_materials: true,
+    study_note_url: 'https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e'
   },
   
   // Phần 2
@@ -759,6 +760,47 @@ Bước 03: Đăng nội dung Product Seed của bạn lên Group Facebook của
         },
         {
           label: 'Padlet luyện tập trên lớp',
+          url: 'https://padlet.com/dangtuyethong2324/vibe-coding-201-batch-02-z7yk4l9ojhninj1z'
+        }
+      ]
+    }
+  },
+  {
+    id: 'ae000000-0000-0000-0000-000000000002',
+    lesson_id: 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e',
+    description: `Nộp PRD version 1.0
+
+Bước 01 · Viết nội dung PRD v1.0 · 3 lớp
+- Lớp WHY: Copy 3 items từ Product Seed M1. Nguyên văn.
+- Lớp WHAT: 2-3 User Stories + AC binary + Scope OUT ≥3 items. Áp dụng 5x5 ceiling.
+- Lớp HOW: User Flow + Data Flow. HARDCODE tiếng Việt cho enum values.
+- Success Metrics: Split Primary + Threshold + Timeframe.
+
+Bước 02 · Đăng lên Facebook group
+- Post: PRD v1.0 (3 lớp + HARDCODE + Success Metrics).
+- Hashtag: #BTVN_Ngay2 — Chi track và feedback.
+- Format: markdown paste vào post hoặc screenshot.`,
+    rubric_checklist: [
+      { item: 'Gate 1 · WHY: Copy nguyên văn 3 items từ Seed, không paraphrase (Pass = 3 dòng khớp Seed items 1-3)', checked: false },
+      { item: 'Gate 2 · WHAT · Stories: 2-3 stories, không hơn (5x5 ceiling) (Pass = Đúng 3 stories · fit happy path)', checked: false },
+      { item: 'Gate 3 · WHAT · AC: Mỗi AC binary testable, có endpoint hoặc số (Pass = Không có "responsive", "user-friendly")', checked: false },
+      { item: 'Gate 4 · WHAT · Scope OUT: ≥3 items OUT explicit (Pass = Kể được 3 thứ KHÔNG build)', checked: false },
+      { item: 'Gate 5 · HOW · Flows: User + Data Flow rõ? Business/System có nếu cần (Pass = Ít nhất 2 flows bắt buộc)', checked: false },
+      { item: 'Gate 6 · HARDCODE: Enum values tiếng Việt ghi cứng (Pass = Không có "Food & Dining", "Bills" tiếng Anh)', checked: false },
+      { item: 'Gate 7 · Success Metrics: Success Signal từ Seed Item 4 có trong PRD assembled (Pass = Primary + Threshold + Timeframe · tracked via AC)', checked: false }
+    ],
+    scaffolding: {
+      items: [
+        {
+          label: 'NotebookLM Vibe Coding 201',
+          url: 'https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e'
+        },
+        {
+          label: 'PRD Prompting Template',
+          url: 'https://drive.google.com/file/d/1HwHEFuUAZTUv6IRtU7oVo8zkvfbZmSgu/view?usp=drive_link'
+        },
+        {
+          label: 'Padlet của lớp (Batch 02)',
           url: 'https://padlet.com/dangtuyethong2324/vibe-coding-201-batch-02-z7yk4l9ojhninj1z'
         }
       ]
@@ -1008,7 +1050,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v7';
+  const SYLLABUS_VERSION = 'v201_v9';
   const [lessons, setLessons] = useState<Lesson[]>(() => {
     const currentVersion = localStorage.getItem('lms_syllabus_version');
     if (currentVersion !== SYLLABUS_VERSION) {

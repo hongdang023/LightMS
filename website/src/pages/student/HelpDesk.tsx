@@ -308,7 +308,7 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
                 Bạn có thể trò chuyện trực tiếp để hỏi đáp nhanh về lý thuyết lẫn thực hành:
               </p>
               <a 
-                href="https://notebooklm.google.com/notebook/b0b2b953-c851-4580-9eef-934ff1ff4ac4" 
+                href="https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e" 
                 target="_blank" 
                 rel="noreferrer" 
                 className="inline-flex items-center gap-2 font-bold text-xs bg-[#15333B] text-[#FFD94C] px-3.5 py-2 rounded-xl hover:bg-[#214C54] transition-all"
