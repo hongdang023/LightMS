@@ -1050,7 +1050,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 
   // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v9';
+  const SYLLABUS_VERSION = 'v201_v10';
   const [lessons, setLessons] = useState<Lesson[]>(() => {
     const currentVersion = localStorage.getItem('lms_syllabus_version');
     if (currentVersion !== SYLLABUS_VERSION) {
@@ -1063,13 +1063,21 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return safeParse('lms_lessons', SEED_LESSONS);
   });
 
-  const [modules, setModules] = useState<Module[]>(() => 
-    safeParse('lms_modules', SEED_MODULES)
-  );
+  const [modules, setModules] = useState<Module[]>(() => {
+    const currentVersion = localStorage.getItem('lms_syllabus_version');
+    if (currentVersion !== SYLLABUS_VERSION) {
+      return SEED_MODULES;
+    }
+    return safeParse('lms_modules', SEED_MODULES);
+  });
 
-  const [assignments, setAssignments] = useState<Assignment[]>(() => 
-    safeParse('lms_assignments', SEED_ASSIGNMENTS)
-  );
+  const [assignments, setAssignments] = useState<Assignment[]>(() => {
+    const currentVersion = localStorage.getItem('lms_syllabus_version');
+    if (currentVersion !== SYLLABUS_VERSION) {
+      return SEED_ASSIGNMENTS;
+    }
+    return safeParse('lms_assignments', SEED_ASSIGNMENTS);
+  });
 
   const [topics, setTopics] = useState<DiscussionTopic[]>(() => {
     const cached = safeParse('lms_discussion_topics', SEED_TOPICS);
