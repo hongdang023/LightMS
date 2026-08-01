@@ -1284,9 +1284,40 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return newProfiles;
         });
       }
+      let currentLessons = resLessons.data && resLessons.data.length > 0 ? (resLessons.data as Lesson[]) : [];
+      let currentAssignments = resAssignments.data && resAssignments.data.length > 0 ? (resAssignments.data as Assignment[]) : [];
+
       if (resModules.data && resModules.data.length > 0) setModules(resModules.data);
-      if (resLessons.data && resLessons.data.length > 0) setLessons(resLessons.data);
-      if (resAssignments.data && resAssignments.data.length > 0) setAssignments(resAssignments.data);
+      
+      // Sync local changes to Supabase if the user is an admin
+      const activeUserObj = (resProfiles.data || []).find((p: any) => p.id === activeUserId);
+      if (activeUserObj && activeUserObj.role === 'admin') {
+        // 1. Sync Lesson 2 to Supabase if it doesn't have the study note
+        const dbLesson2 = currentLessons.find((l: any) => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e');
+        if (dbLesson2 && (!dbLesson2.study_note_url || dbLesson2.study_note_url !== 'https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e' || !dbLesson2.has_materials)) {
+          console.log('Admin phát hiện Lesson 2 chưa có link học liệu hoặc has_materials = false trên Supabase. Đang đồng bộ...');
+          const seedLesson2 = SEED_LESSONS.find(l => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e')!;
+          const { target, ...dbUpdates } = seedLesson2 as any;
+          await supabase.from('lessons').update(dbUpdates).eq('id', seedLesson2.id);
+          currentLessons = currentLessons.map(l => l.id === seedLesson2.id ? { ...l, ...seedLesson2 } : l);
+        }
+
+        // 2. Sync Assignment 2 to Supabase if it doesn't exist or is outdated
+        const dbAssignment2 = currentAssignments.find((a: any) => a.id === 'ae000000-0000-0000-0000-000000000002');
+        const seedAssignment2 = SEED_ASSIGNMENTS.find(a => a.id === 'ae000000-0000-0000-0000-000000000002')!;
+        if (!dbAssignment2) {
+          console.log('Admin phát hiện Assignment 2 chưa tồn tại trên Supabase. Đang tạo...');
+          await supabase.from('assignments').insert([seedAssignment2]);
+          currentAssignments = [...currentAssignments, seedAssignment2];
+        } else if (dbAssignment2.description !== seedAssignment2.description || dbAssignment2.rubric_checklist.length !== seedAssignment2.rubric_checklist.length) {
+          console.log('Admin phát hiện Assignment 2 bị cũ trên Supabase. Đang cập nhật...');
+          await supabase.from('assignments').update(seedAssignment2).eq('id', seedAssignment2.id);
+          currentAssignments = currentAssignments.map(a => a.id === seedAssignment2.id ? seedAssignment2 : a);
+        }
+      }
+
+      setLessons(currentLessons);
+      setAssignments(currentAssignments);
       if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
       if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
       if (resUnlockSchedules.data && resUnlockSchedules.data.length > 0) setOnboardingUnlockSchedules(resUnlockSchedules.data);
