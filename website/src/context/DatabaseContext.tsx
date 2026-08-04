@@ -84,6 +84,7 @@ interface DatabaseContextType {
   courses: Course[];
   batches: Batch[];
   lessons: Lesson[];
+  isLessonsLoading: boolean;
 
   nauticalTransactions: NauticalMilesTransaction[];
   badges: Badge[];
@@ -219,9 +220,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeParse('lms_notifications', SEED_NOTIFICATIONS)
   );
 
-  // Lessons always come from Supabase — no localStorage cache.
-  // SEED_LESSONS is just a placeholder while Supabase fetch is in flight.
-  const [lessons, setLessons] = useState<Lesson[]>(SEED_LESSONS);
+  // Lessons always come from Supabase — start empty, populated after fetch.
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [isLessonsLoading, setIsLessonsLoading] = useState(true);
 
   const [announcements, setAnnouncements] = useState<Announcement[]>(() => 
     safeParse('lms_announcements', SEED_ANNOUNCEMENTS)
@@ -362,6 +363,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // ── Sync Database State from Supabase ──────────────────────────────────
   const fetchDatabaseState = async () => {
+    setIsLessonsLoading(true);
     try {
       console.log('Bắt đầu tải dữ liệu thực tế từ Supabase...');
       
@@ -444,6 +446,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('Đã tải xong toàn bộ dữ liệu thực tế từ Supabase.');
     } catch (e) {
       console.error('Lỗi khi tải dữ liệu từ Supabase:', e);
+    } finally {
+      setIsLessonsLoading(false);
     }
   };
 
@@ -1040,6 +1044,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       courses: SEED_COURSES,
       batches,
       lessons,
+      isLessonsLoading,
       nauticalTransactions,
       badges: SEED_BADGES,
       profileBadges,

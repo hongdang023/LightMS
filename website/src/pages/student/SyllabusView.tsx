@@ -16,6 +16,7 @@ export const SyllabusView: React.FC<{
     activeUser,
     updateLesson,
   } = useDatabase();
+  const { isLessonsLoading } = useDatabase();
 
   const filteredLessons = lessons;
 
@@ -685,7 +686,19 @@ export const SyllabusView: React.FC<{
           />
 
           <div className="grid grid-cols-1 gap-4">
-            {filteredLessons.map((les) => {
+            {isLessonsLoading ? (
+              // Skeleton loading state
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="w-full p-5 bg-white border border-gray-200 rounded-2xl shadow-sm animate-pulse flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              filteredLessons.map((les) => {
               const locked = isLessonLocked(les);
               const completed = isLessonCompletedByStudent(les.id);
               const isStarted = isLessonStarted(les);
@@ -759,7 +772,8 @@ export const SyllabusView: React.FC<{
                   </span>
                 </button>
               );
-            })}
+            }))
+            }
           </div>
         </div>
       )}
