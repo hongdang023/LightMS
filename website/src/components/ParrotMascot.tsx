@@ -26,11 +26,9 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         case 'admin-dashboard':
           script = `Aye Thuyền trưởng ${name}! Đang có vài kẻ đi chậm tiến độ trên hải đồ kìa. Can thiệp ngay thôi!`;
           break;
-        case 'speedgrader':
-          script = `Quạaa! Một xấp bài nộp đang chờ được chấm. Đọc kỹ Rubric rồi ban thưởng Hải lý thôi nào!`;
-          break;
+
         case 'student-mgmt':
-          script = `Danh sách thủy thủ đoàn đây rồi. Ai đạt chuẩn Mastery chưa hả Thuyền trưởng?`;
+          script = `Danh sách thủy thủ đoàn đây rồi. Ai đang tiến bộ nhất hả Thuyền trưởng?`;
           break;
         case 'course-builder':
           script = `Xây dựng hải lộ kiến thức thôi! Thêm chướng ngại vật hay thêm rương kho báu nào?`;

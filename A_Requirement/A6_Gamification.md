@@ -3,7 +3,7 @@
 Để duy trì động lực (Emotional) và tăng tính gắn kết cộng đồng (Social), LightMS áp dụng hệ thống Gamification xuyên suốt khóa học. 
 
 **Theme chủ đạo:** 🌊 **"Hải trình vượt biển cùng The1ight"**
-Học viên sẽ hóa thân thành những Thủy thủ, cùng nhau vượt qua các vùng biển kiến thức (Modules), đối mặt với sóng gió (Assignments) để tìm kiếm các kho báu năng lực và vươn lên trở thành những Thuyền trưởng xuất sắc.
+Học viên sẽ hóa thân thành những Thủy thủ, cùng nhau vượt qua các vùng biển kiến thức (chương trình), đối mặt với sóng gió (Assignments) để tìm kiếm các kho báu năng lực và vươn lên trở thành những Thuyền trưởng xuất sắc.
 
 ---
 
@@ -17,13 +17,13 @@ Học viên sẽ hóa thân thành những Thủy thủ, cùng nhau vượt qua 
 - **Hoàn thành bài học video/doc:** +5 Hải lý / bài (Tích lũy từng chặng nhỏ).
 
 ### Nhóm 2: Chất lượng Năng lực (Discovering Treasures)
-- Mentor đánh giá đạt **Đạt (Meets Expectations):** +100 Hải lý.
-- Mentor đánh giá đạt **Xuất sắc (Mastery):** +150 Hải lý.
+- Admin đánh giá đạt **Đạt (Meets Expectations):** +100 Hải lý.
+- Admin đánh giá đạt **Xuất sắc (Mastery):** +150 Hải lý.
 
 ### Nhóm 3: Tương tác Cộng đồng (Crew Collaboration)
 - **Bình luận/Hỏi đáp trên Threads:** +5 Hải lý / comment (Tương tác với đồng đội).
 - **Được nhận 1 Lượt thả tim (Upvote) trên Threads:** +10 Hải lý (Khuyến khích bình luận có chất lượng).
-- **Nhận được "Tích xanh" (Verified) từ Mentor cho câu trả lời hay:** +200 Hải lý (Hành động "cứu net" đồng đội xuất sắc).
+- **Nhận được "Tích xanh" (Verified) từ Admin cho câu trả lời hay:** +200 Hải lý (Hành động "cứu net" đồng đội xuất sắc).
 
 ---
 
@@ -34,7 +34,7 @@ Số "Hải lý" tích lũy sẽ giúp học viên thăng cấp trên con tàu T
 1. **Thủy thủ tập sự (Novice Sailor):** 0 - 500 Hải lý (Huy hiệu ⛵ - Có sẵn khi tham gia).
 2. **Hoa tiêu (Navigator):** 501 - 1,500 Hải lý (Huy hiệu 🗺️ - Quyền lợi: Xem lịch học và mở khóa kho tài nguyên).
 3. **Thuyền phó (First Mate):** 1,501 - 3,000 Hải lý (Huy hiệu ⚔️ - Quyền lợi: Được quyền duyệt bài viết nhanh).
-4. **Thuyền trưởng (Captain):** 3,001 - 5,000 Hải lý (Huy hiệu 🧭 - Quyền lợi: Cơ hội làm Mentor trợ giảng).
+4. **Thuyền trưởng (Captain):** 3,001 - 5,000 Hải lý (Huy hiệu 🧭 - Quyền lợi: Cơ hội làm Trợ giảng đồng hành cùng Ban vận hành).
 5. **Huyền thoại biển cả (Legend of the Sea):** Đạt 5,000+ Hải lý (Huy hiệu 👑 - Quyền lợi: Vinh danh Bảng Vàng vĩnh viễn).
 
 ---
@@ -65,5 +65,5 @@ Huy hiệu được phân làm 2 nhóm chính và được trưng bày trực qu
 - 💨 **Cánh buồm no gió (Full Sail):** Hoàn thành xuất sắc toàn bộ bài tập của Tuần lễ Onboarding.
 - ⚓ **Mỏ neo thép (Iron Anchor):** Có chuỗi nộp bài đúng hạn (Streak) 3 lần liên tiếp.
 - 🛟 **Phao cứu sinh (Lifebuoy):** Nhận tổng cộng 50 Upvotes từ các bình luận hỗ trợ bạn bè.
-- 🗼 **Ngọn hải đăng (The Lighthouse):** Có bài nộp đạt điểm "Mastery" (Excellent) và được Mentor ghim lên đầu phòng Thảo luận làm mẫu.
+- 🗼 **Ngọn hải đăng (The Lighthouse):** Có bài nộp đạt điểm "Mastery" (Excellent) và được Admin ghim lên đầu phòng Thảo luận làm mẫu.
 - 🗺️ **Bản đồ kho báu (Treasure Map):** Hoàn thành 100% Lộ trình khóa học (Syllabus) với kết quả đạt trở lên.

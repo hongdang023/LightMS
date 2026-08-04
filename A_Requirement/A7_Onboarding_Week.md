@@ -58,14 +58,14 @@ Phần này dùng để phân hóa học viên, dành cho những ai có nhiều
 
 ### 3.2. Cơ chế khóa theo lịch hẹn trước (Scheduled Unlocking)
 
-- **Cơ chế đặt lịch bằng tay (Manual Date/Time Scheduling):** Thay vì dùng công thức cố định, Admin/Mentor được toàn quyền cấu hình mốc thời gian (ngày, giờ) mở khóa tự động cụ thể cho từng Ngày trong Onboarding thông qua cơ sở dữ liệu (Supabase/LocalStorage) bằng input chọn ngày giờ trên giao diện Course Builder.
+- **Cơ chế đặt lịch bằng tay (Manual Date/Time Scheduling):** Thay vì dùng công thức cố định, Admin được toàn quyền cấu hình mốc thời gian (ngày, giờ) mở khóa tự động cụ thể cho từng Ngày trong Onboarding thông qua cơ sở dữ liệu (Supabase/LocalStorage) bằng input chọn ngày giờ trên giao diện Course Builder.
 - **Điều kiện mở khóa kết hợp:** Một ngày học chặng thứ X chỉ thực sự mở khóa đối với học viên khi:
   1. Đã đến hoặc vượt qua mốc thời gian mở khóa đã lên lịch (`scheduled_at`).
   2. Học viên đã hoàn thành 100% nhiệm vụ của ngày học trước đó (X-1).
-- **Công cụ giả lập và bỏ qua khóa (Developer/Admin Bypass):** Đối với tài khoản vai trò Admin/Mentor hoặc chế độ Development, giao diện hỗ trợ cơ chế bỏ qua giới hạn khóa (`bypassLocks` hoặc `lms_bypass_locks` trong LocalStorage) để thuận tiện cho việc kiểm thử toàn bộ luồng mà không bị chặn bởi thời gian thực tế.
+- **Công cụ giả lập và bỏ qua khóa (Developer/Admin Bypass):** Đối với tài khoản vai trò Admin hoặc chế độ Development, giao diện hỗ trợ cơ chế bỏ qua giới hạn khóa (`bypassLocks` hoặc `lms_bypass_locks` trong LocalStorage) để thuận tiện cho việc kiểm thử toàn bộ luồng mà không bị chặn bởi thời gian thực tế.
 
 ---
 
 ## 4. Ứng dụng trong Admin Portal (Course Builder)
 
-Khi Admin tạo bài học thuộc Module Onboarding, hệ thống Course Builder nên cung cấp sẵn một **Rich-text Template** chứa sẵn các Heading (Mục tiêu, Checklist Ngày, Ghi nhớ nhỏ, Bonus Task) và các khối định dạng (Checkbox, Blockquote, Info box) để Admin chỉ cần điền nội dung thay vì phải tự định dạng từ đầu.
+Khi Admin tạo bài học thuộc Onboarding, hệ thống Course Builder nên cung cấp sẵn một **Rich-text Template** chứa sẵn các Heading (Mục tiêu, Checklist Ngày, Ghi nhớ nhỏ, Bonus Task) và các khối định dạng (Checkbox, Blockquote, Info box) để Admin chỉ cần điền nội dung thay vì phải tự định dạng từ đầu.

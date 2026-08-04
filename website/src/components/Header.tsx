@@ -8,7 +8,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions, submissions, assignments, onboardingDays } = useDatabase();
+  const { activeUser, switchUser, lessons, nauticalTransactions, onboardingDays } = useDatabase();
+  const isStudent = activeUser.role === 'student';
 
   // Get current page display title
   const getPageTitle = () => {
@@ -17,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
       case 'about': return 'About';
       case 'onboarding': return 'Onboarding';
       case 'syllabus': return 'Syllabus';
-      case 'competency': return 'Skills';
+
       case 'calendar': return 'Schedule';
       case 'walloffame': return 'Leaderboard';
       case 'help': return 'Support';
@@ -34,17 +35,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
   // Progress bar calculation
   const totalItems = (lessons || []).length + 7;
   const completedMainLessons = (lessons || []).filter(lesson => {
-    const hasTx = (nauticalTransactions || []).some(
+    return (nauticalTransactions || []).some(
       t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
     );
-    if (hasTx) return true;
-    
-    const assignment = (assignments || []).find(a => a.lesson_id === lesson.id);
-    if (!assignment) return false;
-    const submission = (submissions || []).find(
-      s => s.assignment_id === assignment.id && s.student_id === activeUser.id && s.status !== 'draft'
-    );
-    return !!submission;
   }).length;
 
   const completedOnboardingDays = (onboardingDays || []).length > 0
@@ -85,12 +78,12 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
           {getPageTitle()}
         </h2>
         <p className="text-xs text-[#3E5E63] font-semibold mt-0.5">
-          {activeUser.role === 'student' ? 'Thủy thủ đoàn' : 'Ban vận hành'} • {activeUser.full_name}
+          {isStudent ? 'Thủy thủ đoàn' : 'Ban vận hành'} • {activeUser.full_name}
         </p>
       </div>
 
       {/* Center Sailing Progress (Only for student mode) */}
-      {activeUser.role === 'student' && (
+      {isStudent && (
         <div className="flex-1 max-w-md mx-8 flex flex-col items-center">
           <div className="w-full flex justify-between items-center text-[10px] text-[#3E5E63] font-bold mb-1">
             <span>Khởi hành (0%)</span>
@@ -125,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
                 onPageChange('dashboard');
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                activeUser.role === 'student'
+                isStudent
                   ? 'bg-[#214C54] text-white shadow'
                   : 'text-[#3E5E63] hover:text-[#15333B]'
               }`}
@@ -146,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
               }`}
             >
               <span>🛡️</span>
-              <span>Mentor / Admin</span>
+              <span>Admin</span>
             </button>
           </div>
         </div>

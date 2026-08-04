@@ -1,6 +1,6 @@
 # The1ight LMS - Sitemap & Official Nav Items
 
-Sitemap này quy định tên chính thức của các thanh điều hướng (Nav Items) hiển thị trên giao diện của Học viên (Student Portal) và Admin/Mentor (Admin Portal). Cấu trúc được tối ưu dựa trên triết lý Outcome-based và thiết kế Zero Friction.
+Sitemap này quy định tên chính thức của các thanh điều hướng (Nav Items) hiển thị trên giao diện của Học viên (Student Portal) và Ban vận hành (Admin Portal). Cấu trúc được tối ưu dựa trên triết lý Outcome-based và thiết kế Zero Friction.
 
 ## 1. Phân hệ Học viên (Student Portal)
 
@@ -17,10 +17,9 @@ Danh sách các Nav Items chính thức trên thanh điều hướng bên (Sideb
   - Hướng dẫn làm quen hệ thống, lộ trình và phương pháp học trong tuần đầu tiên.
 
 - **Lộ trình học** (Icon: Scroll Map / Bản đồ cuộn)
-  - Danh sách các module và bài học cốt lõi. Bên trong mỗi bài học sẽ tích hợp (All-in-one):
+  - Danh sách các bài học cốt lõi. Bên trong mỗi bài học sẽ tích hợp (All-in-one):
     - _Nội dung & Tài liệu:_ Link xem video ngoài, study notes, slide. _(US-STU-03)_
     - _Bài tập (Assignments):_ Yêu cầu bài tập, nút chuyển hướng Facebook Group của lớp để đăng bài và nút xác nhận hoàn thành. _(US-STU-02)_
-    - _Phản hồi (Feedback):_ Đánh giá của Mentor về mức độ hoàn thành bài tập. _(US-STU-02)_
 
 - **Lịch học** (Icon: Astrolabe / Dụng cụ đo tinh tú)
   - Xem tổng quan lịch trình khóa học kèm nút tự động đồng bộ (Add to Calendar) vào lịch cá nhân.
@@ -31,11 +30,10 @@ Danh sách các Nav Items chính thức trên thanh điều hướng bên (Sideb
 - **Hỏi đáp & Hỗ trợ** (Icon: Lifebuoy / Phao cứu sinh)
   - Cung cấp danh sách FAQ. Kèm theo button dẫn link trực tiếp vào phòng Light Support trên Telegram. _(US-STU-05)_
 
-- **Profile** (Icon: Captain / Thuyền trưởng) *(Thường nằm góc màn hình ở Avatar)*
+- **Profile** (Icon: Captain / Thuyền trưởng) _(Thường nằm góc màn hình ở Avatar)_
   - Thông tin cá nhân.
   - Thành tựu của tôi (My Achievements): Huy hiệu và các cột mốc đã đạt. _(US-STU-06)_
-  - *Lưu ý:* Icon Thông báo (Bell) nằm bên trái Profile hiển thị các tin mới nhất của lớp. Lúc ấn vào từng thông báo thì sẽ được điều hướng để đọc cả bài.
-
+  - _Lưu ý:_ Icon Thông báo (Bell) nằm bên trái Profile hiển thị các tin mới nhất của lớp. Lúc ấn vào từng thông báo thì sẽ được điều hướng để đọc cả bài.
 
 ---
 
@@ -47,10 +45,9 @@ Danh sách các Nav Items chính thức dành cho Ban vận hành và Đội ng�
   - **Tổng quan hệ thống:** Hiển thị các hoạt động đang diễn ra cùng lúc để kiểm soát tránh quá tải. _(US-AD-06)_
 
 - **Soạn lộ trình** (Icon: Plan Rules / Thước kẻ)
-  - Cấu hình nội dung cho các trang Giới thiệu, Onboarding, Lộ trình học (module/bài học/bài tập). Tích hợp chế độ **Reading Mode / Editing Mode với giao diện y hệt Student Mode** để Admin có thể xem trước và điều chỉnh các chi tiết nhỏ dễ dàng hơn. _(US-AD-13)_
+  - Cấu hình nội dung cho các trang Giới thiệu, Onboarding, Lộ trình học (bài học/bài tập). Tích hợp chế độ **Reading Mode / Editing Mode với giao diện y hệt Student Mode** để Admin có thể xem trước và điều chỉnh các chi tiết nhỏ dễ dàng hơn. _(US-AD-13)_
   - Thiết lập lịch (ngày/giờ) mở khoá tự động (Unlock Scheduling) cho từng ngày của Onboarding. Mỗi lần mở khóa sẽ gửi email tự động đến học viên. _(US-AD-15)_
   - Quản lý tài nguyên lưu trữ tập trung. _(US-AD-03)_
-
 
 - **Lịch học** (Icon: Astrolabe / Dụng cụ đo tinh tú)
   - Chỉnh sửa lịch trình khóa học cho các sự kiện/cụm hoạt động (Kick-off, Live Class, Office Hour, Onboarding). _(US-AD-14)_
@@ -62,5 +59,5 @@ Danh sách các Nav Items chính thức dành cho Ban vận hành và Đội ng�
   - **Group Bulk Email:** Tích hợp bộ tạo mẫu và gửi email hàng loạt theo nhóm học viên (Tất cả, Cần hỗ trợ, Xuất sắc).
 
 - **Quản lý nhân sự** (Icon: Shield / Cờ hiệu)
-  - Phân quyền (Roles) cho hệ thống: Ai được làm Admin toàn quyền, ai làm Mentor (chỉ chấm bài), ai làm Support.
+  - Phân quyền (Roles) cho hệ thống: Ai được làm Admin toàn quyền, ai làm Support.
   - Quản lý danh sách nhân sự tham gia vận hành dự án.

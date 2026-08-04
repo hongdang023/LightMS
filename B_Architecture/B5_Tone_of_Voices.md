@@ -44,9 +44,9 @@ Linh vật là nơi "bung xõa" nhất về mặt ngôn từ. Con Vẹt đóng v
 
 ---
 
-## 4. Voice of the Mentor (Văn phong của Đội ngũ Học thuật)
+## 4. Voice of the Lighthouse Guide (Văn phong của Ban vận hành / Admin)
 
-Khác với con Vẹt hài hước, Mentor đóng vai trò là "Thuyền trưởng chỉ đường" - Cần sự uy nghiêm, sắc bén (chuyên môn sâu) nhưng mang tính nâng đỡ (Scaffolding).
+Khác với con Vẹt hài hước, Admin đóng vai trò là "Thuyền trưởng chỉ đường" - Cần sự uy nghiêm, sắc bén (chuyên môn sâu) nhưng mang tính nâng đỡ (Scaffolding).
 
 - **Khi đưa Feedback (Chấm bài):**
   - Tập trung vào sự thật: Phân tích đúng/sai một cách trực diện bằng kỹ thuật "Bánh mì kẹp thịt" (Khen -> Chê -> Gợi ý cách sửa).

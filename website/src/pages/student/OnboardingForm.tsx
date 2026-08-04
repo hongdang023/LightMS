@@ -12,7 +12,6 @@ export const OnboardingForm: React.FC = () => {
   const [formData, setFormData] = useState({
     full_name: activeUser.full_name || '',
     phone_number: activeUser.phone_number || '',
-    telegram_id: activeUser.telegram_id || '',
     facebook_url: activeUser.facebook_url || '',
     industry: activeUser.industry || '',
     current_job: activeUser.current_job || '',
@@ -73,7 +72,7 @@ export const OnboardingForm: React.FC = () => {
     if (step === 1) {
       if (!formData.full_name.trim()) newErrors.full_name = 'Họ và tên không được để trống';
       if (!formData.phone_number.trim()) newErrors.phone_number = 'Số điện thoại không được để trống';
-      if (!formData.telegram_id.trim()) newErrors.telegram_id = 'Telegram ID không được để trống';
+
       if (!formData.facebook_url.trim()) newErrors.facebook_url = 'Facebook URL không được để trống';
     } else if (step === 2) {
       if (!formData.current_role) {
@@ -300,8 +299,7 @@ export const OnboardingForm: React.FC = () => {
                   {errors.full_name && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.full_name}</span>}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                <div>
                     <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Số điện thoại (Zalo)</label>
                     <input
                       type="text"
@@ -313,19 +311,6 @@ export const OnboardingForm: React.FC = () => {
                     />
                     {errors.phone_number && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.phone_number}</span>}
                   </div>
-                  <div>
-                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Telegram ID (Bot báo bài)</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.telegram_id}
-                      onChange={(e) => setFormData({ ...formData, telegram_id: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                      placeholder="@username"
-                    />
-                    {errors.telegram_id && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.telegram_id}</span>}
-                  </div>
-                </div>
 
                 <div>
                   <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Đường link Facebook cá nhân</label>

@@ -23,7 +23,7 @@ export const InternalTeam: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('Mentor');
+  const [role, setRole] = useState('Admin');
   const [permission, setPermission] = useState('');
   const [status, setStatus] = useState('Active');
 
@@ -48,7 +48,7 @@ export const InternalTeam: React.FC = () => {
     // Reset form
     setName('');
     setEmail('');
-    setRole('Mentor');
+    setRole('Admin');
     setPermission('');
     setStatus('Active');
     setIsModalOpen(false);
@@ -194,7 +194,6 @@ export const InternalTeam: React.FC = () => {
                     className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#214C54] focus:bg-white transition-all text-[#15333B] font-semibold"
                   >
                     <option value="Admin">Admin</option>
-                    <option value="Mentor">Mentor</option>
                     <option value="Support Staff">Support Staff</option>
                     <option value="Observer">Observer</option>
                   </select>

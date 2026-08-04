@@ -8,17 +8,7 @@ interface StudentDashboardProps {
 }
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange }) => {
-  const { activeUser, lessons, assignments, submissions, users, modules, courses, calendarEvents } = useDatabase();
-
-  const currentCourse = courses.find(c => c.title.toLowerCase().includes('201')) || courses[0];
-  let filteredModules = currentCourse 
-    ? modules.filter(m => m.course_id === currentCourse.id)
-    : modules;
-
-  if (filteredModules.length === 0 && modules.length > 0) {
-    const fallbackCourseId = modules[0].course_id;
-    filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
-  }
+  const { activeUser, lessons, nauticalTransactions, users, calendarEvents } = useDatabase();
 
   const filteredLessons = lessons;
 
@@ -73,22 +63,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
   const pendingAssignments = React.useMemo(() => {
     const list: any[] = [];
     
-    // Onboarding Week is now displayed on the right column widgets
-
     // Add uncompleted class assignments for started lessons
-    assignments.forEach(assignment => {
-      const lesson = filteredLessons.find(l => l.id === assignment.lesson_id);
-      if (!lesson) return;
+    filteredLessons.forEach(lesson => {
+      if (!lesson.assignment_description) return;
       
       // Check if lesson has started
       if (!isLessonStarted(lesson)) return;
 
-      // Check if student has submitted
-      const hasSub = submissions.some(
-        s => s.assignment_id === assignment.id && s.student_id === activeUser.id && s.status !== 'draft'
+      // Check if student has completed
+      const hasCompleted = (nauticalTransactions || []).some(
+        t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
       );
 
-      if (!hasSub) {
+      if (!hasCompleted) {
         // Calculate due date (lesson start_date + 3 days)
         let dueDateStr = 'N/A';
         if (lesson.start_date) {
@@ -98,9 +85,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
         }
         
         list.push({
-          id: assignment.id,
+          id: lesson.id,
           title: `Bài tập ${lesson.title}`,
-          desc: assignment.description,
+          desc: lesson.assignment_description,
           dueDate: dueDateStr,
           type: 'syllabus',
           progress: null,
@@ -110,7 +97,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     });
 
     return list;
-  }, [onboardingProgress, onboardingDueDate, assignments, filteredLessons, submissions, activeUser.id]);
+  }, [onboardingProgress, onboardingDueDate, filteredLessons, nauticalTransactions, activeUser.id]);
 
   // 3. Find the nearest session from calendar events dynamically
   const nearestLesson = React.useMemo(() => {
@@ -165,13 +152,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
   }, [leaderboard, activeUser.id]);
 
 
-  const getRankTitle = (miles: number) => {
-    if (miles >= 5000) return 'Huyền thoại biển cả 👑';
-    if (miles >= 3001) return 'Thuyền trưởng 🧭';
-    if (miles >= 1501) return 'Thuyền phó ⚔️';
-    if (miles >= 501) return 'Hoa tiêu 🗺️';
-    return 'Thủy thủ tập sự ⛵';
-  };
 
   return (
     <div className="space-y-8 animate-fade-in select-none">
@@ -376,10 +356,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                 </div>
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#92400e]">
-                    Giải Đấu Hiện Tại
+                    Hải Lý Tích Lũy
                   </div>
                   <div className="text-base font-black text-[#15333B] leading-tight">
-                    {getRankTitle(activeUser.nautical_miles)}
+                    {activeUser.nautical_miles.toLocaleString()} Hải lý
                   </div>
                 </div>
               </div>

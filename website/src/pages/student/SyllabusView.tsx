@@ -1,39 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import type { Lesson, Assignment } from '../../context/DatabaseContext';
+import type { Lesson } from '../../context/DatabaseContext';
 import { EditableText } from '../../components/EditableText';
-import { Trash2, Plus, X, Save, Undo, Link as LinkIcon } from 'lucide-react';
+import { Trash2, Plus, X, Save, Undo } from 'lucide-react';
 
 export const SyllabusView: React.FC<{ 
   onPageChange?: (page: string) => void;
   isEditMode?: boolean;
-}> = ({ onPageChange, isEditMode = false }) => {
+}> = ({ isEditMode = false }) => {
   const { 
-    modules, 
     lessons, 
-    assignments, 
-    submissions, 
-    feedbacks, 
-    submitAssignment, 
+    nauticalTransactions,
     completeLesson,
     activeUser,
     updateLesson,
-    updateAssignment,
-    deleteAssignment,
-    courses,
-    users
   } = useDatabase();
-
-  const currentCourse = courses.find(c => c.title.toLowerCase().includes('201')) || courses[0];
-  let filteredModules = currentCourse 
-    ? modules.filter(m => m.course_id === currentCourse.id)
-    : modules;
-
-  if (filteredModules.length === 0 && modules.length > 0) {
-    const fallbackCourseId = modules[0].course_id;
-    filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
-  }
 
   const filteredLessons = lessons;
 
@@ -43,39 +25,22 @@ export const SyllabusView: React.FC<{
 
   // Local drafts for editable states when in Editing Mode (allows Cancel / Save)
   const [draftLesson, setDraftLesson] = useState<Lesson | null>(null);
-  const [draftAssignment, setDraftAssignment] = useState<Assignment | null>(null);
   const [hasHomework, setHasHomework] = useState(false);
   const [newConceptInput, setNewConceptInput] = useState('');
 
   const activeLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0];
-  const activeAssignment = assignments.find(a => a.lesson_id === activeLesson?.id);
-  const activeSubmission = submissions.find(s => s.assignment_id === activeAssignment?.id && s.student_id === activeUser?.id);
-  const activeFeedback = feedbacks.find(f => f.submission_id === activeSubmission?.id);
 
   // Initialize draft when active lesson or edit mode changes
   useEffect(() => {
     if (isEditMode && selectedLessonId && activeLesson) {
       setDraftLesson({ ...activeLesson });
-      if (activeAssignment) {
-        setDraftAssignment({ ...activeAssignment });
-        setHasHomework(true);
-      } else {
-        setDraftAssignment({
-          id: `asg-${activeLesson.id}`,
-          lesson_id: activeLesson.id,
-          description: 'Bài tập cho buổi học này.',
-          rubric_checklist: [],
-          scaffolding: { items: [] }
-        });
-        setHasHomework(false);
-      }
+      setHasHomework(!!activeLesson.assignment_description);
     } else {
       setDraftLesson(null);
-      setDraftAssignment(null);
       setHasHomework(false);
     }
     setNewConceptInput('');
-  }, [selectedLessonId, isEditMode, activeLesson, activeAssignment]);
+  }, [selectedLessonId, isEditMode, activeLesson]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -84,24 +49,22 @@ export const SyllabusView: React.FC<{
 
   const handleSave = () => {
     if (draftLesson) {
-      updateLesson(draftLesson.id, {
+      const updates: Partial<Lesson> = {
         title: draftLesson.title,
         content: draftLesson.content,
         key_concepts: draftLesson.key_concepts,
         slide_url: draftLesson.slide_url,
         study_note_url: draftLesson.study_note_url,
         video_url: draftLesson.video_url,
-      });
-    }
-    if (hasHomework && draftAssignment) {
-      updateAssignment(draftAssignment.id, {
-        lesson_id: draftAssignment.lesson_id,
-        description: draftAssignment.description,
-        rubric_checklist: draftAssignment.rubric_checklist,
-        scaffolding: draftAssignment.scaffolding,
-      });
-    } else if (!hasHomework && activeAssignment) {
-      deleteAssignment(activeAssignment.id);
+      };
+      if (hasHomework) {
+        updates.assignment_description = draftLesson.assignment_description || 'Bài tập cho buổi học này.';
+        updates.assignment_rubric_checklist = draftLesson.assignment_rubric_checklist || [];
+      } else {
+        updates.assignment_description = '';
+        updates.assignment_rubric_checklist = [];
+      }
+      updateLesson(draftLesson.id, updates);
     }
     showToast('Đã lưu mọi thay đổi thành công!');
   };
@@ -109,13 +72,7 @@ export const SyllabusView: React.FC<{
   const handleCancel = () => {
     if (activeLesson) {
       setDraftLesson({ ...activeLesson });
-      if (activeAssignment) {
-        setDraftAssignment({ ...activeAssignment });
-        setHasHomework(true);
-      } else {
-        setDraftAssignment(null);
-        setHasHomework(false);
-      }
+      setHasHomework(!!activeLesson.assignment_description);
       setNewConceptInput('');
       showToast('Đã hoàn tác các thay đổi chưa lưu.');
     }
@@ -127,7 +84,6 @@ export const SyllabusView: React.FC<{
     const start = new Date(lesson.start_date).getTime();
     const now = new Date().getTime();
     return now >= start;
-
   };
 
   // Checks if a lesson is locked based on prerequisite:
@@ -136,19 +92,10 @@ export const SyllabusView: React.FC<{
     // Lesson 0 is never locked
     if (lesson.order_index === 1) return false;
 
-    // Find previous lesson by order_index
-    const prevLesson = filteredLessons.find(l => l.order_index === lesson.order_index - 1);
-    if (!prevLesson) return false;
+    // If the lesson has not started yet, it is locked
+    if (!isLessonStarted(lesson)) return true;
 
-    // Find if previous lesson has an assignment
-    const prevAssignment = assignments.find(a => a.lesson_id === prevLesson.id);
-    if (!prevAssignment) return false;
-
-    // Find if student has submitted a submission for that assignment
-    const prevSubmission = submissions.find(s => s.assignment_id === prevAssignment.id && s.student_id === activeUser?.id);
-    const hasSubmitted = prevSubmission && prevSubmission.status !== 'draft';
-
-    return !hasSubmitted;
+    return false;
   };
 
 
@@ -162,37 +109,30 @@ export const SyllabusView: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeAssignment) return;
+    if (!activeLesson.assignment_description) return;
 
     // Check if rubrics are completed (Self-evaluation check warning, excluding optional checklist items)
-    const requiredRubrics = activeAssignment.rubric_checklist.filter(r => !r.is_optional);
+    const checklist = activeLesson.assignment_rubric_checklist || [];
+    const requiredRubrics = checklist.filter(r => !r.is_optional);
     const checkedRequiredCount = requiredRubrics.filter((r) => {
-      const globalIdx = activeAssignment.rubric_checklist.findIndex(original => original.item === r.item);
+      const globalIdx = checklist.findIndex(original => original.item === r.item);
       return !!rubricSelfCheck[globalIdx];
     }).length;
 
     if (checkedRequiredCount < requiredRubrics.length) {
-      if (!window.confirm(`⚠️ Bạn chưa tick chọn đủ các tiêu chí bắt buộc (${checkedRequiredCount}/${requiredRubrics.length}). Bạn vẫn muốn nộp chứ?`)) {
+      if (!window.confirm(`⚠️ Bạn chưa tick chọn đủ các tiêu chí bắt buộc (${checkedRequiredCount}/${requiredRubrics.length}). Bạn vẫn muốn hoàn thành chứ?`)) {
         return;
       }
     }
 
-    const submissionPayload = JSON.stringify({
-      url: "https://www.facebook.com/groups/27216190438021089",
-      reflection: ""
-    });
-
-    submitAssignment(activeAssignment.id, submissionPayload);
-
+    completeLesson(activeLesson.id);
     showToast('Đã ghi nhận hoàn thành bài tập! 🚀');
   };
 
   const isLessonCompletedByStudent = (lessonId: string): boolean => {
-    const hasSubmission = submissions.some(s => {
-      const asg = assignments.find(a => a.lesson_id === lessonId);
-      return s.assignment_id === asg?.id && s.student_id === activeUser?.id;
-    });
-    return hasSubmission;
+    return (nauticalTransactions || []).some(
+      t => t.student_id === activeUser?.id && t.action_type === 'lesson_complete' && t.reference_id === lessonId
+    );
   };
 
   // Split description into bullet points for the Agenda list
@@ -230,20 +170,7 @@ export const SyllabusView: React.FC<{
     });
   };
 
-  // Helper function to extract all scaffolding links dynamically
-  const getScaffoldingItems = (asg: Assignment) => {
-    const items: { label: string; url: string }[] = [];
-    if (asg.scaffolding?.items) {
-      return asg.scaffolding.items;
-    }
-    if (asg.scaffolding?.template_url) {
-      items.push({ label: '📋 Template Mẫu (Google Sheets)', url: asg.scaffolding.template_url });
-    }
-    if (asg.scaffolding?.reference_link) {
-      items.push({ label: '🔗 Bài làm mẫu tham khảo', url: asg.scaffolding.reference_link });
-    }
-    return items;
-  };
+
 
   return (
     <div className="space-y-6 animate-fade-in select-none pb-20 max-w-5xl mx-auto text-left">
@@ -468,6 +395,19 @@ export const SyllabusView: React.FC<{
                       <span>Video Recording</span>
                     </button>
                   )}
+                  {activeLesson.supporting_resources && activeLesson.supporting_resources.map((res, index) => (
+                    <a
+                      key={index}
+                      href={res.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 cursor-pointer"
+                    >
+                      <span>🔗</span>
+                      <span>{res.label}</span>
+                      <span>↗</span>
+                    </a>
+                  ))}
                 </div>
               )}
             </div>
@@ -476,7 +416,7 @@ export const SyllabusView: React.FC<{
             <div className="border-t border-gray-100 pt-6 space-y-4">
               <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📝 Bài tập về nhà</h4>
               
-              {isEditMode && draftAssignment ? (
+              {isEditMode && draftLesson ? (
                 <div className="space-y-4">
                   {/* Switch toggle to activate/deactivate homework */}
                   <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-150 rounded-2xl shadow-sm">
@@ -488,7 +428,16 @@ export const SyllabusView: React.FC<{
                       <input 
                         type="checkbox" 
                         checked={hasHomework} 
-                        onChange={(e) => setHasHomework(e.target.checked)}
+                        onChange={(e) => {
+                          setHasHomework(e.target.checked);
+                          if (e.target.checked && !draftLesson.assignment_description) {
+                            setDraftLesson({
+                              ...draftLesson,
+                              assignment_description: 'Bài tập cho buổi học này.',
+                              assignment_rubric_checklist: []
+                            });
+                          }
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#214C54]"></div>
@@ -501,8 +450,8 @@ export const SyllabusView: React.FC<{
                       <div className="p-4 bg-amber-50/40 border border-amber-200/50 rounded-xl w-full">
                         <label className="text-[10px] text-[#214C54] font-black uppercase tracking-wider block mb-2">📝 Yêu cầu bài tập:</label>
                         <EditableText
-                          value={draftAssignment.description}
-                          onSave={(newValue) => setDraftAssignment({ ...draftAssignment, description: newValue })}
+                          value={draftLesson.assignment_description || ''}
+                          onSave={(newValue) => setDraftLesson({ ...draftLesson, assignment_description: newValue })}
                           className="text-xs text-[#15333B]"
                           minRows={2}
                         />
@@ -512,7 +461,7 @@ export const SyllabusView: React.FC<{
                       <div className="space-y-3 w-full bg-amber-50/40 border border-amber-200/50 p-4 rounded-xl">
                         <span className="text-[10px] font-bold text-[#214C54] uppercase tracking-wider block">📋 Tiêu chí đánh giá (Checklist):</span>
                         <div className="space-y-2.5">
-                          {(draftAssignment.rubric_checklist || []).map((item, idx) => (
+                          {(draftLesson.assignment_rubric_checklist || []).map((item, idx) => (
                             <div key={idx} className="flex gap-2 items-center bg-white p-3 rounded-xl border border-gray-150 shadow-sm">
                               <div className="flex flex-col gap-1 flex-1">
                                 <input
@@ -521,9 +470,9 @@ export const SyllabusView: React.FC<{
                                   value={item.item}
                                   placeholder="Nhập nội dung tiêu chí..."
                                   onChange={(e) => {
-                                    const newRubrics = [...(draftAssignment.rubric_checklist || [])];
+                                    const newRubrics = [...(draftLesson.assignment_rubric_checklist || [])];
                                     newRubrics[idx] = { ...newRubrics[idx], item: e.target.value };
-                                    setDraftAssignment({ ...draftAssignment, rubric_checklist: newRubrics });
+                                    setDraftLesson({ ...draftLesson, assignment_rubric_checklist: newRubrics });
                                   }}
                                 />
                                 <label className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer select-none">
@@ -531,9 +480,9 @@ export const SyllabusView: React.FC<{
                                     type="checkbox"
                                     checked={!!item.is_optional}
                                     onChange={(e) => {
-                                      const newRubrics = [...(draftAssignment.rubric_checklist || [])];
+                                      const newRubrics = [...(draftLesson.assignment_rubric_checklist || [])];
                                       newRubrics[idx] = { ...newRubrics[idx], is_optional: e.target.checked };
-                                      setDraftAssignment({ ...draftAssignment, rubric_checklist: newRubrics });
+                                      setDraftLesson({ ...draftLesson, assignment_rubric_checklist: newRubrics });
                                     }}
                                     className="rounded border-gray-300 text-[#214C54] focus:ring-[#214C54] w-3 h-3"
                                   />
@@ -543,8 +492,8 @@ export const SyllabusView: React.FC<{
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const newRubrics = (draftAssignment.rubric_checklist || []).filter((_, i) => i !== idx);
-                                  setDraftAssignment({ ...draftAssignment, rubric_checklist: newRubrics });
+                                  const newRubrics = (draftLesson.assignment_rubric_checklist || []).filter((_, i) => i !== idx);
+                                  setDraftLesson({ ...draftLesson, assignment_rubric_checklist: newRubrics });
                                 }}
                                 className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-all cursor-pointer shrink-0"
                               >
@@ -557,73 +506,14 @@ export const SyllabusView: React.FC<{
                         <button
                           type="button"
                           onClick={() => {
-                            const newRubrics = [...(draftAssignment.rubric_checklist || []), { item: 'Tiêu chí đánh giá mới', checked: false, is_optional: false }];
-                            setDraftAssignment({ ...draftAssignment, rubric_checklist: newRubrics });
+                            const newRubrics = [...(draftLesson.assignment_rubric_checklist || []), { item: 'Tiêu chí đánh giá mới', checked: false, is_optional: false }];
+                            setDraftLesson({ ...draftLesson, assignment_rubric_checklist: newRubrics });
                           }}
-                          className="inline-flex items-center gap-1.5 text-xs text-[#214C54] hover:text-[#15333B] font-black border border-[#214C54]/30 px-3 py-1.5 rounded-lg bg-white shadow-sm hover:shadow active:scale-95 transition-all duration-200 cursor-pointer"
+                          className="inline-flex items-center gap-1.5 text-xs text-[#214C54] hover:text-[#15333B] font-black border border-[#214C54]/30 px-3 py-1.5 rounded-lg bg-white shadow-sm hover:shadow active:scale-95 duration-200 cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          Thêm Tiêu Chí Mới
+                          Thêm Tiêu Chi Mới
                         </button>
-                      </div>
-
-                      {/* Scaffolding Resources */}
-                      <div className="space-y-3 w-full bg-amber-50/40 border border-amber-200/50 p-4 rounded-xl">
-                        <span className="text-[10px] font-bold text-[#214C54] uppercase tracking-wider block">🛠️ Tài nguyên Scaffolding hỗ trợ bài làm:</span>
-                        <div className="space-y-3">
-                          {getScaffoldingItems(draftAssignment).map((item, idx) => (
-                            <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-white p-3 rounded-xl border border-gray-150 shadow-sm relative">
-                              <div>
-                                <label className="text-[9px] font-bold text-gray-500 block mb-1">Tên nhãn tài nguyên:</label>
-                                <input
-                                  type="text"
-                                  className="w-full border border-gray-150 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-[#214C54] font-semibold text-gray-700"
-                                  value={item.label}
-                                  onChange={(e) => {
-                                    const newItems = [...getScaffoldingItems(draftAssignment)];
-                                    newItems[idx] = { ...newItems[idx], label: e.target.value };
-                                    setDraftAssignment({ ...draftAssignment, scaffolding: { items: newItems } });
-                                  }}
-                                />
-                              </div>
-                              <div className="pr-8">
-                                <label className="text-[9px] font-bold text-gray-500 block mb-1">Đường dẫn liên kết (URL):</label>
-                                <input
-                                  type="text"
-                                  className="w-full border border-gray-150 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-[#214C54] font-semibold text-gray-700 font-mono"
-                                  value={item.url}
-                                  onChange={(e) => {
-                                    const newItems = [...getScaffoldingItems(draftAssignment)];
-                                    newItems[idx] = { ...newItems[idx], url: e.target.value };
-                                    setDraftAssignment({ ...draftAssignment, scaffolding: { items: newItems } });
-                                  }}
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newItems = getScaffoldingItems(draftAssignment).filter((_, i) => i !== idx);
-                                  setDraftAssignment({ ...draftAssignment, scaffolding: { items: newItems } });
-                                }}
-                                className="absolute top-3 right-3 text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-all cursor-pointer"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                          
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newItems = [...getScaffoldingItems(draftAssignment), { label: 'Tài nguyên hỗ trợ mới', url: 'https://...' }];
-                              setDraftAssignment({ ...draftAssignment, scaffolding: { items: newItems } });
-                            }}
-                            className="inline-flex items-center gap-1.5 text-xs text-[#214C54] hover:text-[#15333B] font-black border border-[#214C54]/30 px-3 py-1.5 rounded-lg bg-white shadow-sm hover:shadow active:scale-95 transition-all duration-200 cursor-pointer"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            Thêm Tài Nguyên Hỗ Trợ
-                          </button>
-                        </div>
                       </div>
                     </>
                   ) : (
@@ -633,8 +523,15 @@ export const SyllabusView: React.FC<{
                       <span className="text-[10px] text-gray-400 block max-w-xs">Gạt công tắc kích hoạt phía trên hoặc bấm nút dưới đây để tạo bài tập mới.</span>
                       <button
                         type="button"
-                        onClick={() => setHasHomework(true)}
-                        className="inline-flex items-center gap-1.5 text-xs text-[#214C54] hover:text-[#15333B] font-black border border-[#214C54]/30 px-3 py-1.5 rounded-lg bg-white shadow-sm hover:shadow active:scale-95 transition-all duration-200 cursor-pointer mt-2"
+                        onClick={() => {
+                          setHasHomework(true);
+                          setDraftLesson({
+                            ...draftLesson,
+                            assignment_description: 'Bài tập cho buổi học này.',
+                            assignment_rubric_checklist: []
+                          });
+                        }}
+                        className="inline-flex items-center gap-1.5 text-xs text-[#214C54] hover:text-[#15333B] font-black border border-[#214C54]/30 px-3 py-1.5 rounded-lg bg-white shadow-sm hover:shadow active:scale-95 duration-200 cursor-pointer mt-2"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         Tạo bài tập về nhà
@@ -642,52 +539,27 @@ export const SyllabusView: React.FC<{
                     </div>
                   )}
                 </div>
-              ) : activeAssignment ? (
+              ) : activeLesson.assignment_description ? (
                 <div className="space-y-5">
                   {/* Requirement description */}
                   <div className="p-4 bg-gray-50 border border-gray-150 rounded-2xl">
-                    <p className="text-sm text-[#15333B] font-semibold leading-relaxed whitespace-pre-wrap">{activeAssignment.description}</p>
+                    <p className="text-sm text-[#15333B] font-semibold leading-relaxed whitespace-pre-wrap">{activeLesson.assignment_description}</p>
                   </div>
 
-                  {/* Scaffolding Resources Links */}
-                  {getScaffoldingItems(activeAssignment).length > 0 && (
-                    <div className="space-y-2">
-                      <span className="text-[10px] text-gray-455 font-bold uppercase tracking-wider block">🛠️ Tài nguyên hỗ trợ:</span>
-                      <div className="flex flex-wrap gap-2.5">
-                        {getScaffoldingItems(activeAssignment).map((item, idx) => (
-                          <a
-                            key={idx}
-                            href={item.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-[11px] font-black text-[#214C54] transition-all cursor-pointer shadow-sm"
-                          >
-                            <LinkIcon className="w-3 h-3 text-[#214C54]" />
-                            {item.label}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Rubrics check / Submission state */}
-                  {activeSubmission && activeSubmission.status !== 'draft' ? (
+                  {isLessonCompletedByStudent(activeLesson.id) ? (
                     <div className="space-y-4">
                       {/* Rubrics Checklist Results */}
-                      <div className="bg-emerald-500/5 border border-emerald-500/25 p-5 rounded-2xl space-y-3">
+                      <div className="bg-emerald-500/5 border border-emerald-500/25 p-5 rounded-2xl space-y-3 bg-emerald-500/5">
                         <span className="text-[10px] text-emerald-800 font-black uppercase tracking-widest block">🎯 Báo cáo hoàn thành bài tập (Rubrics):</span>
                         <div className="space-y-2">
-                          {activeAssignment.rubric_checklist.map((item, idx) => {
-                            const selfChecked = activeSubmission.content ? true : false;
-                            return (
-                              <div key={idx} className="flex items-start gap-2.5 text-sm text-[#15333B] font-semibold">
-                                <span className="text-sm leading-none shrink-0">{selfChecked ? '✅' : '❌'}</span>
-                                <span className={selfChecked ? 'text-[#3E5E63]' : 'text-gray-400 line-through'}>
-                                  {item.item} {item.is_optional && <span className="text-xs text-slate-500 italic font-normal">(Optional)</span>}
-                                </span>
-                              </div>
-                            );
-                          })}
+                          {(activeLesson.assignment_rubric_checklist || []).map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-2.5 text-sm text-[#15333B] font-semibold">
+                              <span className="text-sm leading-none shrink-0">✅</span>
+                              <span className="text-[#3E5E63]">
+                                {item.item} {item.is_optional && <span className="text-xs text-slate-500 italic font-normal">(Optional)</span>}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
@@ -695,7 +567,7 @@ export const SyllabusView: React.FC<{
                       <div className="p-4 bg-[#214C54]/5 border border-[#214C54]/10 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                           <span className="text-xs text-[#214C54] font-black uppercase tracking-wider block mb-0.5">🎉 Trạng thái:</span>
-                          <p className="text-sm text-emerald-600 font-bold">Đã hoàn thành bài tập trên hệ thống</p>
+                          <p className="text-sm text-emerald-600 font-bold">Đã hoàn thành bài học và bài tập</p>
                         </div>
                         <a
                           href="https://www.facebook.com/groups/27216190438021089"
@@ -706,75 +578,37 @@ export const SyllabusView: React.FC<{
                           <span>Xem Facebook Group ↗</span>
                         </a>
                       </div>
-
-                      {/* Grade & Feedback card */}
-                      {activeSubmission.status === 'graded' && activeFeedback ? (
-                        <div className="bg-amber-500/5 border border-amber-500/25 rounded-2xl p-5 space-y-4">
-                           <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
-                            <div>
-                              <span className="text-xs text-amber-800 font-black uppercase tracking-widest block">🏆 Kết quả chấm điểm:</span>
-                              <span className="text-sm text-[#3E5E63] font-semibold">Được chấm bởi {users.find(u => u.id === activeFeedback.mentor_id)?.full_name || 'Giảng viên'}</span>
-                            </div>
-                            <div className="bg-amber-400 text-[#15333B] font-black rounded-xl px-3.5 py-1 text-sm shadow-sm">
-                              Mastery Level: {
-                                activeFeedback.mastery_level === 'excellent' ? 'Xuất sắc 🌟' :
-                                activeFeedback.mastery_level === 'meets_expectations' ? 'Đạt yêu cầu ✅' :
-                                activeFeedback.mastery_level === 'needs_improvement' ? 'Cần cải thiện ⚠️' : 'Chưa đạt ❌'
-                              }
-                            </div>
+                    </div>
+                  ) : (
+                    // New completion form
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      {/* Rubrics self-checklist */}
+                      {(activeLesson.assignment_rubric_checklist || []).length > 0 && (
+                        <div className="bg-amber-50/30 border border-amber-200/50 rounded-2xl p-5 space-y-3.5">
+                          <div>
+                            <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block">🎯 Báo cáo hoàn thành bài tập (Rubrics):</span>
+                            <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal">
+                              Vui lòng tự đối chiếu sản phẩm của bạn với các tiêu chuẩn đầu ra dưới đây trước khi hoàn thành.
+                            </span>
                           </div>
 
                           <div className="space-y-2.5">
-                            <span className="text-xs text-amber-800 font-black uppercase tracking-widest block">💬 Phản hồi của giảng viên:</span>
-                            <p className="text-sm text-[#15333B] font-semibold leading-relaxed whitespace-pre-wrap">{activeFeedback.content}</p>
+                            {(activeLesson.assignment_rubric_checklist || []).map((item, idx) => (
+                              <label key={idx} className="flex items-start gap-2.5 cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900 select-none">
+                                <input 
+                                  type="checkbox"
+                                  checked={!!rubricSelfCheck[idx]}
+                                  onChange={() => handleSelfCheckToggle(idx)}
+                                  className="rounded border-gray-300 text-[#214C54] focus:ring-[#214C54] w-4 h-4 mt-0.5"
+                                />
+                                <span className={rubricSelfCheck[idx] ? 'text-gray-900 font-black' : ''}>
+                                  {item.item} {item.is_optional && <span className="text-[10px] text-slate-500 italic font-normal">(Optional)</span>}
+                                </span>
+                              </label>
+                            ))}
                           </div>
-                        </div>
-                      ) : (
-                        <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-emerald-800 font-semibold shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <span>🎉</span>
-                            <span>Chúc mừng bạn hoàn thành, đến xem bảng vinh danh!</span>
-                          </div>
-                          {onPageChange && (
-                            <button
-                              type="button"
-                              onClick={() => onPageChange('walloffame')}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow transition-all cursor-pointer border-0 select-none whitespace-nowrap"
-                            >
-                              🏆 Xem Bảng vinh danh
-                            </button>
-                          )}
                         </div>
                       )}
-                    </div>
-                  ) : (
-                    // New submission form
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      {/* Rubrics self-checklist */}
-                      <div className="bg-amber-50/30 border border-amber-200/50 rounded-2xl p-5 space-y-3.5">
-                        <div>
-                          <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block">🎯 Báo cáo hoàn thành bài tập (Rubrics):</span>
-                          <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal">
-                            Vui lòng tự đối chiếu sản phẩm của bạn với các tiêu chuẩn đầu ra dưới đây trước khi gửi nộp.
-                          </span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {activeAssignment.rubric_checklist.map((item, idx) => (
-                            <label key={idx} className="flex items-start gap-2.5 cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900 select-none">
-                              <input 
-                                type="checkbox"
-                                checked={!!rubricSelfCheck[idx]}
-                                onChange={() => handleSelfCheckToggle(idx)}
-                                className="rounded border-gray-300 text-[#214C54] focus:ring-[#214C54] w-4 h-4 mt-0.5"
-                              />
-                              <span className={rubricSelfCheck[idx] ? 'text-gray-900 font-black' : ''}>
-                                {item.item} {item.is_optional && <span className="text-[10px] text-slate-500 italic font-normal">(Optional)</span>}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
 
                       {/* Facebook Group Navigation Button */}
                       <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-5 space-y-3">
@@ -799,7 +633,7 @@ export const SyllabusView: React.FC<{
                           type="submit"
                           className="bg-[#214C54] hover:bg-[#15333B] text-white w-full text-xs font-black flex items-center justify-center gap-1.5 py-3 rounded-xl shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 select-none cursor-pointer"
                         >
-                          <span>✅ Hoàn thành bài tập</span>
+                          <span>✅ Xác nhận đã hoàn thành bài tập & bài học</span>
                         </button>
                       ) : (
                         <button 

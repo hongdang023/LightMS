@@ -1,31 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
-import { Shield, Lock, HelpCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
-// ─── Level Configuration with Pirate Theme ──────────────────────────────────
-interface LevelDef {
-  level: number;
-  name: string;
-  minMiles: number;
-  perk: string;
-}
 
-const LEVELS: LevelDef[] = [
-  { level: 1, name: 'Thủy thủ tập sự', minMiles: 0, perk: 'Gia nhập thủy thủ đoàn' },
-  { level: 2, name: 'Hoa tiêu', minMiles: 501, perk: 'Xem Lịch hoạt động lớp học & Mở khóa Kho tài nguyên' },
-  { level: 3, name: 'Thuyền phó', minMiles: 1501, perk: 'Được quyền duyệt bài viết nhanh' },
-  { level: 4, name: 'Thuyền trưởng', minMiles: 3001, perk: 'Cơ hội làm Mentor trợ giảng' },
-  { level: 5, name: 'Huyền thoại biển cả', minMiles: 5000, perk: 'Vinh danh Bảng Vàng vĩnh viễn' },
-];
-
-const getStudentLevel = (miles: number): LevelDef => {
-  for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (miles >= LEVELS[i].minMiles) {
-      return LEVELS[i];
-    }
-  }
-  return LEVELS[0];
-};
 
 // ─── Mock Classmates to make Leaderboard active & alive ───────────────────────
 const MOCK_CLASSMATES: { id: string; full_name: string; avatar_url: string; role: string; nautical_miles: number }[] = [];
@@ -96,7 +73,7 @@ const RankMedal: React.FC<{ rank: number }> = ({ rank }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const WallOfFame: React.FC = () => {
-  const { users, activeUser } = useDatabase();
+  const { users, activeUser, badges, profileBadges } = useDatabase();
   const [lastUpdated, setLastUpdated] = useState('');
 
   useEffect(() => {
@@ -143,81 +120,22 @@ export const WallOfFame: React.FC = () => {
 
   // Profile calculations for active user
   const myMiles = displayActiveUser.nautical_miles;
-  const currentLvl = getStudentLevel(myMiles);
-  const nextLvlIndex = LEVELS.findIndex(l => l.level === currentLvl.level) + 1;
-  const nextLvl = nextLvlIndex < LEVELS.length ? LEVELS[nextLvlIndex] : null;
-
-  let milesNeeded = 0;
-  let progressPercent = 100;
-  if (nextLvl) {
-    milesNeeded = nextLvl.minMiles - myMiles;
-    const levelRange = nextLvl.minMiles - currentLvl.minMiles;
-    const earnedInLevel = myMiles - currentLvl.minMiles;
-    progressPercent = Math.min(100, Math.max(0, (earnedInLevel / levelRange) * 100));
-  }
-
-  // Calculate dynamic percentages for each level based on finalStudents
-  const levelDistribution = LEVELS.map(l => {
-    const count = finalStudents.filter(s => getStudentLevel(s.nautical_miles).level === l.level).length;
-    const pct = finalStudents.length > 0 ? Math.round((count / finalStudents.length) * 100) : 0;
-    return { ...l, percent: pct };
-  });
-
-  // SVG configurations for Circular Progress
-  const svgSize = 110;
-  const strokeWidth = 4;
-  const center = svgSize / 2;
-  const radius = center - strokeWidth;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto px-4 pb-12 animate-fade-in select-none">
       
-      {/* ─── Level Progression Card ─── */}
+      {/* ─── Gamification Overview Card ─── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 flex flex-col lg:flex-row gap-8 items-stretch">
         
-        {/* Left Section: User Profile & Circular Progress */}
-        <div className="flex flex-col items-center justify-center text-center lg:border-r lg:border-gray-100 lg:pr-8 lg:w-1/3">
-          <div className="relative animate-bounce-slow" style={{ width: svgSize, height: svgSize }}>
-            <svg className="w-full h-full transform -rotate-90">
-              {/* Background Track */}
-              <circle
-                cx={center}
-                cy={center}
-                r={radius}
-                className="text-gray-100"
-                strokeWidth={strokeWidth}
-                stroke="currentColor"
-                fill="transparent"
-              />
-              {/* Progress Arc */}
-              <circle
-                cx={center}
-                cy={center}
-                r={radius}
-                className="text-primary-teal"
-                strokeWidth={strokeWidth}
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="transparent"
-              />
-            </svg>
-            
-            {/* Avatar inside */}
-            <div className="absolute inset-[6px] rounded-full overflow-hidden border border-gray-55">
+        {/* Left Section: User Profile & Total Nautical Miles */}
+        <div className="flex flex-col items-center justify-center text-center lg:border-r lg:border-gray-100 lg:pr-8 lg:w-1/3 py-4">
+          <div className="relative w-28 h-28">
+            <div className="absolute inset-0 rounded-full overflow-hidden border-2 border-primary-teal p-1">
               <img
                 src={displayActiveUser.avatar_url}
                 alt={displayActiveUser.full_name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-full"
               />
-            </div>
-            
-            {/* Level Badge bottom right */}
-            <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-primary-teal text-white flex items-center justify-center text-xs font-black border-2 border-white shadow-md">
-              {currentLvl.level}
             </div>
           </div>
 
@@ -225,75 +143,55 @@ export const WallOfFame: React.FC = () => {
             {displayActiveUser.full_name}
             {!isActiveUserStudent && (
               <span className="text-[10px] bg-red-100 text-red-700 font-extrabold px-1.5 py-0.5 rounded-full uppercase">
-                Mentor/Admin
+                Admin
               </span>
             )}
           </h2>
-          <p className="text-sm font-bold text-muted-teal mt-0.5">{currentLvl.name}</p>
-
-          <div className="mt-4 flex items-center justify-center">
-            {nextLvl ? (
-              <div className="relative group flex items-center gap-1 cursor-pointer bg-gray-50 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                <span className="text-xs text-gray-500 font-semibold">
-                  Còn <strong className="text-deep-gold font-extrabold">{milesNeeded}</strong> Hải lý để lên cấp
-                </span>
-                <HelpCircle size={13} className="text-gray-400" />
-                
-                {/* Tooltip */}
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-dark-slate text-white text-xs py-2 px-3 rounded-lg shadow-xl w-60 z-20 leading-relaxed text-center font-normal">
-                  Bạn đang ở Cấp {currentLvl.level} ({myMiles} Hải lý). Cấp {nextLvl.level} ({nextLvl.name}) yêu cầu tối thiểu {nextLvl.minMiles} Hải lý.
-                </div>
-              </div>
-            ) : (
-              <span className="text-xs text-green-600 bg-green-50 px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
-                🏆 Đã đạt cấp độ tối đa!
-              </span>
-            )}
-          </div>
+          <p className="text-sm font-black text-primary-teal mt-1">
+            ⭐️ {myMiles.toLocaleString()} Hải lý tích lũy
+          </p>
         </div>
 
-        {/* Right Section: 9 Levels Distribution */}
+        {/* Right Section: Badges Showroom */}
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-4">
             <Shield size={16} className="text-primary-teal" />
             <h3 className="text-xs font-black text-dark-slate uppercase tracking-wider">
-              Danh sách Cấp độ Hải Trình
+              Danh sách Huy hiệu Hải trình
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {levelDistribution.map((lvl) => {
-              const isUnlocked = myMiles >= lvl.minMiles;
+            {badges.map((badge) => {
+              const unlockedRecord = profileBadges.find(pb => pb.student_id === displayActiveUser.id && pb.badge_id === badge.id);
+              const isUnlocked = !!unlockedRecord;
               return (
                 <div
-                  key={lvl.level}
-                  className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${
+                  key={badge.id}
+                  className={`flex items-start gap-3.5 p-4 rounded-xl border transition-all duration-200 ${
                     isUnlocked
-                      ? 'bg-[#fefaf0]/60 border-[#ffd94c]/30 shadow-sm'
-                      : 'bg-white border-gray-100 opacity-60'
+                      ? 'bg-amber-50/20 border-amber-200 shadow-sm'
+                      : 'bg-gray-50/50 border-gray-150 opacity-60'
                   }`}
                 >
-                  {/* Status Indicator */}
-                  {isUnlocked ? (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-amber-950 font-black flex items-center justify-center text-sm shadow-sm shrink-0 border border-amber-300">
-                      {lvl.level}
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 text-gray-400 flex items-center justify-center shrink-0">
-                      <Lock size={13} />
-                    </div>
-                  )}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm shrink-0 border ${
+                    isUnlocked ? 'bg-amber-100 border-amber-200' : 'bg-gray-200 border-gray-300 text-gray-400'
+                  }`}>
+                    {isUnlocked ? badge.icon : '🔒'}
+                  </div>
 
-                  {/* Level details */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-dark-slate truncate">
-                        Cấp {lvl.level} - {lvl.name}
-                      </h4>
-                      <span className="text-[10px] text-gray-400 font-semibold whitespace-nowrap ml-2">
-                        {lvl.percent}% thành viên
+                    <h4 className={`text-xs font-bold ${isUnlocked ? 'text-amber-900' : 'text-gray-500'}`}>
+                      {badge.name}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 mt-1 leading-normal">
+                      {badge.description}
+                    </p>
+                    {isUnlocked && unlockedRecord && (
+                      <span className="text-[9px] text-emerald-600 font-extrabold mt-1 block">
+                        Đã mở khóa: {new Date(unlockedRecord.unlocked_at).toLocaleDateString('vi-VN')}
                       </span>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
@@ -421,7 +319,7 @@ const LeaderboardColumn: React.FC<LeaderboardColumnProps> = ({
                   {student.full_name}
                 </span>
                 <span className="text-[10px] font-semibold text-gray-400">
-                  Cấp {getStudentLevel(student.nautical_miles).level}
+                  {student.nautical_miles.toLocaleString()} Hải lý
                 </span>
               </div>
 
@@ -466,7 +364,7 @@ const LeaderboardColumn: React.FC<LeaderboardColumnProps> = ({
                 {myData.full_name} (Bạn)
               </span>
               <span className="text-[10px] font-semibold text-gray-400">
-                Cấp {getStudentLevel(myData.nautical_miles).level}
+                {myData.nautical_miles.toLocaleString()} Hải lý
               </span>
             </div>
 

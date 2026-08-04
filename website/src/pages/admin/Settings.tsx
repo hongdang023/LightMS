@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { Settings as SettingsIcon, Calendar, Mail, Play, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Settings as SettingsIcon, Calendar, Mail, Play, AlertCircle } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { 
     batches, 
-    updateBatch, 
-    onboardingUnlockSchedules, 
-    updateOnboardingUnlockSchedule,
-    onboardingDays
+    updateBatch
   } = useDatabase();
 
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
@@ -17,40 +14,6 @@ export const Settings: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
-  const [previewEmailDay, setPreviewEmailDay] = useState<number | null>(null);
-
-  const getEmailPreviewData = (dayNum: number) => {
-    const dayData = onboardingDays.find(d => d.day === dayNum);
-    if (!dayData) return { subject: '', html: '' };
-
-    const subject = dayData.email_subject || `[The1ight] [Onboarding Week] Thử thách Ngày ${dayNum}: ${dayData.title}`;
-    
-    const defaultBody = `Kẹt kẹt... Alo alo! 🦜\n\nChào mừng bạn tới ngày học tiếp theo của Onboarding Week!\n\nHôm nay chúng ta sẽ bắt đầu Thử thách Ngày ${dayNum}: ${dayData.title}\n\n🎯 MỤC TIÊU:\n${dayData.objective}\n\n📝 NHIỆM VỤ:\n${dayData.checklist}\n\n✨ ĐIỀU RÚT RA (TAKEAWAY):\n${dayData.takeaway}\n\nHãy truy cập vào hệ thống LightMS để theo dõi chi tiết và cập nhật bài tập nhé!\n\nChúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
-    const bodyText = dayData.email_body || defaultBody;
-
-    const formattedBody = bodyText
-      .split('\n\n')
-      .map(p => `<p style="margin: 0 0 12px; line-height: 1.6; color: #3E5E63;">${p.replace(/\n/g, '<br />')}</p>`)
-      .join('');
-
-    const htmlContent = `
-<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FDF5DA; padding: 20px; border-radius: 12px; max-width: 100%; border: 1.5px solid #ffd94c;">
-  <div style="background-color: #15333B; padding: 12px; border-radius: 8px 8px 0 0; text-align: center; border-bottom: 4px solid #ffd94c;">
-    <h1 style="color: #ffd94c; margin: 0; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
-      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
-    </h1>
-  </div>
-  <div style="background-color: #ffffff; padding: 20px; border-radius: 0 0 8px 8px; border-top: none;">
-    <h2 style="color: #214C54; margin-top: 0; font-size: 13px; font-weight: 800; border-bottom: 2px solid #F0F0F0; padding-bottom: 8px;">
-      ${subject}
-    </h2>
-    ${formattedBody}
-  </div>
-</div>
-    `.trim();
-
-    return { subject, html: htmlContent };
-  };
 
   // Initialize selected batch
   useEffect(() => {
@@ -206,8 +169,8 @@ export const Settings: React.FC = () => {
               {/* Task 1: Onboarding Email trigger */}
               <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
                 <div>
-                  <span className="text-xs font-bold text-[#15333B] block">1. Lịch mở khóa hàng ngày (Onboarding)</span>
-                  <span className="text-[10px] text-gray-500">Mở khóa bài học & gửi mail tự động mỗi 5 phút</span>
+                  <span className="text-xs font-bold text-[#15333B] block">1. Gửi email Onboarding thủ công</span>
+                  <span className="text-[10px] text-gray-500">Kích hoạt Edge Function gửi email onboarding cho học viên</span>
                 </div>
                 <button 
                   onClick={() => handleTriggerFunction('onboarding')}
@@ -237,7 +200,7 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
                 <div>
                   <span className="text-xs font-bold text-[#15333B] block">3. Tuyên dương tự động xuất sắc (Reward)</span>
-                  <span className="text-[10px] text-gray-500">Chạy lúc 20:00 PM tối Chủ nhật (Đạt 100% Onboarding & Live Class)</span>
+                  <span className="text-[10px] text-gray-500">Chạy lúc 20:00 PM tối Chủ nhật (Đạt 100% Onboarding &amp; Live Class)</span>
                 </div>
                 <button 
                   onClick={() => handleTriggerFunction('reward')}
@@ -251,120 +214,6 @@ export const Settings: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Onboarding schedules detail grid */}
-      <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center gap-3 border-b border-gray-150 pb-3">
-          <Mail className="w-5 h-5 text-[#214C54]" />
-          <h3 className="font-bold text-[#15333B] text-base">Chi tiết lịch mở khóa & Trạng thái Email gửi đi</h3>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-gray-100 text-[#3E5E63] font-bold">
-                <th className="py-2.5 px-3">Ngày</th>
-                <th className="py-2.5 px-3">Tên thử thách</th>
-                <th className="py-2.5 px-3">Giờ mở khóa dự kiến</th>
-                <th className="py-2.5 px-3">Trạng thái gửi email</th>
-                <th className="py-2.5 px-3 text-right">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {onboardingUnlockSchedules.map((schedule) => {
-                const day = onboardingDays.find(d => d.day === schedule.day);
-                // Convert ISO string to YYYY-MM-DDTHH:MM for datetime-local input safely
-                const dateVal = schedule.scheduled_at 
-                  ? new Date(new Date(schedule.scheduled_at).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) 
-                  : '';
-                
-                return (
-                  <tr key={schedule.day} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="py-3 px-3 font-bold text-[#214C54]">Ngày {schedule.day}</td>
-                    <td className="py-3 px-3 font-semibold text-gray-700">{day ? day.title : 'Đang tải...'}</td>
-                    <td className="py-3 px-3">
-                      <input 
-                        type="datetime-local"
-                        value={dateVal}
-                        onChange={async (e) => {
-                          const newDate = new Date(e.target.value).toISOString();
-                          await updateOnboardingUnlockSchedule(schedule.day, newDate);
-                          showToast(`Đã đổi lịch mở khóa Ngày ${schedule.day}! ⏰`);
-                        }}
-                        className="border border-gray-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-[#214C54] font-bold text-slate-700 bg-white"
-                      />
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold flex items-center gap-1 w-max ${
-                        schedule.unlock_email_sent 
-                          ? 'bg-emerald-100 text-emerald-700' 
-                          : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {schedule.unlock_email_sent ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3" /> Đã gửi email
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle className="w-3 h-3" /> Chờ gửi
-                          </>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right">
-                      <button
-                        onClick={() => setPreviewEmailDay(schedule.day)}
-                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-slate-700 font-extrabold text-[10px] rounded-lg transition-all cursor-pointer border-0"
-                      >
-                        Xem thư 👁️
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Preview Email Modal */}
-      {previewEmailDay !== null && (() => {
-        const { subject, html } = getEmailPreviewData(previewEmailDay);
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-3xl p-6 max-w-xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl relative select-text">
-              <div className="flex items-center justify-between border-b pb-3">
-                <h3 className="font-extrabold text-[#15333B] text-base">Xem trước Email: Ngày {previewEmailDay}</h3>
-                <button 
-                  onClick={() => setPreviewEmailDay(null)}
-                  className="text-gray-400 hover:text-gray-700 text-lg font-bold border-0 bg-transparent cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="space-y-1.5 text-xs">
-                <span className="font-black text-gray-400 uppercase block">Tiêu đề email:</span>
-                <span className="font-bold text-slate-800 bg-slate-50 p-2.5 rounded-xl block border border-slate-100">{subject}</span>
-              </div>
-              <div className="space-y-1.5">
-                <span className="font-black text-gray-400 uppercase text-xs block">Nội dung thư gửi học viên:</span>
-                <div 
-                  className="border rounded-2xl p-4 bg-slate-50 overflow-x-auto"
-                  dangerouslySetInnerHTML={{ __html: html }}
-                />
-              </div>
-              <div className="flex justify-end pt-2">
-                <button 
-                  onClick={() => setPreviewEmailDay(null)}
-                  className="px-5 py-2.5 bg-[#214C54] hover:bg-[#15333B] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer border-0"
-                >
-                  Đóng lại
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Floating Toast Notification */}
       {toastMessage && (

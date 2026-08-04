@@ -386,7 +386,7 @@ export const Announcements: React.FC = () => {
                     </div>
                   )}
                   <div className="ml-auto">
-                    Tác giả: <span className="text-gray-700">{ann.author}</span>
+                    Tác giả: <span className="text-gray-700">The1ight Team</span>
                   </div>
                 </div>
               </div>

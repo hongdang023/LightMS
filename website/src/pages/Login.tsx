@@ -141,7 +141,7 @@ export const Login: React.FC = () => {
           Hải Trình <span className="text-[#FFD94C]">LightMS</span>
         </h1>
         <p className="text-xs text-white/60 mb-6 leading-relaxed max-w-sm">
-          Hệ thống quản lý học tập Mastery-based dành cho Solopreneurs và Product Builders.
+          Hệ thống quản lý học tập dành cho Solopreneurs và Product Builders.
         </p>
 
         {/* ── FLOW STATE 1: ROLE SELECTION ── */}

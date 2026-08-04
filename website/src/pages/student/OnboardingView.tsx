@@ -1,138 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { ChevronLeft, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { 
-  BookOpen, Wrench, Bot, Compass, Palette, FlaskConical, Anchor, 
-  ClipboardList, Target, CheckCircle2, Lock, Mail
-} from 'lucide-react';
+import { ChevronLeft, Plus, ClipboardList, Target, CheckCircle2, Mail } from 'lucide-react';
 import { EditableText } from '../../components/EditableText';
-
 import type { OnboardingDay } from '../../context/DatabaseContext';
-
-// Aesthetic banner designs using CSS grids, SVG patterns, and themed color combinations
-
-const DAY_VISUAL_STYLES: {
-  [key: number]: {
-    icon: React.ReactNode;
-    gradient: string;
-    summary: string;
-    bgPattern: React.ReactNode;
-  };
-} = {
-  1: {
-    icon: <BookOpen className="w-6 h-6" />,
-    gradient: "from-[#EAB308] to-[#CA8A04]", // Golden Sea Parchment
-    summary: "Kết nối cộng đồng & cam kết hành động",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <path d="M-10 80 Q20 50 50 80 T110 80 T170 80 T230 80 T295 80" fill="none" stroke="white" strokeWidth="2" />
-        <path d="M-10 100 Q20 70 50 100 T110 100 T170 100 T230 100 T295 100" fill="none" stroke="white" strokeWidth="2" />
-        <circle cx="240" cy="30" r="15" fill="none" stroke="white" strokeWidth="2" />
-        <line x1="240" y1="10" x2="240" y2="50" stroke="white" strokeWidth="2" />
-        <line x1="220" y1="30" x2="260" y2="30" stroke="white" strokeWidth="2" />
-      </svg>
-    )
-  },
-  2: {
-    icon: <Wrench className="w-6 h-6" />,
-    gradient: "from-[#0284C7] to-[#0369A1]", // Blueprint Blue
-    summary: "Xác định sản phẩm bạn muốn xây dựng",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="white" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-        <circle cx="230" cy="40" r="25" fill="none" stroke="white" strokeWidth="1.5" />
-      </svg>
-    )
-  },
-  3: {
-    icon: <Bot className="w-6 h-6" />,
-    gradient: "from-[#059669] to-[#047857]", // Mystic Emerald Dragon
-    summary: "Làm quen với IDE, MCP và CLI",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 20 C60 5 90 40 130 20 C170 0 200 35 240 15" fill="none" stroke="white" strokeWidth="2" strokeDasharray="5 5" />
-        <path d="M10 50 Q70 20 120 70 T240 40" fill="none" stroke="white" strokeWidth="1.5" />
-        <polygon points="210,15 220,5 230,15 220,25" fill="white" />
-      </svg>
-    )
-  },
-  4: {
-    icon: <Compass className="w-6 h-6" />,
-    gradient: "from-[#845EF7] to-[#6741D9]", // Telescope Deep Purple
-    summary: "Hiểu về Agent Skills và Agent Rules",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="150" cy="50" r="35" fill="none" stroke="white" strokeWidth="1.5" />
-        <circle cx="150" cy="50" r="5" fill="white" />
-        <line x1="150" y1="10" x2="150" y2="90" stroke="white" strokeWidth="1" strokeDasharray="3 3" />
-        <line x1="110" y1="50" x2="190" y2="50" stroke="white" strokeWidth="1" strokeDasharray="3 3" />
-        <polygon points="150,20 155,45 150,50" fill="white" />
-        <polygon points="150,80 145,55 150,50" fill="#FFD94C" />
-      </svg>
-    )
-  },
-  5: {
-    icon: <Palette className="w-6 h-6" />,
-    gradient: "from-[#D946EF] to-[#C026D3]", // Oil Paint Palette Pink/Fuchsia
-    summary: "Lưu trữ và quản lý phiên bản với GitHub",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="60" cy="30" r="20" fill="none" stroke="white" strokeWidth="1.5" />
-        <circle cx="120" cy="60" r="30" fill="none" stroke="white" strokeWidth="1.5" />
-        <circle cx="210" cy="40" r="15" fill="none" stroke="white" strokeWidth="1.5" />
-        <path d="M10 80 Q 140 20 280 80" fill="none" stroke="white" strokeWidth="1" />
-      </svg>
-    )
-  },
-  6: {
-    icon: <FlaskConical className="w-6 h-6" />,
-    gradient: "from-[#F97316] to-[#EA580C]", // Bright Amber Sunset
-    summary: "Tìm hiểu cấu trúc Frontend và Backend",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <rect x="30" y="20" width="40" height="50" rx="3" fill="none" stroke="white" strokeWidth="2" />
-        <line x1="40" y1="35" x2="60" y2="35" stroke="white" strokeWidth="2" />
-        <line x1="40" y1="45" x2="60" y2="45" stroke="white" strokeWidth="2" />
-        <line x1="40" y1="55" x2="55" y2="55" stroke="white" strokeWidth="2" />
-        <circle cx="220" cy="40" r="20" fill="none" stroke="white" strokeWidth="1.5" />
-        <line x1="220" y1="20" x2="220" y2="60" stroke="white" strokeWidth="1.5" />
-      </svg>
-    )
-  },
-  7: {
-    icon: <Anchor className="w-6 h-6" />,
-    gradient: "from-[#0D9488] to-[#0F766E]", // Sea Teal Ocean
-    summary: "Đưa sản phẩm lên Internet với Domain & DNS",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <path d="M150 15 L150 65 M135 30 L165 30" stroke="white" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="150" cy="15" r="5" fill="none" stroke="white" strokeWidth="3" />
-        <path d="M125 50 C125 70 175 70 175 50" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" />
-        <path d="M120 50 L115 45 M180 50 L185 45" stroke="white" strokeWidth="3" strokeLinecap="round" />
-      </svg>
-    )
-  },
-  8: {
-    icon: <ClipboardList className="w-6 h-6" />,
-    gradient: "from-[#EC4899] to-[#DB2777]", // Rose Pink
-    summary: "Biết cách tư duy theo User Journey & vẽ User Flow",
-    bgPattern: (
-      <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="20" width="30" height="20" rx="3" fill="none" stroke="white" strokeWidth="2" />
-        <line x1="50" y1="30" x2="100" y2="30" stroke="white" strokeWidth="2" strokeDasharray="3 3" />
-        <rect x="100" y="20" width="30" height="20" rx="3" fill="none" stroke="white" strokeWidth="2" />
-        <line x1="130" y1="30" x2="180" y2="30" stroke="white" strokeWidth="2" strokeDasharray="3 3" />
-        <rect x="180" y="20" width="30" height="20" rx="3" fill="none" stroke="white" strokeWidth="2" />
-      </svg>
-    )
-  }
-};
+import { 
+  DAY_VISUAL_STYLES,
+  renderRichText
+} from '../../data/onboardingVisuals';
+import { DayCard } from '../../components/onboarding/DayCard';
+import { TaskEditRow } from '../../components/onboarding/TaskEditRow';
+import { EmailTemplateModal } from '../../components/onboarding/EmailTemplateModal';
 
 interface OnboardingViewProps {
   isEditMode?: boolean;
@@ -144,9 +22,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
     activeUser, 
     addNotification, 
     onboardingDays, 
-    onboardingUnlockSchedules,
     updateOnboardingDay,
-    updateOnboardingUnlockSchedule,
     users: profiles,
     addNauticalMiles,
     nauticalTransactions,
@@ -156,190 +32,26 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
   // Email template config modal states
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailModalDay, setEmailModalDay] = useState<OnboardingDay | null>(null);
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
-  const [copySuccess, setCopySuccess] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const getDefaultEmailSubject = (dayNum: number, title: string) => {
-    return `[The1ight] [Onboarding Week] Thử thách Ngày ${dayNum}: ${title}`;
-  };
-
-  const getDefaultEmailBody = (dayData: OnboardingDay) => {
-    return `Kẹt kẹt... Alo alo! 🦜
-
-Chào mừng bạn tới ngày học tiếp theo của Onboarding Week!
-
-Hôm nay chúng ta sẽ bắt đầu Thử thách Ngày ${dayData.day}: ${dayData.title}
-
-🎯 MỤC TIÊU:
-${dayData.objective}
-
-📝 NHIỆM VỤ:
-${dayData.checklist}
-
-✨ ĐIỀU RÚT RA (TAKEAWAY):
-${dayData.takeaway}
-
-Hãy truy cập vào hệ thống LightMS để theo dõi chi tiết và cập nhật bài tập nhé!
-
-Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
-  };
-
-  const getHtmlEmail = (subject: string, bodyText: string) => {
-    const formattedBody = bodyText
-      .split('\n\n')
-      .map(p => `<p style="margin: 0 0 12px; line-height: 1.6; color: #3E5E63;">${p.replace(/\n/g, '<br />')}</p>`)
-      .join('');
-
-    return `
-<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FDF5DA; padding: 25px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1.5px solid #ffd94c;">
-  <div style="background-color: #15333B; padding: 15px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid #ffd94c;">
-    <h1 style="color: #ffd94c; margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
-      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
-    </h1>
-  </div>
-  <div style="background-color: #ffffff; padding: 25px; border-radius: 0 0 12px 12px; border-top: none; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-    <h2 style="color: #214C54; margin-top: 0; font-size: 15px; font-weight: 800; border-bottom: 2px solid #F0F0F0; padding-bottom: 8px;">
-      ${subject}
-    </h2>
-    ${formattedBody}
-    <div style="margin-top: 25px; padding-top: 15px; border-top: 2px solid #F0F0F0; text-align: center;">
-      <a href="${window.location.origin}" style="display: inline-block; background-color: #214C54; color: #ffffff; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 11px; box-shadow: 0 2px 4px rgba(33,76,84,0.2);">
-        VÀO HỆ THỐNG LIGHTMS 🚀
-      </a>
-    </div>
-  </div>
-  <div style="text-align: center; margin-top: 12px; font-size: 9px; color: #3E5E63; font-weight: 600;">
-    Bản tin được gửi từ hạm đội vận hành LightMS. Chúc các thủy thủ thuận buồm xuôi gió!
-  </div>
-</div>
-    `.trim();
-  };
 
   const handleOpenEmailModal = (dayData: OnboardingDay) => {
     setEmailModalDay(dayData);
-    setEmailSubject(dayData.email_subject || getDefaultEmailSubject(dayData.day, dayData.title));
-    setEmailBody(dayData.email_body || getDefaultEmailBody(dayData));
     setIsEmailModalOpen(true);
   };
 
-  const handleSaveEmailTemplate = async () => {
+  const handleSaveEmailTemplate = async (subject: string, body: string) => {
     if (!emailModalDay) return;
     await updateOnboardingDay(emailModalDay.day, {
-      email_subject: emailSubject,
-      email_body: emailBody
+      email_subject: subject,
+      email_body: body
     });
-    setToastMessage(`Đã lưu mẫu email Ngày ${emailModalDay.day} thành công!`);
-    setTimeout(() => setToastMessage(null), 3000);
-    setIsEmailModalOpen(false);
   };
 
-  const getBulkEmails = () => {
-    if (!profiles) return '';
-    const students = profiles.filter((p: any) => p.role === 'student');
-    return students.map((s: any) => s.gmail).filter(Boolean).join(',');
-  };
 
-  const handleSendBulkEmail = () => {
-    const emails = getBulkEmails();
-    if (!emails) {
-      alert('Không có học viên nào nhận email!');
-      return;
-    }
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${emails}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-    window.open(gmailUrl, '_blank');
-    setToastMessage(`Đã mở Gmail gửi email Ngày ${emailModalDay?.day} thành công!`);
-    setTimeout(() => setToastMessage(null), 3000);
-    setIsEmailModalOpen(false);
-  };
-
-  const handleCopyEmailFormat = async () => {
-    const html = getHtmlEmail(emailSubject, emailBody);
-    try {
-      const blobHtml = new Blob([html], { type: 'text/html' });
-      const blobText = new Blob([emailBody], { type: 'text/plain' });
-      const item = new ClipboardItem({
-        'text/html': blobHtml,
-        'text/plain': blobText
-      });
-      await navigator.clipboard.write([item]);
-      setCopySuccess(true);
-    } catch (err) {
-      navigator.clipboard.writeText(html);
-      setCopySuccess(true);
-    }
-    setTimeout(() => setCopySuccess(false), 2000);
-  };
-
-  const toLocalDatetimeString = (isoString: string) => {
-    if (!isoString) return '';
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
-  
-  // Date Unlocking Setup
-  const courseStartDate = (() => {
-    const saved = localStorage.getItem('lms_onboarding_start_date');
-    if (saved) return saved;
-    const d = new Date();
-    d.setDate(d.getDate() - 2);
-    return d.toISOString().split('T')[0];
-  })();
-
-  const bypassLocks = (() => {
-    const saved = localStorage.getItem('lms_bypass_locks');
-    return saved === 'true';
-  })();
-
-  // Batch Unlock Setup States
-  const [bulkStartDate, setBulkStartDate] = useState<string>(() => {
-    const saved = localStorage.getItem('lms_onboarding_start_date');
-    if (saved) return saved;
-    const d = new Date();
-    return d.toISOString().split('T')[0];
-  });
-  const [bulkUnlockTime, setBulkUnlockTime] = useState<string>('09:00');
-
-  const handleApplyBulkUnlockSchedule = async () => {
-    const dateParts = bulkStartDate.split('-');
-    const timeParts = bulkUnlockTime.split(':');
-    if (dateParts.length !== 3 || timeParts.length !== 2) {
-      alert('Vui lòng điền đúng định dạng ngày và giờ.');
-      return;
-    }
-
-    const year = parseInt(dateParts[0]);
-    const month = parseInt(dateParts[1]) - 1;
-    const day = parseInt(dateParts[2]);
-    const hour = parseInt(timeParts[0]);
-    const minute = parseInt(timeParts[1]);
-
-    const baseDate = new Date(year, month, day, hour, minute, 0, 0);
-
-    if (isNaN(baseDate.getTime())) {
-      alert('Ngày giờ không hợp lệ.');
-      return;
-    }
-
-    // Update schedules for 7 consecutive days
-    for (let d = 1; d <= 7; d++) {
-      const scheduledDate = new Date(baseDate.getTime());
-      scheduledDate.setDate(baseDate.getDate() + (d - 1));
-      await updateOnboardingUnlockSchedule(d, scheduledDate.toISOString());
-    }
-
-    localStorage.setItem('lms_onboarding_start_date', bulkStartDate);
-    alert('Đã cập nhật lịch mở khóa tự động cho cả 7 ngày Onboarding thành công!');
-  };
 
   // Track selected Day view and current view mode
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [viewMode, setViewMode] = useState<'grid' | 'detail'>('grid');
-
-  const [lockedAlert, setLockedAlert] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
 
   // Load checklist checked state from localStorage and database (DB is Source of Truth if not empty)
   const [checkedTasks, setCheckedTasks] = useState<{ [key: string]: boolean }>(() => {
@@ -372,16 +84,6 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
       }
     }
   }, [activeUser?.id]);
-
-  // Save config changes
-  useEffect(() => {
-    localStorage.setItem('lms_onboarding_start_date', courseStartDate);
-  }, [courseStartDate]);
-
-  useEffect(() => {
-    localStorage.setItem('lms_bypass_locks', String(bypassLocks));
-  }, [bypassLocks]);
-
 
 
   // Helper to extract clean task items from day checklist markdown
@@ -424,26 +126,12 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
     return requiredTasks.every(t => checkedTasks[t.key]);
   };
 
-  // Helper to determine if a day is unlocked based on date AND previous day completion
-  const getDayLockStatus = (_day: number) => {
-    return { isUnlocked: true, daysLeft: 0, unlockDateStr: "", reason: "" };
-  };
 
-    const handleDayCardClick = (day: number) => {
-    const status = getDayLockStatus(day);
-    if (status.isUnlocked) {
-      setSelectedDay(day);
-      setViewMode('detail');
-      setLockedAlert({ show: false, msg: '' });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      setLockedAlert({
-        show: true,
-        msg: `Bình tĩnh nào đồng chí! ${status.reason}`
-      });
-      // Clear alert after 5s
-      setTimeout(() => setLockedAlert({ show: false, msg: '' }), 5000);
-    }
+
+  const handleDayCardClick = (day: number) => {
+    setSelectedDay(day);
+    setViewMode('detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleToggleTask = (day: number, taskIdx: number, label: string) => {
@@ -507,107 +195,7 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
     }
   };
 
-  const parseInlineMarkdown = (text: string): React.ReactNode => {
-    let cleanText = text
-      .replace(/<span[^>]*>/gi, '')
-      .replace(/<\/span>/gi, '')
-      .replace(/<font[^>]*>/gi, '')
-      .replace(/<\/font>/gi, '')
-      .replace(/<br[^>]*>/gi, '')
-      .replace(/<div[^>]*>/gi, '')
-      .replace(/<\/div>/gi, '');
 
-    // Regex matches: links (markdown & HTML), bold, italics, and underline HTML tags
-    const regex = /\[(.*?)\]\((.*?)\)|<a\s+(?:[^>]*?\s+)?href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>|\*\*(.*?)\*\*|\*(.*?)\*|<u>(.*?)<\/u>|<em[^>]*>(.*?)<\/em>/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(cleanText)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(cleanText.substring(lastIndex, match.index));
-      }
-      if (match[1] && match[2]) {
-        // Markdown Link
-        parts.push(
-          <a key={`link-${match.index}`} href={match[2]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors">
-            {match[1]} <span className="text-[10px] inline-block ml-0.5">🔗</span>
-          </a>
-        );
-      } else if (match[3] && match[4]) {
-        // HTML Link
-        parts.push(
-          <a key={`link-html-${match.index}`} href={match[3]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors">
-            {match[4]} <span className="text-[10px] inline-block ml-0.5">🔗</span>
-          </a>
-        );
-      } else if (match[5]) {
-        // Bold
-        const isTaskHeading = match[5].toLowerCase().startsWith('task ');
-        parts.push(
-          <strong 
-            key={`bold-${match.index}`} 
-            className={isTaskHeading ? "block text-base font-semibold text-[#214C54] mb-1" : "font-semibold text-[#214C54]"}
-          >
-            {match[5]}
-          </strong>
-        );
-      } else if (match[6]) {
-        // Italic (Markdown style)
-        parts.push(
-          <em key={`italic-md-${match.index}`} className="italic">
-            {match[6]}
-          </em>
-        );
-      } else if (match[7]) {
-        // Underline HTML tag
-        parts.push(
-          <u key={`underline-${match.index}`} className="underline">
-            {match[7]}
-          </u>
-        );
-      } else if (match[8]) {
-        // Italic (em HTML tag)
-        parts.push(
-          <em key={`italic-html-${match.index}`} className="italic">
-            {match[8]}
-          </em>
-        );
-      }
-      lastIndex = regex.lastIndex;
-    }
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
-    }
-    return parts.length > 0 ? <>{parts}</> : text;
-  };
-
-  const renderRichText = (text: string): React.ReactNode => {
-    if (!text) return null;
-    const lines = text.split('\n');
-    return lines.map((line, idx) => {
-      const isQuote = line.startsWith('> ');
-      if (isQuote) {
-        line = line.substring(2);
-      }
-      
-      const parsedLine = parseInlineMarkdown(line);
-
-      if (isQuote) {
-        return (
-          <blockquote key={idx} className="border-l-4 border-[#EAB308] pl-4 py-3 my-3 bg-[#FDF5DA] rounded-r-lg text-[#15333B] italic shadow-sm text-base">
-            {parsedLine}
-          </blockquote>
-        );
-      }
-
-      return (
-        <div key={idx} className="min-h-[1.2em] my-1 text-base leading-relaxed text-[#3E5E63]">
-          {parsedLine}
-        </div>
-      );
-    });
-  };
 
   const activeDayData = onboardingDays.find(d => d.day === selectedDay) || onboardingDays[0];
 
@@ -722,60 +310,7 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
     }
   };
 
-  const applyFormatting = (taskId: string, format: 'bold' | 'italic' | 'underline' | 'ordered-list' | 'bullet-list' | 'link' | 'clear') => {
-    const editor = document.getElementById(`input-${taskId}`) as HTMLDivElement;
-    if (!editor) return;
 
-    editor.focus();
-
-    if (format === 'bold') {
-      document.execCommand('bold', false);
-    } else if (format === 'italic') {
-      document.execCommand('italic', false);
-    } else if (format === 'underline') {
-      document.execCommand('underline', false);
-    } else if (format === 'ordered-list') {
-      document.execCommand('insertOrderedList', false);
-    } else if (format === 'bullet-list') {
-      document.execCommand('insertUnorderedList', false);
-    } else if (format === 'link') {
-      const url = prompt('Nhập địa chỉ liên kết (URL):', 'https://');
-      if (url) {
-        document.execCommand('createLink', false, url);
-      }
-    } else if (format === 'clear') {
-      document.execCommand('removeFormat', false);
-    }
-
-    // Trigger onInput manually to sync state and save
-    const html = editor.innerHTML;
-    let markdown = html
-      .replace(/<span[^>]*>/gi, '')
-      .replace(/<\/span>/gi, '')
-      .replace(/<font[^>]*>/gi, '')
-      .replace(/<\/font>/gi, '')
-      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-      .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-      .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-      .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-      .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
-      .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, p1) => {
-        let idx = 1;
-        // Clean inner li tags and make sure we have correct line endings
-        return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, () => `${idx++}. $1\n`).trim() + '\n';
-      })
-      .replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, p1) => {
-        return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, '- $1\n').trim() + '\n';
-      })
-      .replace(/<div><br><\/div>/gi, '\n')
-      .replace(/<div>(.*?)<\/div>/gi, '\n$1')
-      .replace(/<br>/gi, '\n')
-      .replace(/&nbsp;/g, ' ')
-      .trim();
-
-    handleTaskLabelChange(taskId, markdown);
-  };
 
   const dayTasks = getTasksForDay(activeDayData);
   const visual = DAY_VISUAL_STYLES[selectedDay] || DAY_VISUAL_STYLES[1];
@@ -790,130 +325,21 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
         helpPurpose="Giúp bạn khởi động đúng cách — thiết lập toàn bộ nền tảng, hiểu rõ luật chơi và sẵn sàng tâm lý để bước vào khoá học."
       />
 
-      {/* Locked Alert speech box from mascot */}
-      {lockedAlert.show && (
-        <div className="bg-[#FFFBEB] border-2 border-amber-300 p-4 rounded-2xl flex items-start gap-4 animate-shake shadow-md">
-          <span className="text-3xl">🦜</span>
-          <div className="space-y-1">
-            <span className="text-xs text-amber-700 font-black block uppercase tracking-wider">Bác Vẹt Cảnh Báo Thủy Triều:</span>
-            <p className="text-sm text-amber-800 leading-relaxed font-semibold">
-              "{lockedAlert.msg}"
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isEditMode && viewMode === 'grid' && (
-        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm mb-6 animate-fade-in select-text">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-2xl text-amber-600">📅</span>
-            <div>
-              <span className="text-sm font-bold text-amber-800 block">Thiết lập Lịch mở khóa hàng loạt (Onboarding Week)</span>
-              <span className="text-xs text-amber-600">Cấu hình nhanh ngày mở khóa cho cả 7 ngày học liên tiếp thay vì cài đặt từng ngày</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-amber-700 uppercase block">Ngày bắt đầu (Day 1)</label>
-              <input
-                type="date"
-                className="border border-amber-300 rounded-xl px-4 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold"
-                value={bulkStartDate}
-                onChange={(e) => setBulkStartDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-black text-amber-700 uppercase block">Giờ mở khóa hàng ngày</label>
-              <input
-                type="time"
-                className="border border-amber-300 rounded-xl px-4 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold"
-                value={bulkUnlockTime}
-                onChange={(e) => setBulkUnlockTime(e.target.value)}
-              />
-            </div>
-            <button
-              onClick={handleApplyBulkUnlockSchedule}
-              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer border-0"
-            >
-              Áp dụng cho 7 ngày Onboarding
-            </button>
-          </div>
-        </div>
-      )}
-
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {onboardingDays.map((dayData) => {
-            const status = getDayLockStatus(dayData.day);
-            const isUnlocked = status.isUnlocked;
-            
             const tasks = getTasksForDay(dayData);
             const totalTasks = tasks.length;
             const completedTasks = tasks.filter(t => checkedTasks[t.key]).length;
-            const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
-            
-            const cardVisual = DAY_VISUAL_STYLES[dayData.day];
 
             return (
-              <button
+              <DayCard
                 key={dayData.day}
+                dayData={dayData}
+                totalTasks={totalTasks}
+                completedTasks={completedTasks}
                 onClick={() => handleDayCardClick(dayData.day)}
-                className={`relative flex flex-col text-left rounded-3xl overflow-hidden transition-all duration-300 group
-                  ${isUnlocked 
-                    ? 'hover:-translate-y-1 hover:shadow-xl hover:shadow-[#214C54]/20 ring-1 ring-black/5 bg-white' 
-                    : 'opacity-60 grayscale-[50%] cursor-not-allowed bg-gray-50'
-                  }`}
-              >
-                {/* Header Area with Gradient */}
-                <div className={`relative h-28 w-full bg-gradient-to-br ${cardVisual.gradient} p-5 flex items-start justify-between overflow-hidden shrink-0`}>
-                  {cardVisual.bgPattern}
-                  
-                  <div className="relative z-10 bg-white/20 backdrop-blur-sm p-3 rounded-2xl text-white shadow-sm">
-                    {cardVisual.icon}
-                  </div>
-                  
-                  {/* Status Indicator */}
-                  <div className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm text-white shadow-sm border border-white/30">
-                    {!isUnlocked ? (
-                      <Lock className="w-4 h-4" />
-                    ) : isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-300" />
-                    ) : (
-                      <span className="text-sm font-black">{dayData.day}</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#214C54]/50 mb-1">
-                    Ngày {dayData.day}
-                  </h3>
-                  <h4 className="text-lg font-bold text-[#15333B] leading-tight mb-2 line-clamp-2 flex-1 group-hover:text-sky-600 transition-colors">
-                    {dayData.title.replace(/^Ngày \d+[:\-]?\s*/i, '').trim()}
-                  </h4>
-                  
-                  <p className="text-sm text-[#3E5E63] line-clamp-2 mb-4 leading-relaxed h-10">
-                    {cardVisual.summary}
-                  </p>
-                  
-                  {/* Progress Bar */}
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between text-xs font-semibold mb-2">
-                      <span className={isCompleted ? "text-emerald-600" : "text-[#3E5E63]"}>
-                        {isCompleted ? "Đã hoàn thành" : "Tiến độ"}
-                      </span>
-                      <span className="text-[#214C54]">{completedTasks}/{totalTasks}</span>
-                    </div>
-                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-emerald-500' : 'bg-sky-500'}`}
-                        style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </button>
+              />
             );
           })}
         </div>
@@ -932,32 +358,19 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
           {isEditMode && (
             <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
               <div className="flex items-center gap-3">
-                <span className="text-2xl text-amber-600">⏰</span>
+                <span className="text-2xl text-amber-600">✉️</span>
                 <div>
-                  <span className="text-sm font-bold text-amber-800 block">Thời gian mở khóa tự động (Ngày {activeDayData.day})</span>
-                  <span className="text-xs text-amber-600">Đến giờ hẹn hệ thống sẽ tự mở khóa và gửi email thông báo</span>
+                  <span className="text-sm font-bold text-amber-800 block">Mẫu Email Thông Báo (Ngày {activeDayData.day})</span>
+                  <span className="text-xs text-amber-600">Soạn và gửi email thông báo thủ công cho học viên</span>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <input
-                  type="datetime-local"
-                  className="border border-amber-300 rounded-xl px-4 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-bold"
-                  value={(() => {
-                    const sched = onboardingUnlockSchedules.find(s => s.day === activeDayData.day);
-                    return sched ? toLocalDatetimeString(sched.scheduled_at) : '';
-                  })()}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      updateOnboardingUnlockSchedule(activeDayData.day, new Date(e.target.value).toISOString());
-                    }
-                  }}
-                />
                 <button
                   type="button"
                   onClick={() => handleOpenEmailModal(activeDayData)}
                   className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer border-0"
                 >
-                  <Mail className="w-4 h-4" /> Mẫu Email Mở Khóa
+                  <Mail className="w-4 h-4" /> Mẫu Email Thông Báo
                 </button>
               </div>
             </div>
@@ -1026,197 +439,19 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
                 <div className="space-y-4 w-full">
                   <div className="space-y-3">
                     {editingTasks.map((task, idx) => (
-                      <div key={task.id} className="flex flex-col gap-2 bg-white p-4 rounded-2xl border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all">
-                        {/* Formatting toolbar shown only when this task is active */}
-                        {focusedTaskId === task.id && (
-                          <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-inner">
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'bold');
-                              }}
-                              className="w-7 h-7 flex items-center justify-center text-sm font-extrabold hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
-                              title="In đậm (Bold)"
-                            >
-                              B
-                            </button>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'italic');
-                              }}
-                              className="w-7 h-7 flex items-center justify-center text-sm italic hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
-                              title="In nghiêng (Italic)"
-                            >
-                              I
-                            </button>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'underline');
-                              }}
-                              className="w-7 h-7 flex items-center justify-center text-sm underline hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
-                              title="Gạch chân (Underline)"
-                            >
-                              U
-                            </button>
-                            <div className="w-px h-5 bg-gray-300 mx-1"></div>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'ordered-list');
-                              }}
-                              className="px-2 h-7 flex items-center justify-center text-[10px] font-black hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
-                              title="Danh sách số"
-                            >
-                              1.2.3.
-                            </button>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'bullet-list');
-                              }}
-                              className="px-2 h-7 flex items-center justify-center text-xs hover:bg-white rounded-lg text-[#214C54] transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
-                              title="Danh sách điểm"
-                            >
-                              •••
-                            </button>
-                            <div className="w-px h-5 bg-gray-300 mx-1"></div>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'link');
-                              }}
-                              className="px-2.5 h-7 flex items-center justify-center text-xs hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm gap-1"
-                              title="Gắn link"
-                            >
-                              🔗 Link
-                            </button>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                applyFormatting(task.id, 'clear');
-                              }}
-                              className="w-7 h-7 flex items-center justify-center text-sm hover:bg-white rounded-lg text-rose-600 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
-                              title="Xóa định dạng"
-                            >
-                              Tx
-                            </button>
-                            <span className="text-[9px] text-gray-400 ml-auto italic hidden sm:inline pr-1">Nhấn Enter để xuống dòng</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-start gap-3">
-                          {/* Reordering */}
-                          <div className="flex flex-col gap-1 shrink-0 pt-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleMoveTask(idx, 'up')}
-                              disabled={idx === 0}
-                              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
-                              title="Di chuyển lên"
-                            >
-                              <ArrowUp size={14} className="text-[#3E5E63]" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMoveTask(idx, 'down')}
-                              disabled={idx === editingTasks.length - 1}
-                              className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
-                              title="Di chuyển xuống"
-                            >
-                              <ArrowDown size={14} className="text-[#3E5E63]" />
-                            </button>
-                          </div>
-
-                          {/* Task Text Area (WYSIWYG contentEditable) */}
-                          <div className="flex-1 min-w-0">
-                            <div
-                              id={`input-${task.id}`}
-                              contentEditable
-                              suppressContentEditableWarning
-                              onInput={(e) => {
-                                const target = e.currentTarget;
-                                // Convert visual HTML layout to markdown to save state
-                                let html = target.innerHTML;
-                                
-                                // Standardize HTML tags to markdown
-                                let markdown = html
-                                  .replace(/\s+style="[^"]*"/gi, '')
-                                  .replace(/<span[^>]*>/gi, '')
-                                  .replace(/<\/span>/gi, '')
-                                  .replace(/<font[^>]*>/gi, '')
-                                  .replace(/<\/font>/gi, '')
-                                  .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                                  .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-                                  .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                                  .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-                                  .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-                                  .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
-                                  .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, p1) => {
-                                    let idx = 1;
-                                    return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, () => `${idx++}. $1\n`).trim() + '\n';
-                                  })
-                                  .replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, p1) => {
-                                    return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, '- $1\n').trim() + '\n';
-                                  })
-                                  .replace(/<div[^>]*><br[^>]*><\/div>/gi, '\n')
-                                  .replace(/<div[^>]*>(.*?)<\/div>/gi, '\n$1')
-                                  .replace(/<br\s*[^>]*>/gi, '\n')
-                                  .replace(/&nbsp;/g, ' ')
-                                  .replace(/\s+(?:class|id|dir|align|style)="[^"]*"/gi, '')
-                                  .trim();
-                                
-                                handleTaskLabelChange(task.id, markdown);
-                              }}
-                              onBlur={() => {
-                                handleTaskLabelBlur(task.id, task.label);
-                                setTimeout(() => setFocusedTaskId(null), 200);
-                              }}
-                              onFocus={() => {
-                                setFocusedTaskId(task.id);
-                              }}
-                              className="w-full bg-transparent focus:outline-none py-1 px-1.5 text-sm text-[#15333B] font-semibold border-b border-transparent focus:border-slate-200 min-h-[2em]"
-                              dangerouslySetInnerHTML={{
-                                __html: task.label
-                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                                  .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                                  .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-sky-650 hover:underline">$1</a>')
-                                  .split('\n').join('<br>')
-                              }}
-                            />
-                          </div>
-
-                          {/* Optional toggle */}
-                          <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0 border border-gray-100 rounded-xl p-2 bg-gray-50 hover:bg-gray-100 transition-colors mt-0.5">
-                            <input
-                              type="checkbox"
-                              checked={task.isOptional}
-                              onChange={() => handleToggleOptional(task.id)}
-                              className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
-                            />
-                            <span className="text-xs font-bold text-[#3E5E63]">Tùy chọn</span>
-                          </label>
-
-                          {/* Delete */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteTask(task.id)}
-                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all shrink-0 mt-0.5"
-                            title="Xóa nhiệm vụ"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
+                      <TaskEditRow
+                        key={task.id}
+                        task={task}
+                        idx={idx}
+                        totalTasks={editingTasks.length}
+                        focusedTaskId={focusedTaskId}
+                        setFocusedTaskId={setFocusedTaskId}
+                        onMove={handleMoveTask}
+                        onLabelChange={handleTaskLabelChange}
+                        onLabelBlur={handleTaskLabelBlur}
+                        onToggleOptional={handleToggleOptional}
+                        onDelete={handleDeleteTask}
+                      />
                     ))}
                   </div>
 
@@ -1283,14 +518,7 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
                     <>
                       <button
                         onClick={() => {
-                          const nextDay = selectedDay + 1;
-                          const lockStatus = getDayLockStatus(nextDay);
-                          if (lockStatus.isUnlocked) {
-                            setSelectedDay(nextDay);
-                          } else {
-                            setLockedAlert({ show: true, msg: lockStatus.reason });
-                            setTimeout(() => setLockedAlert({ show: false, msg: '' }), 5000);
-                          }
+                          setSelectedDay(selectedDay + 1);
                         }}
                         className="px-6 py-3 bg-[#214C54] hover:bg-[#15333B] text-white font-black text-xs rounded-xl shadow-md hover:shadow-lg transition-all uppercase tracking-wider flex items-center gap-2 border-0 cursor-pointer"
                       >
@@ -1363,119 +591,16 @@ Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
 
       {/* Email Modal */}
       {isEmailModalOpen && emailModalDay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in text-slate-800">
-          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col border border-gray-100 overflow-hidden animate-scale-up max-h-[90vh]">
-            
-            {/* Modal Header */}
-            <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-teal-850">
-                <Mail className="w-5 h-5" />
-                <h4 className="text-sm font-black text-[#15333B] uppercase tracking-wider font-extrabold">Cấu hình Email Mở khóa: Ngày {emailModalDay.day}</h4>
-              </div>
-              <button 
-                onClick={() => setIsEmailModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#15333B]/5 hover:bg-[#15333B]/10 flex items-center justify-center text-[#15333B] transition-colors cursor-pointer border-0"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Side-by-Side Content */}
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-              {/* Left Column: Form Editor */}
-              <div className="flex-1 p-6 space-y-4 overflow-y-auto border-r border-gray-100 flex flex-col">
-                {/* Subject Input */}
-                <div className="space-y-1.5 shrink-0">
-                  <label className="text-[11px] font-bold text-[#15333B] block">Tiêu đề Email (Subject):</label>
-                  <input 
-                    type="text"
-                    required
-                    placeholder="Nhập tiêu đề email..."
-                    value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54]/20 transition-all font-bold text-[#15333B]"
-                  />
-                </div>
-
-                {/* Body Textarea */}
-                <div className="space-y-1.5 flex-1 flex flex-col min-h-0">
-                  <label className="text-[11px] font-bold text-[#15333B] block shrink-0">Nội dung Email (Body):</label>
-                  <textarea 
-                    required
-                    placeholder="Nhập nội dung email..."
-                    value={emailBody}
-                    onChange={(e) => setEmailBody(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs leading-relaxed focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54]/20 resize-none transition-all font-medium text-gray-700 flex-1 min-h-[150px]"
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="pt-4 border-t border-gray-100 flex justify-between gap-3 shrink-0">
-                  <button 
-                    type="button"
-                    onClick={handleCopyEmailFormat}
-                    className="btn border border-teal-600 text-teal-850 hover:bg-teal-50/50 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer bg-white"
-                  >
-                    {copySuccess ? 'Đã sao chép! ✓' : 'Sao chép định dạng 📋'}
-                  </button>
-                  
-                  <div className="flex gap-2">
-                    <button 
-                      type="button"
-                      onClick={() => setIsEmailModalOpen(false)}
-                      className="btn border border-gray-300 text-gray-700 text-xs font-bold px-4 py-2 hover:bg-gray-50 rounded-xl cursor-pointer bg-white"
-                    >
-                      Hủy
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleSaveEmailTemplate}
-                      className="btn border border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold px-4 py-2 hover:bg-emerald-100 rounded-xl cursor-pointer"
-                    >
-                      Lưu mẫu
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={handleSendBulkEmail}
-                      className="btn bg-[#214C54] text-white text-xs font-extrabold px-4 py-2 flex items-center gap-1.5 rounded-xl shadow-md cursor-pointer border-0"
-                    >
-                      Gửi qua Gmail 🚀
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Brand Guidelines Preview */}
-              <div className="hidden md:flex flex-1 flex-col bg-gray-50 p-6 overflow-y-auto">
-                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">Xem trước Email (Brand Guidelines)</div>
-                <div className="bg-[#FDF5DA] p-6 rounded-2xl border border-[#ffd94c] flex-1 flex flex-col justify-start min-h-[300px]">
-                  <div className="bg-[#15333B] p-4 rounded-t-xl text-center border-b-4 border-[#ffd94c]">
-                    <span className="text-[#ffd94c] font-black text-xs tracking-wider block">
-                      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
-                    </span>
-                  </div>
-                  <div className="bg-white p-5 rounded-b-xl flex-1 shadow-sm">
-                    <h5 className="text-[#214C54] font-black text-xs border-b border-gray-150 pb-2 mb-3">
-                      {emailSubject || '(Không có tiêu đề)'}
-                    </h5>
-                    <div className="text-[11px] text-gray-700 font-medium leading-relaxed space-y-3 whitespace-pre-line">
-                      {emailBody || '(Không có nội dung)'}
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-                      <span className="inline-block bg-[#214C54] text-white text-[10px] font-black px-4 py-2 rounded-lg cursor-pointer">
-                        VÀO HỆ THỐNG LIGHTMS 🚀
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-center mt-3 text-[9px] text-[#3E5E63] font-bold">
-                    Bản tin được gửi từ hạm đội vận hành LightMS.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        <EmailTemplateModal
+          dayData={emailModalDay}
+          profiles={profiles}
+          onClose={() => setIsEmailModalOpen(false)}
+          onSave={handleSaveEmailTemplate}
+          onToast={(msg) => {
+            setToastMessage(msg);
+            setTimeout(() => setToastMessage(null), 3000);
+          }}
+        />
       )}
 
       {/* Floating Toast Notification */}

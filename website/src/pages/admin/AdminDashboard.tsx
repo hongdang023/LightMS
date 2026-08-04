@@ -123,9 +123,8 @@ const BarChart: React.FC<BarChartProps> = ({ data, colorClass }) => {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) => {
   const { 
-    users, submissions, assignments, 
-    onboardingDays, lessons, nauticalTransactions,
-    courses, modules
+    users, 
+    onboardingDays, lessons, nauticalTransactions
   } = useDatabase();
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -133,28 +132,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Filter lessons and assignments for the current course (Vibe Coding 201)
-  const currentCourse = courses.find(c => c.title.toLowerCase().includes('201')) || courses[0];
-  let filteredModules = currentCourse 
-    ? modules.filter(m => m.course_id === currentCourse.id)
-    : modules;
-
-  if (filteredModules.length === 0 && modules.length > 0) {
-    const fallbackCourseId = modules[0].course_id;
-    filteredModules = modules.filter(m => m.course_id === fallbackCourseId);
-  }
-
   const courseLessons = lessons;
-
-  const courseAssignments = assignments.filter(a => courseLessons.some(l => l.id === a.lesson_id));
+  const lessonsWithAssignments = courseLessons.filter(l => !!l.assignment_description);
 
   const students = users.filter(u => u.role === 'student');
   const totalStudents = students.length;
-  const pendingGradesCount = submissions.filter(s => s.status === 'submitted' && courseAssignments.some(a => a.id === s.assignment_id)).length;
-  const gradedCount = submissions.filter(s => s.status === 'graded' && courseAssignments.some(a => a.id === s.assignment_id)).length;
+
+  // Total completions of lessons that have assignments
+  const totalCompletedAssignments = (nauticalTransactions || []).filter(
+    t => t.action_type === 'lesson_complete' && 
+         lessonsWithAssignments.some(l => l.id === t.reference_id)
+  ).length;
+
+  const pendingGradesCount = 0;
+  const gradedCount = totalCompletedAssignments;
 
   // Calculate Assignment Completion Rate
-  const totalAssignmentsCount = courseAssignments.length;
+  const totalAssignmentsCount = lessonsWithAssignments.length;
   const totalExpectedSubmissions = totalStudents * totalAssignmentsCount;
 
   // Selected student object
@@ -169,18 +163,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
 
   // Helper: Check if a student completed a specific lesson assignment
   const isStudentLessonCompleted = (studentId: string, lessonId: string) => {
-    const asg = courseAssignments.find(a => a.lesson_id === lessonId);
-    if (!asg) return false;
-    return submissions.some(s => s.student_id === studentId && s.assignment_id === asg.id && (s.status === 'submitted' || s.status === 'graded'));
+    return (nauticalTransactions || []).some(
+      t => t.student_id === studentId && t.action_type === 'lesson_complete' && t.reference_id === lessonId
+    );
   };
 
   // Helper: Get list of unsubmitted homeworks (bottlenecks) for a student
   const getStudentUnsubmittedLessons = (studentId: string) => {
     return courseLessons.filter(l => {
-      const asg = courseAssignments.find(a => a.lesson_id === l.id);
-      if (!asg) return false;
-      const submitted = submissions.some(s => s.student_id === studentId && s.assignment_id === asg.id);
-      return !submitted;
+      if (!l.assignment_description) return false;
+      return !isStudentLessonCompleted(studentId, l.id);
     });
   };
 
@@ -209,7 +201,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   // Live Class lessons progress data for Bar Chart (Only show lessons that have assignments)
   const liveClassBarData = courseLessons
     .map((l, index) => ({ l, originalIndex: index }))
-    .filter(({ l }) => courseAssignments.some(a => a.lesson_id === l.id))
+    .filter(({ l }) => !!l.assignment_description)
     .map(({ l, originalIndex }) => {
       const completed = students.filter(s => isStudentLessonCompleted(s.id, l.id)).length;
       const match = l.title.match(/Buổi\s+(\d+)/i);
@@ -248,12 +240,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     });
 
     const lessonsDetail = lessons.map(l => {
-      const lessonCompleted = nauticalTransactions.some(t => t.student_id === studentId && t.action_type === 'lesson_complete' && t.reference_id === l.id);
-      const asg = assignments.find(a => a.lesson_id === l.id);
+      const lessonCompleted = (nauticalTransactions || []).some(t => t.student_id === studentId && t.action_type === 'lesson_complete' && t.reference_id === l.id);
       let assignmentStatus: 'none' | 'not_submitted' | 'submitted' | 'graded' | 'draft' = 'none';
-      if (asg) {
-        const sub = submissions.find(s => s.student_id === studentId && s.assignment_id === asg.id);
-        assignmentStatus = sub ? sub.status : 'not_submitted';
+      if (l.assignment_description) {
+        assignmentStatus = lessonCompleted ? 'graded' : 'not_submitted';
       }
 
       return {
@@ -377,9 +367,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
             {/* Overall Homework Donut Chart */}
             <div className="col-span-1 flex justify-center">
               <DonutChart 
-                completed={submissions.filter(s => s.status === 'graded' && courseAssignments.some(a => a.id === s.assignment_id)).length} 
+                completed={totalCompletedAssignments} 
                 total={totalExpectedSubmissions} 
-                label="Đã chấm điểm" 
+                label="Đã hoàn thành" 
                 sublabel="Bài tập đạt chất lượng"
                 colorHex="#0CA678" 
               />
@@ -517,16 +507,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
                           <span className="text-[10px] text-gray-400 italic">Không có bài tập</span>
                         )}
                         {lesson.assignmentStatus === 'not_submitted' && (
-                          <span className="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded-lg font-bold">Chưa nộp ❌</span>
-                        )}
-                        {lesson.assignmentStatus === 'submitted' && (
-                          <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-1 rounded-lg font-bold flex items-center gap-1">Chờ chấm ⏳</span>
+                          <span className="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded-lg font-bold">Chưa hoàn thành ❌</span>
                         )}
                         {lesson.assignmentStatus === 'graded' && (
-                          <span className="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded-lg font-bold">Đã chấm điểm ✓</span>
-                        )}
-                        {lesson.assignmentStatus === 'draft' && (
-                          <span className="text-[10px] bg-gray-100 text-gray-800 px-2 py-1 rounded-lg font-bold">Nháp 📝</span>
+                          <span className="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded-lg font-bold">Đã hoàn thành ✓</span>
                         )}
                       </div>
                     </div>

@@ -13,4 +13,4 @@ Một yêu cầu không được coi là hoàn thiện nếu thiếu một trong
 1.  **OUTCOME**: Kết quả cuối cùng người dùng nhận được là gì? (Cụ thể, đo lường được).
 2.  **PATH**: Lộ trình từng bước để đi từ số 0 đến Outcome.
 3.  **SYSTEM**: Các công cụ, tính năng hệ thống hỗ trợ việc thực hiện lộ trình đó.
-4.  **VERIFICATION**: Cách thức hệ thống hoặc Mentor xác nhận Member đã đạt được Outcome (Proof of Work).
+4.  **VERIFICATION**: Cách thức hệ thống hoặc Admin xác nhận Member đã đạt được Outcome (Proof of Work).

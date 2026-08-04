@@ -15,16 +15,16 @@ Dưới đây là các yêu cầu phi chức năng (NFR) nhằm đảm bảo h�
 
 ## 3. Scalability (Khả năng mở rộng)
 - **NFR-SC-01 (Auto-scaling):** Kiến trúc hệ thống phải hỗ trợ tự động mở rộng tài nguyên máy chủ khi số lượng học viên, số lượng Batch tăng lên gấp nhiều lần.
-- **NFR-SC-02 (Operational Scalability):** Tối đa hóa công năng của "Rule Engine" (Automations) để khi số lượng học viên tăng lên, khối lượng công việc thủ công của Admin/Mentor không bị tăng theo tỷ lệ thuận.
+- **NFR-SC-02 (Operational Scalability):** Tối đa hóa công năng của "Rule Engine" (Automations) để khi số lượng học viên tăng lên, khối lượng công việc thủ công của Admin không bị tăng theo tỷ lệ thuận.
 
 ## 4. Security & Privacy (Bảo mật & Quyền riêng tư)
 - **NFR-SE-01 (Authentication):** Hệ thống cần áp dụng các chuẩn xác thực an toàn (ví dụ: OAuth 2.0, JWT). Ưu tiên tính năng đăng nhập nhanh qua Google (Single Sign-On).
-- **NFR-SE-02 (Role-based Access Control - RBAC):** Phân quyền truy cập chặt chẽ giữa các vai trò (Học viên, Mentor, Admin) để tránh truy cập trái phép vào dữ liệu điểm số, tài nguyên admin.
+- **NFR-SE-02 (Role-based Access Control - RBAC):** Phân quyền truy cập chặt chẽ giữa các vai trò (Học viên, Admin) để tránh truy cập trái phép vào dữ liệu điểm số, tài nguyên admin.
 - **NFR-SE-03 (Data Privacy):** Bảo vệ thông tin cá nhân của học viên, tuân thủ các quy định về bảo mật dữ liệu. Dữ liệu nhạy cảm (mật khẩu) phải được mã hóa một chiều.
 - **NFR-SE-04 (Content Protection):** Hạn chế tối đa khả năng tải lậu video bản quyền của khóa học (ví dụ: sử dụng HLS streaming hoặc các công nghệ chống download video cơ bản).
 
 ## 5. Integration & Interoperability (Tích hợp & Tương tác hệ thống)
-- **NFR-IN-01 (Telegram Integration):** Tích hợp sâu với Telegram API để hỗ trợ gửi thông báo (Triggers), cập nhật vinh danh (Wall of Fame) và nhận câu hỏi hỗ trợ.
+
 - **NFR-IN-02 (Calendar Integration):** Có khả năng xuất lịch trình dưới dạng file `.ics` hoặc tích hợp thẳng qua Google Calendar API.
 - **NFR-IN-03 (Third-party Tools):** Sẵn sàng API để kết nối với các công cụ CRM hoặc Email Marketing (ví dụ: Mailchimp, ActiveCampaign) phục vụ chuỗi Email Onboarding.
 

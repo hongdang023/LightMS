@@ -37,7 +37,7 @@ Khu vực tập trung toàn bộ học liệu. Thay vì để link text đơn đ
 - **Khu vực Nộp bài (Submission Workspace):** Ngay bên dưới yêu cầu bài tập, tích hợp sẵn khung soạn thảo Rich-text hoặc nút Upload File/Link để học viên nộp bài.
 
 ### 2.4. Feedback & Community (Phản hồi & Thảo luận)
-- **Nhận xét của Mentor (Feedback):** Khu vực hiển thị trạng thái chấm bài, điểm số và nhận xét chi tiết của Mentor trả trực tiếp vào bài nộp.
+- **Nhận xét của Ban vận hành (Feedback):** Khu vực hiển thị trạng thái chấm bài, điểm số và nhận xét chi tiết của Admin trả trực tiếp vào bài nộp.
 - **Thảo luận (Discussion):** Tích hợp nút xem luồng (Thread) thảo luận của cộng đồng lớp học về bài tập này.
 
 ---

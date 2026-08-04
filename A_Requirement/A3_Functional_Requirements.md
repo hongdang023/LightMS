@@ -14,7 +14,7 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 - **FR-STU-05 (All-in-one Lessons):** Mỗi bài học phải tích hợp đầy đủ nội dung: Video bài giảng, tài liệu (slide, pdf), yêu cầu bài tập và nút điều hướng làm bài, xác nhận hoàn thành trên cùng một giao diện.
 - **FR-STU-06 (Assignment Submission):** Học viên đăng bài tập trực tiếp lên Facebook Group của lớp và bấm nút "Hoàn thành bài tập" trên hệ thống để ghi nhận trạng thái hoàn thành.
-- **FR-STU-07 (View Feedback):** Học viên có thể xem phản hồi đánh giá của Mentor ngay tại khu vực bài tập.
+- **FR-STU-07 (View Feedback):** Học viên có thể xem phản hồi đánh giá của Admin ngay tại khu vực bài tập.
 ### 1.3. Cộng đồng & Hỗ trợ (Hỏi đáp & Hỗ trợ)
 
 - **FR-STU-11 (FAQ Knowledge Base):** Cung cấp hệ thống câu hỏi thường gặp (FAQ) để giải đáp nhanh.
@@ -28,7 +28,7 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 ---
 
-## 2. Phân hệ Admin & Mentor (Admin Portal)
+## 2. Phân hệ Ban vận hành (Admin Portal)
 
 ### 2.1. Bảng điều khiển (Tổng quan hệ thống)
 
@@ -36,12 +36,12 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 ### 2.2. Quản lý Khóa học & Nội dung (Soạn lộ trình)
 
-- **FR-AD-03 (Course Builder):** Admin có thể tạo module, bài học, thiết lập "Onboarding Week".
-- **FR-AD-04 (Access Restrictions):** Admin có thể cài đặt điều kiện mở khóa bài học (Ví dụ: Bắt buộc hoàn thành Module 1 mới được mở Module 2).
+- **FR-AD-03 (Course Builder):** Admin có thể tạo bài học, thiết lập "Onboarding Week".
+- **FR-AD-04 (Access Restrictions):** Admin có thể cài đặt điều kiện mở khóa bài học (Ví dụ: Bắt buộc hoàn thành Bài học 1 mới được mở Bài học 2).
 - **FR-AD-05 (Centralized Resource):** Kho lưu trữ tập trung các tài nguyên học tập để dễ dàng gán vào các bài học khác nhau.
 - **FR-AD-13 (Reading/Editing Mode Toggle):** Admin có thể chuyển đổi giữa chế độ xem (Reading Mode) và sửa nhanh (Editing Mode) với **giao diện y hệt Student Mode** cho các mục Giới thiệu, Onboarding, Lộ trình học để dễ dàng điều chỉnh các chi tiết nhỏ.
 - **FR-AD-14 (Real-time Course Update Sync):** Nội dung chỉnh sửa từ Admin (khi lưu) được đồng bộ tức thời (Real-time) sang giao diện Học viên.
-- **FR-AD-15 (Scheduled Onboarding Unlock):** Thiết lập lịch (ngày/giờ) mở khóa tự động cho từng ngày trong Module Onboarding.
+- **FR-AD-15 (Scheduled Onboarding Unlock):** Thiết lập lịch (ngày/giờ) mở khóa tự động cho từng ngày trong Onboarding.
 - **FR-AD-16 (Auto-unlock Email Notifications):** Mỗi lần mở khóa một ngày Onboarding theo lịch, hệ thống tự động gửi email thông báo đến địa chỉ email của học viên.
 
 ### 2.3. Quản lý Lịch học
@@ -52,7 +52,7 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 ### 2.4. Quản lý Bài tập & Đánh giá (Chấm bài tập)
 
-- **FR-AD-09 (Threads Curation):** Công cụ cho phép Mentor "ghim" hoặc chọn lọc các bài nộp xuất sắc làm mẫu cho lớp học.
+- **FR-AD-09 (Threads Curation):** Công cụ cho phép Admin "ghim" hoặc chọn lọc các bài nộp xuất sắc làm mẫu cho lớp học.
 
 ### 2.5. Quản lý Học viên & Báo cáo (Quản lý học viên)
 

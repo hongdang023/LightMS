@@ -79,14 +79,14 @@ Chú trọng vào khả năng đọc (Readability). LMS là nơi học viên ph�
 ### 3.2. Text Hierarchy (Phân cấp chữ)
 
 - **H1 (Page Title):** 28px - 32px | Bold | Màu `#15333B`. Dành cho Tên Khóa học, Tiêu đề Dashboard.
-- **H2 (Section Title):** 24px | Semi-Bold | Màu `#214C54`. Tên các Module, Tên Bài học.
+- **H2 (Section Title):** 24px | Semi-Bold | Màu `#214C54`. Tên Bài học, Tên Phần.
 - **H3 (Card Title):** 18px - 20px | Medium | Màu `#15333B`. Tiêu đề của từng hộp nội dung.
 - **Body Text (Nội dung chính):** 16px | Regular | Màu `#15333B` (hoặc opacity 80% là `#3E5E63` cho chữ bớt gắt). Line-height: `1.6` (để dễ đọc).
 - **Small Text (Meta data):** 13px - 14px | Regular | Dành cho ngày giờ, tác giả, số lượt Upvotes.
 
 ### 3.3. Rich-Text Format
 
-- **Blockquote (Trích dẫn):** Có dải màu viền trái là `#EAB308`, nền `#FDF5DA` để nhấn mạnh các ghi chú quan trọng từ Mentor.
+- **Blockquote (Trích dẫn):** Có dải màu viền trái là `#EAB308`, nền `#FDF5DA` để nhấn mạnh các ghi chú quan trọng từ Admin.
 - **Bold/Highlight:** Dùng màu `#214C54` cho chữ bôi đậm thay vì màu đen tuyền.
 
 ---

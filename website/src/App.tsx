@@ -13,7 +13,7 @@ import { AnnouncementsView } from './pages/student/AnnouncementsView';
 import { AboutView } from './pages/student/AboutView';
 import { OnboardingView } from './pages/student/OnboardingView';
 import { SyllabusView } from './pages/student/SyllabusView';
-import { CompetencyFramework } from './pages/student/CompetencyFramework';
+
 import { CalendarView } from './pages/student/CalendarView';
 import { WallOfFame } from './pages/student/WallOfFame';
 import { HelpDesk } from './pages/student/HelpDesk';
@@ -78,8 +78,6 @@ function MainAppShell() {
         return <OnboardingView onPageChange={handlePageChange} />;
       case 'syllabus':
         return <SyllabusView onPageChange={handlePageChange} />;
-      case 'competency':
-        return <CompetencyFramework />;
       case 'calendar':
         return <CalendarView />;
       case 'walloffame':

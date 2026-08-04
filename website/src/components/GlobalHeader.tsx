@@ -30,12 +30,12 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions, logout, submissions, assignments, onboardingDays } = useDatabase();
+  const { activeUser, switchUser, lessons, nauticalTransactions, logout, onboardingDays } = useDatabase();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isStudent = activeUser.role === 'student';
-  const isAdmin = activeUser.role === 'mentor' || activeUser.role === 'admin';
+  const isAdmin = activeUser.role === 'admin';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -56,17 +56,9 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
   // Progress bar calculation
   const totalItems = (lessons || []).length + 7;
   const completedMainLessons = (lessons || []).filter(lesson => {
-    const hasTx = (nauticalTransactions || []).some(
+    return (nauticalTransactions || []).some(
       t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
     );
-    if (hasTx) return true;
-    
-    const assignment = (assignments || []).find(a => a.lesson_id === lesson.id);
-    if (!assignment) return false;
-    const submission = (submissions || []).find(
-      s => s.assignment_id === assignment.id && s.student_id === activeUser.id && s.status !== 'draft'
-    );
-    return !!submission;
   }).length;
 
   const completedOnboardingDays = (onboardingDays || []).length > 0
@@ -185,7 +177,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
           <div className="text-left hidden sm:flex flex-col justify-center gap-1">
             <p className="text-xs font-extrabold text-[#15333B] leading-none mb-0">{activeUser.full_name.split(' ').slice(-1)[0]}</p>
             <p className="text-[9px] text-gray-400 font-semibold leading-none mb-0">
-              {isStudent ? 'Học viên' : 'Admin / Mentor'}
+              {isStudent ? 'Học viên' : 'Admin'}
             </p>
           </div>
           <ChevronRight className={`w-3.5 h-3.5 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-90' : ''}`} />
@@ -210,7 +202,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
                 </p>
                 {/* Vai trò — cỡ trung, màu gold nhạt */}
                 <p className="text-[11px] text-[#FFD94C]/80 font-semibold leading-none mb-0">
-                  {isStudent ? 'Học viên' : 'Admin / Mentor'}
+                  {isStudent ? 'Học viên' : 'Admin'}
                 </p>
                 {/* Email — nhỏ nhất, mono, mờ nhất */}
                 <p className="text-[10px] text-[#3E5E63] font-mono leading-none truncate mb-0">
