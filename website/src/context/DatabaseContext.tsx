@@ -219,18 +219,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeParse('lms_notifications', SEED_NOTIFICATIONS)
   );
 
-  // Bump version to force reload the new syllabus lessons, modules, and assignments
-  const SYLLABUS_VERSION = 'v201_v13';
-  const isVersionMismatch = localStorage.getItem('lms_syllabus_version') !== SYLLABUS_VERSION;
-
-  const [lessons, setLessons] = useState<Lesson[]>(() => {
-    if (isVersionMismatch) {
-      localStorage.setItem('lms_syllabus_version', SYLLABUS_VERSION);
-      localStorage.setItem('lms_lessons', JSON.stringify(SEED_LESSONS));
-      return SEED_LESSONS;
-    }
-    return safeParse('lms_lessons', SEED_LESSONS);
-  });
+  // Lessons always come from Supabase — no localStorage cache.
+  // SEED_LESSONS is just a placeholder while Supabase fetch is in flight.
+  const [lessons, setLessons] = useState<Lesson[]>(SEED_LESSONS);
 
   const [announcements, setAnnouncements] = useState<Announcement[]>(() => 
     safeParse('lms_announcements', SEED_ANNOUNCEMENTS)
@@ -346,9 +337,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 
 
-  useEffect(() => {
-    localStorage.setItem('lms_lessons', JSON.stringify(lessons));
-  }, [lessons]);
+  // lessons are NOT cached in localStorage — always fetched fresh from Supabase.
 
 
 
