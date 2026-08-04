@@ -8,8 +8,6 @@ import {
   SEED_PROFILES,
   SEED_TRANSACTIONS,
   SEED_NOTIFICATIONS,
-  SEED_ANNOUNCEMENTS,
-  SEED_CALENDAR_EVENTS,
   SEED_ABOUT_CONTENT
 } from './seedData';
 import type {
@@ -224,34 +222,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLessonsLoading, setIsLessonsLoading] = useState(true);
 
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => 
-    safeParse('lms_announcements', SEED_ANNOUNCEMENTS)
-  );
-
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => {
-    const parsed = safeParse('lms_calendar_events', SEED_CALENDAR_EVENTS);
-    const filtered = parsed.filter(e => e.id !== 'cal-oh-5' && e.id !== 'cal-oh-6');
-    if (filtered.length !== parsed.length) {
-      localStorage.setItem('lms_calendar_events', JSON.stringify(filtered));
-      return filtered;
-    }
-    return parsed;
-  });
-
-  const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>(() => {
-    const parsed = safeParse<OnboardingDay[]>('lms_onboarding_days', []);
-    if (parsed.length === 0) return [];
-    
-    const hasOutdatedTitle = parsed.some(d => d.day === 2 && d.title.includes("Làm quen với viết"));
-    const hasOutdatedChecklist = parsed.some(d => d.checklist.includes("Xác nhận hoàn thành"));
-    const isMissingDay8 = parsed.length < 8;
-    const isMissingTelegramTask = !parsed.some(d => d.day === 1 && d.checklist.includes("Telegram"));
-    const hasOutdatedDay6 = parsed.some(d => d.day === 6 && d.bonusResources?.includes("Frontend Development Crash Course"));
-    if (hasOutdatedTitle || hasOutdatedChecklist || isMissingDay8 || isMissingTelegramTask || hasOutdatedDay6) {
-      return [];
-    }
-    return parsed;
-  });
+  // Always fetched fresh from Supabase — no localStorage cache.
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>([]);
 
 
 
@@ -275,53 +249,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 
 
-  useEffect(() => {
-    localStorage.setItem('lms_announcements', JSON.stringify(announcements));
-  }, [announcements]);
-
-  useEffect(() => {
-    localStorage.setItem('lms_calendar_events', JSON.stringify(calendarEvents));
-  }, [calendarEvents]);
-
-  useEffect(() => {
-    localStorage.setItem('lms_onboarding_days', JSON.stringify(onboardingDays));
-  }, [onboardingDays]);
-
-  useEffect(() => {
-    const loadOnboardingDays = async () => {
-      let parsed = onboardingDays;
-      if (parsed.length === 0) {
-        parsed = safeParse<OnboardingDay[]>('lms_onboarding_days', []);
-      }
-      
-      const hasOutdatedTitle = parsed.some(d => d.day === 2 && d.title.includes("Làm quen với viết"));
-      const hasOutdatedChecklist = parsed.some(d => d.checklist.includes("Xác nhận hoàn thành"));
-      const isMissingDay8 = parsed.length < 8;
-      const isMissingTelegramTask = !parsed.some(d => d.day === 1 && d.checklist.includes("Telegram"));
-      const hasOutdatedDay6 = parsed.some(d => d.day === 6 && d.bonusResources?.includes("Frontend Development Crash Course"));
-      
-      if (parsed.length === 0 || hasOutdatedTitle || hasOutdatedChecklist || isMissingDay8 || isMissingTelegramTask || hasOutdatedDay6) {
-        try {
-          const res = await fetch('/data/onboardingData.json');
-          if (res.ok) {
-            const data = await res.json();
-            setOnboardingDays(data);
-          }
-        } catch (err) {
-          console.error('Failed to fetch onboarding days from static JSON:', err);
-        }
-      }
-    };
-    loadOnboardingDays();
-  }, []);
-
-
+  // announcements, calendarEvents, onboardingDays are NOT cached in localStorage
+  // — always fetched fresh from Supabase.
 
   useEffect(() => {
     localStorage.setItem('lms_about_content', JSON.stringify(aboutContent));
   }, [aboutContent]);
-
-
 
   useEffect(() => {
     localStorage.setItem('lms_nautical_transactions', JSON.stringify(nauticalTransactions));
@@ -330,7 +263,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem('lms_batches', JSON.stringify(batches));
   }, [batches]);
-
 
   useEffect(() => {
     localStorage.setItem('lms_notifications', JSON.stringify(notifications));
@@ -428,12 +360,19 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       setLessons(currentLessons);
       if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
-      if (resOnboardingDays.data && resOnboardingDays.data.length > 0) setOnboardingDays(resOnboardingDays.data);
-      if (resBatches.data && resBatches.data.length > 0) setBatches(resBatches.data);
 
-      if (resAnnouncements.data) {
-        setAnnouncements(resAnnouncements.data);
+      // onboardingDays: Supabase first, fallback to static JSON if empty
+      if (resOnboardingDays.data && resOnboardingDays.data.length > 0) {
+        setOnboardingDays(resOnboardingDays.data);
+      } else {
+        try {
+          const res = await fetch('/data/onboardingData.json');
+          if (res.ok) setOnboardingDays(await res.json());
+        } catch { /* leave empty */ }
       }
+
+      if (resBatches.data && resBatches.data.length > 0) setBatches(resBatches.data);
+      if (resAnnouncements.data) setAnnouncements(resAnnouncements.data);
 
       const [
         resNauticalMiles,
