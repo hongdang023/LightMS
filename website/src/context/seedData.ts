@@ -159,8 +159,8 @@ export const SEED_LESSONS: Lesson[] = [
         url: 'https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e'
       },
       {
-        label: 'PRD Prompting Template',
-        url: 'https://drive.google.com/file/d/1HwHEFuUAZTUv6IRtU7oVo8zkvfbZmSgu/view?usp=drive_link'
+        label: 'PRD Prompting Template v3.0',
+        url: 'https://drive.google.com/file/d/1_8QJAA5qBdGLngHY-3RkYQvjzcg4jHtI/view?usp=drive_link'
       },
       {
         label: 'Padlet của lớp (Batch 02)',
