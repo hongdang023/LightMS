@@ -336,28 +336,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 
       
-      // Sync local changes to Supabase if the user is an admin
-      const activeUserObj = (resProfiles.data || []).find((p: any) => p.id === activeUserId);
-      if (activeUserObj && activeUserObj.role === 'admin') {
-        // 1. Sync Lesson 2 to Supabase if it doesn't have the study note, video_url or has_materials = false
-        const dbLesson2 = currentLessons.find((l: any) => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e');
-        const seedLesson2 = SEED_LESSONS.find(l => l.id === 'a1ba6fd1-5e99-4b0a-9ac1-3d667d63d96e')!;
-        if (dbLesson2 && (
-          !dbLesson2.study_note_url || 
-          dbLesson2.study_note_url !== seedLesson2.study_note_url || 
-          !dbLesson2.video_url || 
-          dbLesson2.video_url !== seedLesson2.video_url || 
-          !dbLesson2.has_materials ||
-          !dbLesson2.assignment_description ||
-          dbLesson2.assignment_description !== seedLesson2.assignment_description
-        )) {
-          console.log('Admin phát hiện Lesson 2 chưa có link học liệu/video hoặc bài tập trên Supabase. Đang đồng bộ...');
-          const { target, ...dbUpdates } = seedLesson2 as any;
-          await supabase.from('lessons').update(dbUpdates).eq('id', seedLesson2.id);
-          currentLessons = currentLessons.map(l => l.id === seedLesson2.id ? { ...l, ...seedLesson2 } : l);
-        }
-      }
-
       setLessons(currentLessons);
       if (resCalendarEvents.data) setCalendarEvents(resCalendarEvents.data);
 
@@ -759,7 +737,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Check for Treasure Map badge
     const completedLessonTx = nauticalTransactions.filter(t => t.student_id === activeUserId && t.action_type === 'lesson_complete');
-    if (completedLessonTx.length + 1 >= SEED_LESSONS.length) {
+    if (completedLessonTx.length + 1 >= lessons.length) {
       unlockBadge(activeUserId, 'bada0000-0000-0000-0000-000000000006');
     }
   };
