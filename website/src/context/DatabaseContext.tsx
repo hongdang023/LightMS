@@ -4,7 +4,6 @@ import {
   SEED_BADGES,
   SEED_COURSES,
   SEED_BATCHES,
-  SEED_PROFILES,
   SEED_TRANSACTIONS,
   SEED_NOTIFICATIONS,
   SEED_ABOUT_CONTENT
@@ -326,7 +325,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (resProfiles.data && resProfiles.data.length > 0) {
         setProfiles(prev => {
           const fetchedProfiles = resProfiles.data as Profile[];
-          const newProfiles = fetchedProfiles.map(dbP => {
+          const newProfiles: Profile[] = fetchedProfiles.map(dbP => {
             return {
               ...dbP,
               role: (dbP.role || 'student') as UserRole

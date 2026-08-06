@@ -106,6 +106,9 @@ export const WallOfFame: React.FC = () => {
   // Profile calculations for active user
   const myMiles = displayActiveUser.nautical_miles;
 
+  const isAdminEmail = activeUser.gmail === 'dangtuyethong2324@gmail.com';
+  const isActiveUserStudent = activeUser.role === 'student' && !isAdminEmail;
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto px-4 pb-12 animate-fade-in select-none">
       

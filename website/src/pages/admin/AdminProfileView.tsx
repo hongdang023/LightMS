@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../context/DatabaseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { ShieldCheck, Mail, Phone, Send, CheckCircle2, Bookmark, Save } from 'lucide-react';
+import { 
+  Mail, 
+  Phone, 
+  Send,
+  Save, 
+  CheckCircle2
+} from 'lucide-react';
 import type { AdminRole } from '../../types/database';
 
 export const AdminProfileView: React.FC = () => {

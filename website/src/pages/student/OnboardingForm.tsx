@@ -152,7 +152,7 @@ export const OnboardingForm: React.FC = () => {
       await addNauticalMiles(
         activeUser.id,
         50,
-        'profile_complete',
+        'profile_completion',
         'Hoàn thành 100% Hồ sơ cá nhân',
         `profile-${activeUser.id}`
       );

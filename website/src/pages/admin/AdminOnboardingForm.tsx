@@ -78,7 +78,7 @@ export const AdminOnboardingForm: React.FC = () => {
           <div className="absolute right-0 top-0 opacity-10 translate-x-4 -translate-y-4">
             <ShieldCheck size={180} />
           </div>
-          <BrandLogo variant="light" size="md" className="mb-4" />
+          <BrandLogo className="mb-4" />
           <h1 className="text-2xl font-black flex items-center gap-2">
             <span>Chào mừng Quản trị viên!</span>
             <Sparkles size={20} className="text-amber-400" />
