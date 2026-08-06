@@ -1,5 +1,7 @@
 # LightMS - B2: Database Schema (Thiết kế Cơ sở dữ liệu)
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+
 Hệ thống sử dụng **PostgreSQL** trên nền tảng **Supabase**. Cấu trúc dưới đây được thiết kế tối ưu cho mô hình Outcome-based Mastery và Action-Oriented, đồng bộ 100% với mã nguồn đang chạy trên Website.
 
 ---
@@ -115,10 +117,22 @@ Xác thực (Authentication) được quản lý qua bảng mặc định `auth.
 | `id`           | `uuid`        | PK                 |                                                    |
 | `student_id`   | `uuid`        | FK (`profiles.id`) | Thủy thủ nhận điểm                                 |
 | `amount`       | `int`         | NOT NULL           | Số Hải lý cộng/trừ (Ví dụ: +50, -10)               |
-| `action_type`  | `text`        | NOT NULL           | Loại hành động (Ví dụ: `lesson_complete`, `kudos`) |
+| `action_type`  | `text`        | NOT NULL           | Loại hành động — xem danh sách đầy đủ bên dưới    |
 | `reference_id` | `uuid`        |                    | Khóa ngoại tham chiếu (VD: ID bài học)             |
 | `description`  | `text`        | NOT NULL           | Nội dung chi tiết giao dịch                        |
 | `created_at`   | `timestamptz` | DEFAULT `now()`    | Thời điểm thực hiện                                |
+
+**Danh sách `action_type` hợp lệ:**
+
+| `action_type` | Điểm | Mô tả |
+| :--- | :--- | :--- |
+| `profile_completion` | +50 NM | Hoàn thành khai báo 100% Profile lần đầu |
+| `lesson_complete` | +20 NM | Hoàn thành bài học không có bài tập |
+| `assignment_graded` | +50 NM | Hoàn thành tự đối chiếu Rubric Checklist của bài học có bài tập |
+| `onboarding_day_complete` | +50 NM | Hoàn thành 1 ngày Onboarding |
+| `submission_kudos` | Biến động | Admin khen thưởng điểm thêm |
+| `assignment_submitted` | 0 NM | *Legacy — hiện không dùng* |
+
 
 ### `badges` (Danh mục Huy hiệu)
 
@@ -142,11 +156,14 @@ Xác thực (Authentication) được quản lý qua bảng mặc định `auth.
 
 
 #### 2. Cơ chế kích hoạt mở khóa Huy hiệu (Badges)
-Hệ thống tự động kiểm tra điều kiện mở khóa (Triggers) mỗi khi có giao dịch điểm mới:
-* **Huy hiệu "Thẻ căn cước" 💳 (Identity Card):** Mở khóa ngay khi học viên hoàn thành khai báo 100% Profile.
-* **Huy hiệu "Cánh buồm no gió" ⛵ (Wind Catcher):** Mở khóa khi học viên hoàn thành `3 ngày học onboarding` đầu tiên.
-* **Huy hiệu "Thủy thủ lão luyện" ⚓ (Veteran Sailor):** Mở khóa khi hoàn thành tất cả `7 ngày học onboarding`.
-* **Huy hiệu "Chinh phục đại dương" 🌊 (Ocean Conqueror):** Mở khóa khi hoàn thành tất cả bài học trong lộ trình học tập Live Class.
+Hệ thống tự động kiểm tra điều kiện mở khóa (Triggers) mỗi khi có giao dịch điểm hoặc hành động mới:
+* **Huy hiệu "Thẻ Căn Cước Thủy Thủ" 🪪:** Mở khóa ngay khi học viên hoàn thành khai báo 100% Profile.
+* **Huy hiệu "Cánh Buồm Khởi Hành" ⛵:** Mở khóa khi hoàn thành ngày học Onboarding đầu tiên (Day 1).
+* **Huy hiệu "Vượt Sóng Băng Băng" 🌊:** Mở khóa khi hoàn thành mốc 3 ngày Onboarding đầu tiên (Day 1 - Day 3).
+* **Huy hiệu "Thủy Thủ Lão Luyện" ⚓:** Mở khóa khi hoàn thành trọn vẹn hành trình 7 ngày Onboarding.
+* **Huy hiệu "Bài Tập Đầu Tay" 📝:** Mở khóa khi hoàn thành bài tập về nhà đầu tiên.
+* **Huy hiệu "Thủy Thủ Chăm Chỉ" ✍️:** Mở khóa khi hoàn thành mốc 3 bài tập về nhà.
+* **Huy hiệu "Thuyền Trưởng Gương Mẫu" 🧑‍✈️:** Mở khóa khi hoàn thành đầy đủ 100% bài tập về nhà của khóa học.
 
 ---
 
@@ -165,6 +182,9 @@ Hệ thống tự động kiểm tra điều kiện mở khóa (Triggers) mỗi 
 | `send_email`    | `boolean`     | DEFAULT `false`    | Cờ gửi email tự động                       |
 | `sent_email_at` | `timestamptz` |                    | Thời điểm đã gửi email                     |
 | `media_urls`    | `text[]`      | DEFAULT `'{}'`     | Link đính kèm hình ảnh/video               |
+| `category`      | `text`        |                    | Phân loại: `'system'`, `'leaderboard'`, `'content_update'`, `'schedule'`, `'achievement'` |
+| `is_auto`       | `boolean`     | DEFAULT `false`    | `true` = do Automated System tạo, `false` = Admin tạo thủ công. Dùng để Admin filter và kiểm soát tần suất tự động |
+| `target_id`     | `text`        |                    | ID tham chiếu tới entity gốc trigger thông báo (VD: `leaderboard-top1-{student_id}-{date}`). Dùng để check trùng tránh spam |
 | `created_at`    | `timestamptz` | DEFAULT `now()`    |                                            |
 
 ### `onboarding_days` (Chi tiết ngày Onboarding)
@@ -201,3 +221,46 @@ Hệ thống tự động kiểm tra điều kiện mở khóa (Triggers) mỗi 
 | `type`            | `text`    |                 | Loại chính: 'class', 'community', 'other'                                                     |
 | `event_type`      | `text`    |                 | Phân loại: 'kick-off', 'office-hour', 'live-class', 'onboarding', 'capstone', 'class-bonding' |
 | `details`         | `text`    |                 | Chi tiết nội dung/link mô tả sự kiện                                                          |
+
+---
+
+## 5. HelpDesk (Hỏi đáp & Hỗ trợ)
+
+### `help_desk_faqs` (Câu hỏi thường gặp)
+
+| Column Name     | Type          | Constraints     | Description |
+| :-------------- | :------------ | :-------------- | :---------- |
+| `id`            | `uuid`        | PK              | |
+| `category`      | `text`        | NOT NULL        | Nhóm chủ đề câu hỏi (VD: "Bài tập", "Tài khoản") |
+| `question`      | `text`        | NOT NULL        | Câu hỏi |
+| `description`   | `text`        |                 | Tóm tắt ngắn |
+| `sections`      | `jsonb`       |                 | Nội dung chi tiết dạng `[{ "id": "uuid", "title": "...", "content": "markdown" }]` |
+| `order_index`   | `int`         | DEFAULT 0       | Thứ tự hiển thị |
+| `last_updated`  | `timestamptz` | DEFAULT `now()` | Lần cập nhật cuối |
+
+---
+
+## 6. Static Content (Nội dung Tĩnh có thể chỉnh sửa)
+
+### `about_content` (Nội dung trang Giới thiệu)
+
+Bảng lưu nội dung trang **Giới thiệu** (About) cho phép Admin chỉnh sửa thông tin khóa học trực tiếp trên giao diện. Chỉ có **1 bản ghi duy nhất** với `id = 'default'`.
+
+| Column Name        | Type    | Description |
+| :----------------- | :------ | :---------- |
+| `id`               | `text`  | PK — luôn là `'default'` |
+| `overview_text`    | `text`  | Nội dung phần Tổng quan |
+| `schedule_text`    | `text`  | Nội dung phần Lịch học |
+| `benefits_text`    | `text`  | Nội dung phần Lợi ích |
+| `video_url`        | `text`  | Link video giới thiệu |
+| `platform_buttons` | `jsonb` | Danh sách nút platform `[{ "icon", "title", "subtitle", "url" }]` |
+| `benefit_clubs`    | `jsonb` | Danh sách club lợi ích `[{ "icon", "name", "desc", "links" }]` |
+| `quote`            | `text`  | Câu trích dẫn nổi bật |
+| `gach_dau_dong`    | `jsonb` | Danh sách gạch đầu dòng highlight |
+| `tru_cot_1`        | `jsonb` | Trụ cột 1 `{ "title", "subtitle", "desc" }` |
+| `tru_cot_2`        | `jsonb` | Trụ cột 2 |
+| `tru_cot_3`        | `jsonb` | Trụ cột 3 |
+| `outro`            | `text`  | Đoạn kết |
+| `sdt_note`         | `text`  | Lưu ý số điện thoại |
+| `office_hour_desc` | `text`  | Mô tả Office Hour |
+| `luu_y_gold`       | `text`  | Thông điệp nổi bật (gold highlight) |

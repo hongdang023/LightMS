@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
-import { ChevronLeft, Plus, ClipboardList, Target, CheckCircle2, Mail } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Target, CheckCircle2, Mail } from 'lucide-react';
 import { EditableText } from '../../components/EditableText';
 import type { OnboardingDay } from '../../types/database';
 import { 
@@ -11,8 +11,9 @@ import {
   renderRichText
 } from '../../data/onboardingVisuals';
 import { DayCard } from '../../components/onboarding/DayCard';
-import { TaskEditRow } from '../../components/onboarding/TaskEditRow';
 import { EmailTemplateModal } from '../../components/onboarding/EmailTemplateModal';
+import { DayTaskChecklist } from '../../components/onboarding/DayTaskChecklist';
+import { DayBonusResources } from '../../components/onboarding/DayBonusResources';
 
 interface OnboardingViewProps {
   isEditMode?: boolean;
@@ -418,8 +419,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
           </div>
 
           {/* Task Checklist Panel */}
-          <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-5 mb-6 gap-4">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-5 gap-4">
               <h2 className="text-2xl font-bold text-[#15333B] flex items-center gap-2">
                 <ClipboardList className="w-6 h-6 text-emerald-500" /> Danh sách Nhiệm vụ
               </h2>
@@ -428,74 +429,23 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
                 Hoàn thành: {dayTasks.filter(t => checkedTasks[t.key]).length} / {dayTasks.length}
               </span>
             </div>
-            
-            <div className="space-y-3">
-              {isEditMode ? (
-                <div className="space-y-4 w-full">
-                  <div className="space-y-3">
-                    {editingTasks.map((task, idx) => (
-                      <TaskEditRow
-                        key={task.id}
-                        task={task}
-                        idx={idx}
-                        totalTasks={editingTasks.length}
-                        focusedTaskId={focusedTaskId}
-                        setFocusedTaskId={setFocusedTaskId}
-                        onMove={handleMoveTask}
-                        onLabelChange={handleTaskLabelChange}
-                        onLabelBlur={handleTaskLabelBlur}
-                        onToggleOptional={handleToggleOptional}
-                        onDelete={handleDeleteTask}
-                      />
-                    ))}
-                  </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAddTask}
-                    className="w-full py-3 border-2 border-dashed border-[#214C54]/30 hover:border-[#214C54]/80 text-[#214C54] hover:bg-[#214C54]/5 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <Plus size={14} /> Thêm Nhiệm Vụ Mới
-                  </button>
-                </div>
-              ) : (
-                dayTasks.map((task) => {
-                  const isCompleted = !!checkedTasks[task.key];
-                  return (
-                    <div key={task.key} className={`p-4 md:p-5 rounded-2xl border transition-all duration-300 ${isCompleted ? 'bg-emerald-50/50 border-emerald-200 opacity-90' : task.isOptional ? 'bg-white border-dashed border-gray-200 hover:border-violet-300 hover:shadow-md' : 'bg-white border-gray-200 hover:border-sky-300 hover:shadow-md'}`}>
-                      <label className="flex items-start gap-4 cursor-pointer group">
-                        <div className="pt-1 shrink-0">
-                          <input 
-                            type="checkbox" 
-                            checked={isCompleted}
-                            onChange={() => handleToggleTask(activeDayData.day, task.idx, task.label)}
-                            className="w-5 h-5 rounded-md border-2 border-gray-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer transition-colors"
-                          />
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-start flex-wrap gap-2">
-                            {task.isOptional && (
-                              <div className="shrink-0 flex flex-col items-start gap-1">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-600 border border-violet-200">
-                                  ✦ Tùy chọn
-                                </span>
-                                {task.optionalNote && (
-                                  <span className="text-[11px] text-violet-500 italic font-medium">{task.optionalNote}</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <div className={`text-[17px] leading-relaxed transition-all ${isCompleted ? 'text-gray-400 line-through' : 'text-[#3E5E63]'}`}>
-                            {renderRichText(task.label)}
-                          </div>
-
-                        </div>
-                      </label>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <DayTaskChecklist
+              isEditMode={isEditMode}
+              activeDay={activeDayData.day}
+              dayTasks={dayTasks}
+              checkedTasks={checkedTasks}
+              onToggleTask={handleToggleTask}
+              editingTasks={editingTasks}
+              focusedTaskId={focusedTaskId}
+              setFocusedTaskId={setFocusedTaskId}
+              onTaskLabelChange={handleTaskLabelChange}
+              onTaskLabelBlur={handleTaskLabelBlur}
+              onToggleOptional={handleToggleOptional}
+              onDeleteTask={handleDeleteTask}
+              onMoveTask={handleMoveTask}
+              onAddTask={handleAddTask}
+            />
 
             {!isEditMode && isDayCompleted(selectedDay) && (
               <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/20 text-center space-y-4 animate-scale-up">
@@ -537,50 +487,12 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
                 </div>
               </div>
             )}
+
+            <DayBonusResources
+              activeDayData={activeDayData}
+              isEditMode={isEditMode}
+            />
           </div>
-
-
-
-          {/* Companion Mascot speech box */}
-          {!isEditMode && (
-            <div className="bg-white border-2 border-sky-100 p-5 rounded-2xl flex items-start gap-4">
-              <span className="text-3xl">🦜</span>
-              <div className="space-y-1">
-                <span className="text-xs text-sky-700 font-black block uppercase tracking-wider">Bác Vẹt Đồng Hành gợi ý:</span>
-                <div className="text-sm text-[#3E5E63] leading-relaxed font-semibold">
-                  {activeDayData.companionHint
-                    ? renderRichText(activeDayData.companionHint)
-                    : '"Thực hiện xong nhiệm vụ nào thì check ngay vào ô trống bên cạnh để nhận điểm thưởng nhé! Tích tiểu thành đại, hải trình còn dài! Nhớ hoàn thành 100% để mở khóa ngày mai nhé!"'}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Bonus Resources card */}
-          {!isEditMode && activeDayData.bonusResources && (
-            <div className="bg-amber-50/60 border-2 border-amber-100 p-5 rounded-2xl">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base">💬</span>
-                <span className="text-xs text-amber-700 font-black uppercase tracking-wider">Bonus: Tài liệu đọc thêm cho bạn</span>
-              </div>
-              <div className="space-y-1.5">
-                {activeDayData.bonusResources.split('\n').filter((l: string) => l.trim().startsWith('- [')).map((line: string, i: number) => {
-                  const match = line.match(/^- \[([^\]]+)\]\(([^)]+)\)/);
-                  if (!match) return null;
-                  const [, label, url] = match;
-                  return (
-                    <a key={i} href={url} target="_blank" rel="noreferrer"
-                       className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-amber-100 transition-colors group">
-                      <span className="text-amber-500 group-hover:text-amber-600 text-sm shrink-0">🔗</span>
-                      <span className="text-sm text-sky-600 group-hover:text-sky-700 font-medium group-hover:underline">{label}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-
         </div>
       )}
 

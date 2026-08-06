@@ -1,4 +1,6 @@
-# The1ight LMS - B5: Tone of Voice (Văn phong Hệ thống)
+# The1ight LMS - B5: Giọng văn & Ngôn ngữ (Tone of Voices)
+
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
 
 Để trải nghiệm học tập thực sự đồng nhất với Theme **"Hải trình Cướp biển"** và đem lại cảm giác gần gũi, The1ight LMS áp dụng một bộ quy tắc về Văn phong (Tone of Voice) cụ thể cho từng thành tố trong hệ thống.
 

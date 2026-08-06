@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CourseProvider } from './context/CourseContext';
 import { GamificationProvider } from './context/GamificationContext';
 import { CommunityProvider } from './context/CommunityContext';
+import { ToastProvider } from './context/ToastContext';
 import { GlobalNavigationSidebar } from './components/GlobalNavigationSidebar';
 import { GlobalHeader } from './components/GlobalHeader';
 import { ParrotMascot } from './components/ParrotMascot';
@@ -11,26 +12,25 @@ import { OnboardingForm } from './pages/student/OnboardingForm';
 import { AdminOnboardingForm } from './pages/admin/AdminOnboardingForm';
 import { ProductTour } from './components/ProductTour';
 
-// Pages
-import { StudentDashboard } from './pages/student/StudentDashboard';
-import { AnnouncementsView } from './pages/student/AnnouncementsView';
-import { AboutView } from './pages/student/AboutView';
-import { OnboardingView } from './pages/student/OnboardingView';
-import { SyllabusView } from './pages/student/SyllabusView';
+// Lazy-loaded Pages (Code Splitting)
+const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
+const AnnouncementsView = lazy(() => import('./pages/student/AnnouncementsView').then(m => ({ default: m.AnnouncementsView })));
+const AboutView = lazy(() => import('./pages/student/AboutView').then(m => ({ default: m.AboutView })));
+const OnboardingView = lazy(() => import('./pages/student/OnboardingView').then(m => ({ default: m.OnboardingView })));
+const SyllabusView = lazy(() => import('./pages/student/SyllabusView').then(m => ({ default: m.SyllabusView })));
+const CalendarView = lazy(() => import('./pages/student/CalendarView').then(m => ({ default: m.CalendarView })));
+const WallOfFame = lazy(() => import('./pages/student/WallOfFame').then(m => ({ default: m.WallOfFame })));
+const HelpDesk = lazy(() => import('./pages/student/HelpDesk').then(m => ({ default: m.HelpDesk })));
+const ProfileView = lazy(() => import('./pages/student/ProfileView').then(m => ({ default: m.ProfileView })));
 
-import { CalendarView } from './pages/student/CalendarView';
-import { WallOfFame } from './pages/student/WallOfFame';
-import { HelpDesk } from './pages/student/HelpDesk';
-import { ProfileView } from './pages/student/ProfileView';
-
-import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { AdminProfileView } from './pages/admin/AdminProfileView';
-import { CourseBuilder } from './pages/admin/CourseBuilder';
-import { StudentManagement } from './pages/admin/StudentManagement';
-import { InternalTeam } from './pages/admin/InternalTeam';
-import { Announcements as AdminAnnouncements } from './pages/admin/Announcements';
-import { CalendarManagement as AdminCalendarManagement } from './pages/admin/CalendarManagement';
-import { Settings as AdminSettings } from './pages/admin/Settings';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminProfileView = lazy(() => import('./pages/admin/AdminProfileView').then(m => ({ default: m.AdminProfileView })));
+const CourseBuilder = lazy(() => import('./pages/admin/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
+const StudentManagement = lazy(() => import('./pages/admin/StudentManagement').then(m => ({ default: m.StudentManagement })));
+const InternalTeam = lazy(() => import('./pages/admin/InternalTeam').then(m => ({ default: m.InternalTeam })));
+const AdminAnnouncements = lazy(() => import('./pages/admin/Announcements').then(m => ({ default: m.Announcements })));
+const AdminCalendarManagement = lazy(() => import('./pages/admin/CalendarManagement').then(m => ({ default: m.CalendarManagement })));
+const AdminSettings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
 
 import './App.css';
 
@@ -109,7 +109,14 @@ function MainAppShell() {
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <main className="page-container custom-scrollbar">
-          {renderPage()}
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
+              <div className="w-8 h-8 border-4 border-[#214C54] border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs font-bold text-gray-400">Đang tải trang...</span>
+            </div>
+          }>
+            {renderPage()}
+          </Suspense>
         </main>
       </div>
 
@@ -124,7 +131,9 @@ function App() {
       <CourseProvider>
         <GamificationProvider>
           <CommunityProvider>
-            <MainAppShell />
+            <ToastProvider>
+              <MainAppShell />
+            </ToastProvider>
           </CommunityProvider>
         </GamificationProvider>
       </CourseProvider>

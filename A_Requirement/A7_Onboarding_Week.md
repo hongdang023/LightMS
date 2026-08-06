@@ -1,5 +1,7 @@
 # LightMS - A7: Onboarding Week Structure (Cấu trúc Tuần Khởi động)
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+
 Tài liệu này quy định tiêu chuẩn cấu trúc nội dung cho một bài học/thử thách theo ngày (Daily Challenge) trong Tuần Onboarding (Onboarding Week). Cấu trúc này nhằm mục đích "kích hoạt" học viên, xây dựng thói quen và tạo động lực trước khi bước vào các bài học chuyên môn.
 
 ## 1. Triết lý thiết kế (Design Philosophy)

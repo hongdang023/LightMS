@@ -6,16 +6,45 @@ import {
   ChevronRight, 
   Info
 } from 'lucide-react';
-import { 
-  categories, 
-  getFaqs 
-} from '../../data/helpDeskData';
+import { categories } from '../../data/helpDeskData';
+import { useCommunity } from '../../context/CommunityContext';
 
 interface HelpDeskProps {
   onPageChange?: (page: string) => void;
 }
 
-export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
+// Simple markdown-to-HTML renderer (supports **bold**, [text](url), bullet lists, numbered lists, line breaks)
+function renderMarkdown(text: string): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    // Parse inline formatting
+    const parseInline = (str: string): React.ReactNode[] => {
+      const parts: React.ReactNode[] = [];
+      const regex = /\*\*(.+?)\*\*|\[(.+?)\]\((https?:\/\/[^)]+)\)/g;
+      let last = 0;
+      let m: RegExpExecArray | null;
+      while ((m = regex.exec(str)) !== null) {
+        if (m.index > last) parts.push(str.slice(last, m.index));
+        if (m[1]) parts.push(<strong key={m.index}>{m[1]}</strong>);
+        else if (m[2]) parts.push(<a key={m.index} href={m[3]} target="_blank" rel="noreferrer" className="text-[#214C54] font-bold hover:underline">{m[2]}</a>);
+        last = m.index + m[0].length;
+      }
+      if (last < str.length) parts.push(str.slice(last));
+      return parts;
+    };
+    if (line.startsWith('- ')) return <p key={i} className="flex gap-1.5"><span>•</span><span>{parseInline(line.slice(2))}</span></p>;
+    const numMatch = line.match(/^(\d+)\. (.+)$/);
+    if (numMatch) return <p key={i} className="flex gap-1.5"><span>{numMatch[1]}.</span><span>{parseInline(numMatch[2])}</span></p>;
+    if (line.startsWith('→ ')) return <p key={i} className="text-[#214C54] font-semibold">{parseInline(line.slice(2))}</p>;
+    if (line.trim() === '') return <br key={i} />;
+    return <p key={i}>{parseInline(line)}</p>;
+  });
+}
+
+export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange }) => {
+  const { helpDeskFaqs } = useCommunity();
+
   // Navigation states: 'home' | 'category' | 'article'
   const [viewState, setViewState] = useState<'home' | 'category' | 'article'>('home');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -25,19 +54,20 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
 
   const sectionsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  const faqs = useMemo(() => getFaqs(onPageChange), [onPageChange]);
+  // Use DB-backed faqs, falling back to empty while loading
+  const faqs = helpDeskFaqs;
 
 
   // Global search filtering across all articles
   const filteredArticles = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const query = searchQuery.toLowerCase();
-    return faqs.filter(art => 
-      art.q.toLowerCase().includes(query) || 
+    return faqs.filter(art =>
+      art.question.toLowerCase().includes(query) ||
       art.description.toLowerCase().includes(query) ||
       art.sections.some(sec => sec.title.toLowerCase().includes(query))
     );
-  }, [searchQuery]);
+  }, [faqs, searchQuery]);
 
   // Selected category info
   const selectedCategory = useMemo(() => {
@@ -47,12 +77,12 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
   // Articles within selected category
   const categoryArticles = useMemo(() => {
     return faqs.filter(art => art.category === selectedCategoryId);
-  }, [selectedCategoryId]);
+  }, [faqs, selectedCategoryId]);
 
   // Active article content
   const activeArticle = useMemo(() => {
     return faqs.find(art => art.id === selectedArticleId);
-  }, [selectedArticleId]);
+  }, [faqs, selectedArticleId]);
 
   // Intersection observer to highlight current section in Table of Contents
   useEffect(() => {
@@ -174,7 +204,7 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
                       }`}
                     >
                       <div className="space-y-1 text-left">
-                        <h4 className="font-bold text-xs text-[#15333B]">{art.q}</h4>
+                        <h4 className="font-bold text-xs text-[#15333B]">{art.question}</h4>
                         <p className="text-[10px] text-gray-400 font-medium">{art.description}</p>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-300" />
@@ -276,7 +306,7 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
                   }`}
                 >
                   <div className="space-y-1 text-left">
-                    <h4 className="font-bold text-xs text-[#15333B]">{art.q}</h4>
+                    <h4 className="font-bold text-xs text-[#15333B]">{art.question}</h4>
                     <p className="text-[10px] text-gray-400 font-semibold">{art.description}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-300" />
@@ -298,13 +328,13 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
             
             {/* Header info */}
             <div className="border-b border-gray-100 pb-5 space-y-2 text-left">
-              <h1 className="text-lg md:text-xl font-black text-[#15333B] leading-tight">{activeArticle.q}</h1>
+              <h1 className="text-lg md:text-xl font-black text-[#15333B] leading-tight">{activeArticle.question}</h1>
               <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold">
                 <span className="bg-[#214C54]/10 text-[#214C54] px-2 py-0.5 rounded">
                   {categories.find(c => c.id === activeArticle.category)?.label}
                 </span>
                 <span>•</span>
-                <span>Cập nhật ngày: {activeArticle.lastUpdated}</span>
+                <span>Cập nhật ngày: {activeArticle.last_updated}</span>
               </div>
             </div>
 
@@ -318,8 +348,8 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange }) => {
                   className="space-y-3 scroll-mt-20 text-left"
                 >
                   <h3 className="text-xs font-bold text-[#15333B] border-b border-gray-50 pb-2">{sec.title}</h3>
-                  <div className="text-xs text-[#3E5E63] leading-relaxed font-semibold">
-                    {sec.content}
+                  <div className="text-xs text-[#3E5E63] leading-relaxed font-semibold space-y-2">
+                    {renderMarkdown(sec.content)}
                   </div>
                 </div>
               ))}

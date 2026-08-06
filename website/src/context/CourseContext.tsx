@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Course, Batch, Lesson } from '../types/database';
 
@@ -23,6 +23,28 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [batches, setBatches] = useState<Batch[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLessonsLoading, setIsLessonsLoading] = useState(true);
+
+  // ── Initial data fetch from Supabase ──────────────────────────────────────
+  useEffect(() => {
+    const loadCourseData = async () => {
+      const [
+        { data: coursesData },
+        { data: batchesData },
+        { data: lessonsData },
+      ] = await Promise.all([
+        supabase.from('courses').select('*'),
+        supabase.from('batches').select('*'),
+        supabase.from('lessons').select('*').order('order_index', { ascending: true }),
+      ]);
+
+      if (coursesData) setCourses(coursesData);
+      if (batchesData) setBatches(batchesData);
+      if (lessonsData) setLessons(lessonsData);
+      setIsLessonsLoading(false);
+    };
+
+    loadCourseData();
+  }, []);
 
   const completeLesson = (lessonId: string) => {
     console.log('Complete lesson triggered:', lessonId);

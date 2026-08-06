@@ -1,5 +1,7 @@
 # LightMS - User Stories
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Stable
+
 Dựa trên triết lý outcome-based và các Jobs To Be Done (JTBD) đã định nghĩa, dưới đây là danh sách User Stories (US) cho hệ thống LightMS. Các User Story được chia theo 2 nhóm người dùng chính và đánh mã số để dễ dàng theo dõi.
 
 ## 1. Stakeholder: Học viên (Student)

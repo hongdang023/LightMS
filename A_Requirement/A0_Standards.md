@@ -1,5 +1,7 @@
 # A0. REQUIREMENT STANDARDS
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+
 ## Triết lý: Outcome-Based (OBE)
 
 Không mô tả tính năng dựa trên việc "Dữ liệu được hiển thị thế nào". Cần mô tả dựa trên: "User sẽ đạt được gì (Outcome) sau màn hình này?".

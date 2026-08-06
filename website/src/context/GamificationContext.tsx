@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Badge, ProfileBadge, NauticalMilesTransaction, Profile } from '../types/database';
 
@@ -36,6 +36,26 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Dummy profileBadges state placeholder if needed by context
   const profileBadges: ProfileBadge[] = useMemo(() => [], []);
+
+  // ── Initial data fetch from Supabase ──────────────────────────────────────
+  useEffect(() => {
+    const loadGamificationData = async () => {
+      const [
+        { data: badgesData },
+        { data: txData },
+      ] = await Promise.all([
+        supabase.from('badges').select('*'),
+        supabase.from('nautical_miles_transactions')
+          .select('*')
+          .order('created_at', { ascending: false }),
+      ]);
+
+      if (badgesData) setBadges(badgesData);
+      if (txData) setNauticalTransactions(txData);
+    };
+
+    loadGamificationData();
+  }, []);
 
   const unlockBadge = async (
     studentId: string,

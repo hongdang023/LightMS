@@ -1,5 +1,7 @@
 # The1ight LMS - A8: Syllabus Contents & Structure (Cấu trúc Syllabus)
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+
 Tài liệu này quy định tiêu chuẩn tổ chức và trình bày nội dung cho các bài học (Lessons) trong phần **Syllabus**, được tối ưu hóa từ bảng theo dõi truyền thống sang định dạng "All-in-one" chuẩn LMS quốc tế.
 
 ## 1. Phân tích cách tổ chức thông tin hiện tại

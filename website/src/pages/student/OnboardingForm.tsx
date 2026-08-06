@@ -3,6 +3,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
 import { BrandLogo } from '../../components/BrandLogo';
 import { ChevronRight, ChevronLeft, Award, Sparkles, Compass, Check } from 'lucide-react';
+import { FormStep1PersonalInfo } from '../../components/onboarding/formSteps/FormStep1PersonalInfo';
+import { FormStep2RoleAndField } from '../../components/onboarding/formSteps/FormStep2RoleAndField';
+import { FormStep3Demographics } from '../../components/onboarding/formSteps/FormStep3Demographics';
+import { FormStep4ProductIdea } from '../../components/onboarding/formSteps/FormStep4ProductIdea';
 
 interface OnboardingFormProps {
   onComplete?: () => void;
@@ -301,235 +305,47 @@ export const OnboardingForm: React.FC<OnboardingFormProps> = ({ onComplete: _onC
 
             {/* Step 1 Fields */}
             {step === 1 && (
-              <div className="space-y-4 animate-fade-in">
-                <div>
-                  <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Họ và tên</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                    placeholder="Nguyễn Văn A"
-                  />
-                  {errors.full_name && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.full_name}</span>}
-                </div>
-
-                <div>
-                    <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Số điện thoại (Zalo)</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.phone_number}
-                      onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                      placeholder="0901234567"
-                    />
-                    {errors.phone_number && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.phone_number}</span>}
-                  </div>
-
-                <div>
-                  <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Đường link Facebook cá nhân</label>
-                  <input
-                    type="url"
-                    required
-                    value={formData.facebook_url}
-                    onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all"
-                    placeholder="https://facebook.com/username"
-                  />
-                  {errors.facebook_url && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.facebook_url}</span>}
-                </div>
-              </div>
+              <FormStep1PersonalInfo
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+              />
             )}
 
             {/* Step 2 Fields */}
             {step === 2 && (
-              <div className="space-y-5 animate-fade-in pr-1">
-                {/* Current Role Dropdown */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Vai trò hiện tại của bạn? <span className="text-red-500">*</span></label>
-                  <select
-                    value={formData.current_role}
-                    onChange={(e) => setFormData({ ...formData, current_role: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
-                  >
-                    <option value="">-- Chọn vai trò --</option>
-                    <option value="Học sinh/ Sinh viên">Học sinh/ Sinh viên</option>
-                    <option value="Nhân viên/ Chuyên viên">Nhân viên/ Chuyên viên</option>
-                    <option value="Quản lý/ Leader">Quản lý/ Leader</option>
-                    <option value="Founder">Founder</option>
-                    <option value="Freelancer">Freelancer</option>
-                    <option value="Đang trong thời gian nghỉ việc/ chuyển ngành">Đang trong thời gian nghỉ việc/ chuyển ngành</option>
-                    <option value="Other">Other (Khác)...</option>
-                  </select>
-
-                  {formData.current_role === 'Other' && (
-                    <input
-                      type="text"
-                      required
-                      value={otherRole}
-                      onChange={(e) => setOtherRole(e.target.value)}
-                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
-                      placeholder="Nhập vai trò cụ thể của bạn..."
-                    />
-                  )}
-                  {errors.current_role && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.current_role}</span>}
-                </div>
-
-                {/* Work Field Dropdown */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn đang học/làm trong lĩnh vực gì? <span className="text-red-500">*</span></label>
-                  <select
-                    value={formData.work_field}
-                    onChange={(e) => setFormData({ ...formData, work_field: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
-                  >
-                    <option value="">-- Chọn lĩnh vực --</option>
-                    <option value="Marketing/ Truyền thông">Marketing/ Truyền thông</option>
-                    <option value="Tài chính/ Kế toán">Tài chính/ Kế toán</option>
-                    <option value="Giáo dục">Giáo dục</option>
-                    <option value="Sản phẩm/ Công nghệ">Sản phẩm/ Công nghệ</option>
-                    <option value="Sản xuất">Sản xuất</option>
-                    <option value="FMCG">FMCG</option>
-                    <option value="Nghệ thuật">Nghệ thuật</option>
-                    <option value="HR">HR</option>
-                    <option value="Other">Other (Khác)...</option>
-                  </select>
-
-                  {formData.work_field === 'Other' && (
-                    <input
-                      type="text"
-                      required
-                      value={otherField}
-                      onChange={(e) => setOtherField(e.target.value)}
-                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
-                      placeholder="Nhập lĩnh vực cụ thể của bạn..."
-                    />
-                  )}
-                  {errors.work_field && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.work_field}</span>}
-                </div>
-              </div>
+              <FormStep2RoleAndField
+                formData={formData}
+                setFormData={setFormData}
+                otherRole={otherRole}
+                setOtherRole={setOtherRole}
+                otherField={otherField}
+                setOtherField={setOtherField}
+                errors={errors}
+              />
             )}
 
             {/* Step 3 Fields */}
             {step === 3 && (
-              <div className="space-y-5 animate-fade-in max-h-[380px] overflow-y-auto pr-1">
-                
-                {/* Referral Source Dropdown */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn biết tới khoá học này từ đâu? <span className="text-red-500">*</span></label>
-                  <select
-                    value={formData.referral_source}
-                    onChange={(e) => setFormData({ ...formData, referral_source: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
-                  >
-                    <option value="">-- Chọn nguồn giới thiệu --</option>
-                    <option value="Substack The1ight">Substack The1ight</option>
-                    <option value="Facebook cá nhân của Trainer Quang Nguyễn">Facebook cá nhân của Trainer Quang Nguyễn</option>
-                    <option value="Facebook Fanpage The1ight">Facebook Fanpage The1ight</option>
-                    <option value="Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)">Facebook Group cộng đồng (Tự do từ Công sở, Vibe Coder Community)</option>
-                    <option value="Cộng đồng 1ight Club">Cộng đồng 1ight Club</option>
-                    <option value="Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)">Cộng đồng Alumni Club (Học viên cũ học lại khoá mới)</option>
-                    <option value="Người quen giới thiệu">Người quen giới thiệu</option>
-                    <option value="Other">Other (Khác)...</option>
-                  </select>
-
-                  {formData.referral_source === 'Other' && (
-                    <input
-                      type="text"
-                      required
-                      value={otherReferral}
-                      onChange={(e) => setOtherReferral(e.target.value)}
-                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
-                      placeholder="Nhập nguồn giới thiệu cụ thể..."
-                    />
-                  )}
-                  {errors.referral_source && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.referral_source}</span>}
-                </div>
-
-                {/* Living Region Dropdown */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Hiện tại bạn đang sinh sống ở khu vực nào? <span className="text-red-500">*</span></label>
-                  <select
-                    value={formData.living_region}
-                    onChange={(e) => setFormData({ ...formData, living_region: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
-                  >
-                    <option value="">-- Chọn khu vực --</option>
-                    <option value="Miền Bắc Việt Nam">Miền Bắc Việt Nam</option>
-                    <option value="Miền Trung Việt Nam">Miền Trung Việt Nam</option>
-                    <option value="Miền Nam Việt Nam">Miền Nam Việt Nam</option>
-                    <option value="Ngoài lãnh thổ Việt Nam">Ngoài lãnh thổ Việt Nam</option>
-                  </select>
-                  {errors.living_region && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.living_region}</span>}
-                </div>
-
-                {/* Gender Dropdown */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn là: <span className="text-red-500">*</span></label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
-                  >
-                    <option value="">-- Chọn giới tính --</option>
-                    <option value="Nam">Nam</option>
-                    <option value="Nữ">Nữ</option>
-                    <option value="Other">Other (Khác)...</option>
-                  </select>
-
-                  {formData.gender === 'Other' && (
-                    <input
-                      type="text"
-                      required
-                      value={otherGender}
-                      onChange={(e) => setOtherGender(e.target.value)}
-                      className="w-full mt-3 px-4 py-2.5 border border-gray-200 rounded-xl focus:border-[#214C54] focus:outline-none text-sm font-semibold"
-                      placeholder="Nhập giới tính của bạn..."
-                    />
-                  )}
-                  {errors.gender && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.gender}</span>}
-                </div>
-
-                {/* Age Group Dropdown */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Bạn năm nay bao nhiêu tuổi? <span className="text-red-500">*</span></label>
-                  <select
-                    value={formData.age_group}
-                    onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all bg-white"
-                  >
-                    <option value="">-- Chọn độ tuổi --</option>
-                    <option value="Dưới 18 tuổi">Dưới 18 tuổi</option>
-                    <option value="18 - 24 tuổi">18 - 24 tuổi</option>
-                    <option value="25 - 30 tuổi">25 - 30 tuổi</option>
-                    <option value="31 - 45 tuổi">31 - 45 tuổi</option>
-                    <option value="46 - 55 tuổi">46 - 55 tuổi</option>
-                    <option value="Trên 55 tuổi">Trên 55 tuổi</option>
-                  </select>
-                  {errors.age_group && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.age_group}</span>}
-                </div>
-              </div>
+              <FormStep3Demographics
+                formData={formData}
+                setFormData={setFormData}
+                otherReferral={otherReferral}
+                setOtherReferral={setOtherReferral}
+                otherGender={otherGender}
+                setOtherGender={setOtherGender}
+                errors={errors}
+              />
             )}
 
             {/* Step 4 Fields */}
             {step === 4 && (
-              <div className="space-y-4 animate-fade-in">
-                <div>
-                  <label className="block text-xs font-black text-gray-700 uppercase tracking-wider mb-1.5">Ý tưởng sản phẩm dự kiến xây dựng</label>
-                  <textarea
-                    required
-                    disabled={isSubmitting}
-                    value={formData.product_idea}
-                    onChange={(e) => setFormData({ ...formData, product_idea: e.target.value })}
-                    rows={5}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] text-sm font-semibold transition-all disabled:opacity-50"
-                    placeholder="VD: Một ứng dụng theo dõi chi tiêu mini kết nối Google Sheet để quản lý tài chính cá nhân tự động bằng AI..."
-                  />
-                  {errors.product_idea && <span className="text-[10px] text-red-500 font-bold mt-1 block">{errors.product_idea}</span>}
-                </div>
-              </div>
+              <FormStep4ProductIdea
+                formData={formData}
+                setFormData={setFormData}
+                isSubmitting={isSubmitting}
+                errors={errors}
+              />
             )}
             
             {submitError && (

@@ -37,7 +37,107 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [admins, setAdmins] = useState<Admin[]>([]);
 
   const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
-  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail === activeUser?.gmail) || admins[0] || null;
+  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) || admins[0] || null;
+
+  // Load profiles and admins from Supabase on startup
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [profRes, adminRes] = await Promise.all([
+          supabase.from('profiles').select('*'),
+          supabase.from('admins').select('*')
+        ]);
+        if (profRes.data) setProfiles(profRes.data as Profile[]);
+        if (adminRes.data) setAdmins(adminRes.data as Admin[]);
+      } catch (err) {
+        console.error('Error fetching profiles/admins in AuthContext:', err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Listen to Supabase Auth state changes (e.g. Google OAuth redirect)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const userEmail = session.user.email?.toLowerCase().trim() || '';
+        
+        // Check if user is in admins table dynamically from Supabase
+        const { data: adminData } = await supabase
+          .from('admins')
+          .select('*')
+          .eq('gmail', userEmail)
+          .maybeSingle();
+
+        const isAdmin = !!adminData;
+        const role: UserRole = isAdmin ? 'admin' : 'student';
+
+        // Check if profile exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('gmail', userEmail)
+          .maybeSingle();
+
+        let currentProfile: Profile;
+
+        if (existingProfile) {
+          if (existingProfile.role !== role) {
+            await supabase.from('profiles').update({ role }).eq('id', existingProfile.id);
+            existingProfile.role = role;
+          }
+          currentProfile = existingProfile as Profile;
+        } else {
+          const newProfile: Profile = {
+            id: session.user.id || crypto.randomUUID(),
+            full_name: session.user.user_metadata?.full_name || userEmail.split('@')[0],
+            avatar_url: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userEmail)}`,
+            role,
+            gmail: userEmail,
+            phone_number: '',
+            facebook_url: '',
+            is_profile_completed: false,
+            nautical_miles: 0,
+            visits: 1,
+            created_at: new Date().toISOString()
+          };
+          await supabase.from('profiles').insert([newProfile]);
+          currentProfile = newProfile;
+        }
+
+        setProfiles(prev => {
+          const idx = prev.findIndex(p => p.id === currentProfile.id);
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = currentProfile;
+            return copy;
+          }
+          return [currentProfile, ...prev];
+        });
+
+        if (adminData) {
+          setAdmins(prev => {
+            const idx = prev.findIndex(a => a.id === adminData.id);
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = adminData as Admin;
+              return copy;
+            }
+            return [adminData as Admin, ...prev];
+          });
+        }
+
+        setActiveUserId(currentProfile.id);
+        setIsAuthenticated(true);
+        localStorage.setItem('lms_active_user_id', currentProfile.id);
+        localStorage.setItem('lms_is_authenticated', 'true');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('lms_active_user_id', activeUserId);
@@ -51,14 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGmail = (email: string, _role: UserRole = 'student'): Profile | null => {
+  const loginWithGmail = (email: string, requestedRole: UserRole = 'student'): Profile | null => {
     const cleanEmail = email.trim().toLowerCase();
-    const adminEmails = [
-      'dangtuyethong2324@gmail.com',
-      'quangnhatnguyen2403@gmail.com',
-      'chinn2006@gmail.com'
-    ];
-    const isAdminEmail = adminEmails.includes(cleanEmail);
+    
+    // Check dynamic admin status against loaded admins array or requestedRole
+    const isAdminEmail = admins.some(a => a.gmail.toLowerCase() === cleanEmail) || requestedRole === 'admin';
     const finalRole: UserRole = isAdminEmail ? 'admin' : 'student';
 
     const existingUser = profiles.find(p => p.gmail.toLowerCase() === cleanEmail);

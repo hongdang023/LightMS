@@ -1,5 +1,7 @@
 # The1ight LMS - Sitemap & Official Nav Items
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+
 Sitemap này quy định tên chính thức của các thanh điều hướng (Nav Items) hiển thị trên giao diện của Học viên (Student Portal) và Ban vận hành (Admin Portal). Cấu trúc được tối ưu dựa trên triết lý Outcome-based và thiết kế Zero Friction.
 
 ## 1. Phân hệ Học viên (Student Portal)
@@ -26,14 +28,22 @@ Danh sách các Nav Items chính thức trên thanh điều hướng bên (Sideb
 
 - **Bảng vinh danh** (Icon: Nautical Star / Sao hàng hải 8 cánh)
   - Khu vực ghi nhận kết quả tốt và thành tựu xuất sắc của học viên. _(US-STU-09)_
+  - **Huy hiệu của tôi (My Achievements)**: Hiển thị bộ sưu tập 7 Huy hiệu Hành động mà học viên đã mở khóa.
 
 - **Hỏi đáp & Hỗ trợ** (Icon: Lifebuoy / Phao cứu sinh)
   - Cung cấp danh sách FAQ. Kèm theo button dẫn link trực tiếp vào phòng Light Support trên Telegram. _(US-STU-05)_
 
 - **Profile** (Icon: Captain / Thuyền trưởng) _(Thường nằm góc màn hình ở Avatar)_
-  - Thông tin cá nhân.
-  - Thành tựu của tôi (My Achievements): Huy hiệu và các cột mốc đã đạt. _(US-STU-06)_
+  - Thông tin cá nhân cơ bản và khảo sát ban đầu. _(US-STU-06)_
   - _Lưu ý:_ Icon Thông báo (Bell) nằm bên trái Profile hiển thị các tin mới nhất của lớp. Lúc ấn vào từng thông báo thì sẽ được điều hướng để đọc cả bài.
+
+- **Thông báo** _(Trang full-page, mở từ Bell icon)_
+  - Danh sách toàn bộ thông báo từ Ban tổ chức, phân loại theo category. _(FR-STU-16)_
+  - File: `AnnouncementsView.tsx`
+
+- **Khai báo Thông tin** _(Modal/Page, hiển thị lần đầu sau khi đăng ký)_
+  - Form khai báo thông tin cá nhân (nhân khẩu học, lĩnh vực, ý tưởng sản phẩm...) để hoàn thiện Profile và nhận thưởng Huy hiệu "Định danh".
+  - File: `OnboardingForm.tsx`
 
 ---
 
@@ -59,5 +69,11 @@ Danh sách các Nav Items chính thức dành cho Ban vận hành và Đội ng�
   - **Group Bulk Email:** Tích hợp bộ tạo mẫu và gửi email hàng loạt theo nhóm học viên (Tất cả, Cần hỗ trợ, Xuất sắc).
 
 - **Quản lý nhân sự** (Icon: Shield / Cờ hiệu)
-  - Phân quyền (Roles) cho hệ thống: Ai được làm Admin toàn quyền, ai làm Support.
-  - Quản lý danh sách nhân sự tham gia vận hành dự án.
+  - Quản lý danh sách nhân sự tham gia vận hành: thêm/sửa/xóa thành viên Ban vận hành.
+  - Phân quyền (Roles) cho hệ thống: `Founder`, `Trainer`, `Teaching Assistant (TA)`, `Operations`.
+  - File: `InternalTeam.tsx`
+
+- **Cài đặt hệ thống** (Icon: Gear / Răng cưa)
+  - Cấu hình chung của Batch (đặt tên lớp, ngày khai giảng, bế giảng).
+  - Các cài đặt vận hành khác của hệ thống.
+  - File: `Settings.tsx`

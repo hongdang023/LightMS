@@ -1,6 +1,11 @@
 # LightMS - B4: UI Design System
 
-Tài liệu này quy định hệ thống thiết kế giao diện (UI Design System) cho LightMS. Triết lý thiết kế được lấy cảm hứng từ **Canvas LMS** (tối giản, Card-based, sử dụng không gian trắng) nhưng được "thổi hồn" bởi **Theme Hải trình Cướp biển** độc đáo với hình ảnh **Ngọn hải đăng (Lighthouse)** làm biểu tượng trung tâm. Đặc biệt, giao diện sẽ có sự dẫn dắt của linh vật **"Vẹt lắm mồm"** xuyên suốt trải nghiệm học tập để hệ thống Gamification trở nên sống động.
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+
+Tài liệu này quy định hệ thống thiết kế giao diện (UI Design System) cho LightMS. Triết lý thiết kế được lấy cảm hứng từ **Canvas LMS** (tối giản, Card-based, sử dụng không gian trắng) nhưng được "thổi hồn" bởi **Theme Hải trình Cướp biển** độc đáo với hình ảnh **Ngọn hải đăng (Lighthouse)** làm biểu tượng trung tâm.
+
+> **Version:** 1.1 | **Cập nhật:** 2026-08-07
+> **Nguyên tắc:** Mọi quy định phải map 1:1 sang CSS variable hoặc Tailwind class trong codebase.
 
 ## 0. Branding Logo (Nhận diện Thương hiệu)
 - **Logo chính:** Hình ảnh ngọn hải đăng (The Lighthouse), tượng trưng cho sự soi đường chỉ lối và định hướng học tập rõ ràng.
@@ -10,164 +15,368 @@ Tài liệu này quy định hệ thống thiết kế giao diện (UI Design Sy
 
 ## 1. Colors & Branding (Hệ thống Màu sắc)
 
-Hệ thống màu sắc được trích xuất từ bảng màu thương hiệu (Theme Hải trình) với tông màu Xanh biển sâu (Teal/Ocean) làm chủ đạo và Vàng ánh kim (Gold) làm điểm nhấn cho các thành tựu.
-
 ### 1.1. Brand Colors (Màu thương hiệu)
 
-- **Primary Teal:** `#214C54`
-  - _Ứng dụng:_ Màu chủ đạo cho Navbar, Primary Buttons, các đường viền active, icon chính. Thể hiện sự chuyên nghiệp, sâu sắc của "đại dương kiến thức".
-- **Dark Slate (Navy/Deep Teal):** `#15333B`
-  - _Ứng dụng:_ Dùng cho màu chữ chính (Typography: Heading, Body text mạnh), Footer, hoặc nền sidebar (Dark mode). Mang lại độ tương phản cao, dễ đọc.
-- **Muted Teal:** `#3E5E63`
-  - _Ứng dụng:_ Dùng cho màu chữ phụ (Secondary text), các nút Secondary, hoặc viền thẻ (Card borders).
+- **Primary Teal:** `#214C54` | CSS: `var(--primary-teal)`
+  - _Ứng dụng:_ Navbar, Primary Buttons, đường viền active, icon chính.
+- **Dark Slate:** `#15333B` | CSS: `var(--dark-slate)`
+  - _Ứng dụng:_ Màu chữ chính (Heading, Body text), Footer.
+- **Muted Teal:** `#3E5E63` | CSS: `var(--muted-teal)`
+  - _Ứng dụng:_ Chữ phụ (Secondary text), viền thẻ (Card borders), viền nút Secondary.
 
 ### 1.2. Accent Colors (Màu nhấn & Gamification)
 
-- **Light Gold / Yellow:** `#FFD94C`
-  - _Ứng dụng:_ Màu nhấn phụ, dùng cho các thông báo (warnings nhẹ), highlight text, hoặc viền các thẻ chứa nội dung quan trọng.
-- **Deep Gold / Amber:** `#EAB308`
-  - _Ứng dụng:_ Màu nhấn chính cho Gamification. Dùng cho các icon Huy hiệu (Badges), điểm số Hải lý, nút CTA (Call-to-Action) đặc biệt như "Nộp bài ngay", hoặc trạng thái đạt "Mastery".
+- **Light Gold:** `#FFD94C` | CSS: `var(--light-gold)`
+  - _Ứng dụng:_ Highlight text, viền thẻ nội dung quan trọng.
+- **Deep Gold / Amber:** `#EAB308` | CSS: `var(--deep-gold)`
+  - _Ứng dụng:_ **Dành riêng cho Gamification** — Badge Huy hiệu, điểm Hải lý, nút Gamification CTA, trạng thái Mastery. **Không dùng cho generic success.**
 
 ### 1.3. Background Colors (Màu nền)
 
-- **Canvas Gray:** `#F0F0F0`
-  - _Ứng dụng:_ Màu nền tảng của toàn bộ ứng dụng (App Background). Các thẻ nội dung (Cards) màu trắng (`#FFFFFF`) sẽ nổi bật rõ ràng trên nền xám nhạt này theo đúng phong cách Canvas.
-- **Cream / Soft Yellow:** `#FDF5DA`
-  - _Ứng dụng:_ Màu nền nhẹ cho các khu vực Scaffolding (Template mẫu), bảng Alert cảnh báo, hoặc nền các bình luận được "Verified".
+- **Canvas Gray:** `#F0F0F0` | CSS: `var(--canvas-gray)`
+  - _Ứng dụng:_ Nền tổng thể của app. Cards trắng (`#FFFFFF`) nổi bật trên nền này.
+- **Cream:** `#FDF5DA` | CSS: `var(--cream)`
+  - _Ứng dụng:_ Nền Scaffolding, Alert Mastery, bình luận được Verified.
+
+### 1.4. Semantic Colors (Màu ngữ nghĩa)
+
+- **Success:** `#10B981` | CSS: `var(--success)` — Nộp bài thành công, hoàn thành task.
+- **Warning:** `#F59E0B` | CSS: `var(--warning)` — Deadline sắp đến, cảnh báo nhẹ.
+- **Danger:** `#EF4444` | CSS: `var(--danger)` — Hành động xóa, hủy, lỗi hệ thống.
 
 ---
 
 ## 2. Buttons & Actions (Nút bấm & Tương tác)
 
-Theo triết lý Zero Friction, các nút bấm phải rõ ràng mục đích, kích thước đủ lớn (Touch-friendly) và có phân cấp thị giác (Visual Hierarchy) rõ ràng.
-
 ### 2.1. Phân cấp Nút bấm (Button Hierarchy)
 
-- **Primary Button (Hành động chính):**
-  - _Màu sắc:_ Nền `#214C54`, Chữ trắng (`#FFFFFF`). Khi Hover: Chuyển sang `#15333B`.
-  - _Sử dụng:_ Chỉ có 1 Primary Button trên mỗi màn hình (VD: "Nộp bài", "Lưu cài đặt").
-- **Secondary Button (Hành động phụ):**
-  - _Màu sắc:_ Nền Trắng/Trong suốt, Viền `#3E5E63`, Chữ `#3E5E63`.
-  - _Sử dụng:_ Các nút "Hủy", "Quay lại", "Xem bản nháp".
-- **Gamification / CTA Button:**
-  - _Màu sắc:_ Nền `#EAB308`, Chữ `#15333B` hoặc Trắng.
-  - _Sử dụng:_ Nút bấm mang tính khích lệ, mở khóa huy hiệu, hoặc "Nhận thưởng".
+- **`primary` — Hành động chính:**
+  - Nền `#214C54`, Chữ trắng. Hover: nền `#15333B` + `shadow-md` + `-translate-y-0.5`.
+  - Chỉ **1 Primary Button** trên mỗi màn hình. VD: "Nộp bài", "Lưu cài đặt".
+
+- **`secondary` — Hành động phụ:**
+  - Nền **trong suốt (transparent)**, Viền `1px solid #3E5E63`, Chữ `#3E5E63`. Hover: nền `#F0F0F0`.
+  - VD: "Hủy", "Quay lại", "Xem bản nháp".
+
+- **`gamification` — CTA Gamification:**
+  - Nền `#EAB308`, Chữ `#15333B`. Hover: nền đậm hơn + `shadow-glow`.
+  - **Chỉ dùng trong context Gamification.** VD: "Nhận thưởng", "Mở khóa badge".
+
+- **`danger` — Hành động xóa/hủy:**
+  - Nền `#EF4444`, Chữ trắng. Hover: nền `#DC2626`.
+  - Luôn kèm dialog xác nhận trước khi thực thi.
+
+- **`ghost` — Hành động ẩn/thứ yếu:**
+  - Nền trong suốt, Chữ `#3E5E63`. Hover: nền `#F0F0F0`, không shadow.
+  - Icon-only actions, subtle text links, hành động ít ưu tiên.
 
 ### 2.2. Trạng thái (States)
 
-- **Disabled (Vô hiệu hóa):** Nền xám nhạt (`#F0F0F0`), Chữ xám (`#9CA3AF`). KHÔNG có hiệu ứng bấm. Dùng khi học viên chưa đủ điều kiện mở khóa bài học.
-- **Loading:** Hiển thị Spinner (vòng quay) nhỏ bên trong nút, text đổi thành "Đang xử lý...".
+- **Disabled:** Opacity `50%` (`opacity-50`), `pointer-events: none`. Áp dụng đồng nhất qua mọi variant.
+- **Loading:** Spinner nhỏ thay thế leftIcon, text giữ nguyên.
 
-### 2.3. Tiêu chuẩn Thiết kế Nút bấm Cao cấp (Premium Button Guidelines)
+### 2.3. Tiêu chuẩn Nút bấm Cao cấp
 
-- **Border Radius (Độ bo góc):** Các nút bấm phải sử dụng bo góc vừa phải (`rounded-lg` hoặc `rounded-xl`, tương đương 8px - 12px) để mang lại cảm giác thân thiện nhưng vẫn hiện đại, sang trọng. Hạn chế dùng bo tròn hoàn toàn (`rounded-full`) ngoại trừ các Badge trạng thái, và tuyệt đối không dùng nút vuông vức (0px) tạo cảm giác thô cứng.
-- **Shadows & Depth (Đổ bóng & Độ sâu):** Sử dụng `shadow-sm` cho các nút ở trạng thái bình thường để tạo độ nổi nhẹ nhàng. Khi hover, tăng lên `shadow-md` kết hợp hiệu ứng nhấc lên (`-translate-y-0.5`) mượt mà (`transition-all duration-300`). Tuyệt đối tránh drop shadow quá đậm hoặc màu đen cứng.
-- **Padding & Breathing Room (Không gian thở):** Nút bấm cần không gian thở rộng rãi. Padding dọc tối thiểu `py-2` hoặc `py-2.5`, padding ngang tối thiểu `px-4` hoặc `px-5`. Chữ bên trong nút không bao giờ được phép dính sát mép.
-- **Micro-interactions (Vi tương tác):** Hover states không chỉ đổi màu mà nên kết hợp hiệu ứng thay đổi độ sáng hoặc chuyển đổi màu nền tinh tế. Khi bấm (Active state), nút nên có hiệu ứng lún nhẹ (`scale-95`). Nếu nút có chứa Icon, Icon nên có hiệu ứng dịch chuyển (VD: mũi tên trượt nhẹ sang phải `group-hover:translate-x-1`).
+- **Border Radius:** `rounded-xl` (12px) — mặc định cho mọi button. Không dùng `rounded-full` hay `rounded-none`.
+- **Shadows:** `shadow-sm` thường → `shadow-md` + `-translate-y-0.5` khi hover (`transition-all duration-200`).
+- **Padding:** `sm`: `py-1.5 px-3` | `md`: `py-2 px-4` | `lg`: `py-3 px-6`.
+- **Active state:** `scale-95`. Icon mũi tên: `group-hover:translate-x-1`.
 
 ---
 
 ## 3. Typography & Formats (Định dạng & Font chữ)
 
-Chú trọng vào khả năng đọc (Readability). LMS là nơi học viên phải đọc rất nhiều text (Rich-text), nên khoảng cách dòng (Line-height) và font chữ phải thân thiện với mắt.
-
 ### 3.1. Font Families
 
-- **Font chính (Headings & UI):** `Inter` hoặc `Roboto`. Các font Sans-Serif hiện đại, tròn trịa, hiển thị cực nét trên màn hình số.
-- **Font phụ (Monospace / Code):** `Fira Code` hoặc `JetBrains Mono`. Dành riêng cho các khối block code hoặc các thẻ pre-formatted trong Rich-text.
+- **Font chính:** `Inter` — CSS: `var(--font-sans)`. Import từ Google Fonts (weights: 300–800).
+- **Font code:** `JetBrains Mono` — CSS: `var(--font-mono)`. Dành cho block code và pre-formatted text.
+
+> ⚠️ **Đã chốt:** Không dùng Roboto hay Fira Code. Codebase đang dùng Inter + JetBrains Mono.
 
 ### 3.2. Text Hierarchy (Phân cấp chữ)
 
-- **H1 (Page Title):** 28px - 32px | Bold | Màu `#15333B`. Dành cho Tên Khóa học, Tiêu đề Dashboard.
-- **H2 (Section Title):** 24px | Semi-Bold | Màu `#214C54`. Tên Bài học, Tên Phần.
-- **H3 (Card Title):** 18px - 20px | Medium | Màu `#15333B`. Tiêu đề của từng hộp nội dung.
-- **Body Text (Nội dung chính):** 16px | Regular | Màu `#15333B` (hoặc opacity 80% là `#3E5E63` cho chữ bớt gắt). Line-height: `1.6` (để dễ đọc).
-- **Small Text (Meta data):** 13px - 14px | Regular | Dành cho ngày giờ, tác giả, số lượt Upvotes.
+- **H1 (Page Title):** `1.75rem` | `font-weight: 800` | `var(--dark-slate)`. Mobile: `1.5rem`.
+- **H2 (Section Title):** `1.5rem` | `font-weight: 700` | `var(--dark-slate)`.
+- **H3 (Card Title):** `1.25rem` | `font-weight: 600` | `var(--dark-slate)`.
+- **H4:** `1.125rem` | `font-weight: 600` | `var(--dark-slate)`.
+- **H6 (Label/Tag):** `0.875rem` | `font-weight: 600` | `var(--muted-teal)` | uppercase | `letter-spacing: 0.05em`.
+- **Body Text:** `1rem` | Regular | `var(--dark-slate)`. Line-height: `1.7`.
+- **Small Text (Meta):** `0.875rem` | `var(--muted-teal)`. Ngày giờ, tác giả, số Upvote.
 
 ### 3.3. Rich-Text Format
 
-- **Blockquote (Trích dẫn):** Có dải màu viền trái là `#EAB308`, nền `#FDF5DA` để nhấn mạnh các ghi chú quan trọng từ Admin.
-- **Bold/Highlight:** Dùng màu `#214C54` cho chữ bôi đậm thay vì màu đen tuyền.
+- **Blockquote:** Viền trái `4px solid var(--deep-gold)`, nền `var(--cream)`, padding `12px 16px`, radius `0 12px 12px 0`.
+- **Code inline:** Nền `#E2E8F0`, padding `2px 6px`, radius `4px`, font `var(--font-mono)`.
+- **Code block:** Nền `var(--dark-slate)`, chữ `#F8FAFC`, padding `16px`, radius `12px`.
+- **Bold text:** Dùng màu `var(--primary-teal)` thay vì đen tuyền.
 
 ---
 
 ## 4. Alerts & Notifications (Thông báo & Cảnh báo)
 
-Hệ thống thông báo cần tinh tế, không làm phiền trải nghiệm học tập, nhưng phải đủ sức thu hút sự chú ý khi cần thiết (ví dụ: Trễ deadline).
-
-- **Success Alert (Thành công - Mở khóa):**
-  - Nền `#FDF5DA`, Text và Icon `#EAB308` (hoặc màu xanh lá cây tiêu chuẩn). Dùng khi nộp bài thành công, nhận điểm Mastery.
-- **Info Alert (Thông tin học tập):**
-  - Nền `#F0F0F0`, Viền trái màu `#214C54`. Dùng để cung cấp Scaffolding, gợi ý cách làm bài, hoặc hướng dẫn Onboarding.
-- **Warning Alert (Cảnh báo - Trễ deadline):**
-  - Nền `#FFFBEB` (vàng nhạt), Text `#B45309`. Nhắc nhở học viên sắp đến hạn chót hoặc cần cập nhật hồ sơ.
-- **Toast Notifications:**
-  - Hiển thị góc dưới cùng bên phải màn hình. Tự động biến mất sau 3 giây. Dùng cho các thao tác phụ như "Đã lưu bản nháp", "Đã copy link".
+- **Success Alert:** Nền `#ECFDF5`, Viền trái `#10B981`, Text `#10B981`. Dùng khi nộp bài thành công, hoàn thành task. ⚠️ Không dùng vàng gold cho Success.
+- **Mastery Alert (Gamification):** Nền `var(--cream)`, Viền trái `#EAB308`, Text `#EAB308`. Khi nhận Mastery, mở khóa badge.
+- **Info Alert:** Nền `var(--canvas-gray)`, Viền trái `var(--primary-teal)`. Scaffolding, hướng dẫn Onboarding.
+- **Warning Alert:** Nền `#FFFBEB`, Viền trái `#F59E0B`, Text `#B45309`. Deadline sắp đến.
+- **Toast Notifications:** Góc dưới phải màn hình. Tự động ẩn sau **3 giây**.
 
 ---
 
 ## 5. Theme Integration & Mascot (Tích hợp Chủ đề & Linh vật)
 
-Để làm sống động không khí **Hải trình, Hải tặc và Cướp biển**, UI sẽ lồng ghép các yếu tố đồ họa một cách tinh tế (giữ được sự sang trọng của Elegance mà không làm rối nội dung học):
+- **Linh vật "Vẹt lắm mồm":** Trợ lý ảo xuất hiện dạng Pop-up/Tooltip ở góc màn hình. Lời thoại đậm chất cướp biển (VD: _"Aye aye Thuyền trưởng! Bão bài tập đang đến!"_).
 
-- **Linh vật "Vẹt lắm mồm" (The Talkative Parrot):**
-  - Đóng vai trò là trợ lý ảo (Virtual Assistant). Thường xuyên xuất hiện ở các góc màn hình (dạng Pop-up popover/Tooltip) để nhắc nhở làm bài, báo tin vui khi nhận huy hiệu, hoặc "lải nhải" thúc giục nếu học viên nộp bài trễ.
-  - Các lời thoại của Vẹt mang phong cách hài hước, đậm chất cướp biển (Ví dụ: _"Aye aye Thuyền trưởng! Bão bài tập đang đến, hãy giương buồm lên!"_).
-- **Premium Iconography & UI Elements (Nautical Elegance):**
-  - **Phong cách Icon (Icon Style):** Để tránh cảm giác "AI-generated" hoặc "hoạt hình" rẻ tiền, hệ thống sử dụng **Minimalist Line-art Icons** (độ dày nét 1.5px - 2px) kết hợp phong cách **Duotone** tinh tế (Màu chính: Teal `#214C54`, Màu nhấn: Gold `#EAB308`).
-  - **Trọng lượng nét (Stroke Weight):** Độ dày nét (stroke-width) phải hoàn toàn nhất quán trên toàn bộ hệ thống (khuyên dùng 1.5px). Tuyệt đối không mix lẫn lộn icon nét dày và nét mỏng, hoặc icon dạng solid (fill) và dạng line trong cùng một nhóm chức năng để giữ sự thanh lịch.
-  - **Tỉ lệ khung hình (Alignment & Size):** Tất cả các icon phải được căn giữa hoàn hảo trong một khung hình (box) chuẩn (VD: 24x24px). Đảm bảo icon thẳng hàng tuyệt đối (optical alignment) với text đi kèm.
-  - **Micro-animations (Hiệu ứng động):** Các icon ở vị trí tương tác quan trọng nên có hiệu ứng động tinh tế khi người dùng chú ý tới (hover). Ví dụ: icon mũi tên trượt ngang nhẹ, icon mỏ neo nhấp nhô nhẹ.
-  - **Metaphor (Ẩn dụ hàng hải cao cấp):** Các biểu tượng được hình học hóa và cách điệu tối giản từ chủ đề cướp biển/hải trình:
-    - _Dashboard:_ Biểu tượng **La bàn (Compass)** thanh mảnh với kim chỉ nam mạ vàng.
-    - _Wall of Fame (Leaderboard):_ Hình ảnh **Ngôi sao hàng hải (Nautical Star)** sắc nét. Giao diện Leaderboard lấy cảm hứng từ **Skool và Duolingo**, tập trung vào tính cạnh tranh lành mạnh, phân cấp rõ ràng ai đang dẫn đầu, và tôn vinh nỗ lực bền bỉ.
-    - _Learning/Courses:_ Biểu tượng **Bản đồ cuộn (Scroll Map)** hoặc **Kính viễn vọng (Telescope)** dạng nét đứt tinh xảo.
-  - Thanh Tiến độ (Progress Bar) được thiết kế giống như một con thuyền lướt trên sóng biển trỏ tới đích đến.
+- **Iconography:**
+  - Dùng **Lucide** làm thư viện icon chuẩn. `strokeWidth={1.5}` thống nhất toàn hệ thống.
+  - Kích thước chuẩn: `24x24px` thường | `20x20px` trong button/badge | `16x16px` inline.
+  - Màu: `var(--primary-teal)` icon chính | `var(--muted-teal)` icon phụ | `var(--deep-gold)` icon Gamification.
+  - Micro-animation: mũi tên `group-hover:translate-x-1`, tải lên `group-hover:-translate-y-0.5`.
+
+- **Metaphor hàng hải:**
+  - Dashboard: La bàn (Compass).
+  - Wall of Fame: Ngôi sao hàng hải (Nautical Star).
+  - Courses: Kính viễn vọng (Telescope).
 
 ---
 
 ## 6. Layout & UX Optimization (Tối ưu hóa Bố cục & Trải nghiệm)
 
-Để đảm bảo hệ thống dễ sử dụng, hiện đại và thân thiện với người dùng, UI Design System bổ sung các nguyên tắc tối ưu hóa trải nghiệm (UX) sau:
+### 6.1. Collapsible Sidebar
 
-### 6.1. Collapsible Sidebar (Thanh điều hướng thu gọn)
+- Desktop (≥1024px): Sidebar full (~240px), có thể thu gọn xuống 80px (icon-only).
+- Tablet (768–1023px): Mặc định collapsed (80px).
+- Mobile (<768px): Ẩn hoàn toàn, chuyển thành Drawer kéo từ mép trái + nút Hamburger trên Header.
 
-- **Implement Collapsible Sidebar:** Thiết lập thanh điều hướng bên trái thành dạng có thể thu gọn (collapsible).
+### 6.2. Visual Hierarchy (Phân cấp thị giác)
 
-### 6.2. Establish Strong Visual Hierarchy (Phân cấp thị giác rõ rệt)
+Elevation system dựa trên shadow:
 
-### 6.3. Optimize Spacing & Whitespace (Tối ưu hóa Khoảng cách & Không gian trống)
+| Tầng | Thành phần | Shadow Token |
+|------|-----------|-------------|
+| Base | App background | Không shadow |
+| Level 1 | Cards, Panels thường | `var(--shadow-sm)` |
+| Level 2 | Hover state, Active cards | `var(--shadow-md)` |
+| Level 3 | Modals, Dialogs, Dropdowns | `var(--shadow-lg)` |
 
-- **Khoảng cách nhất quán:** Áp dụng hệ thống khoảng cách nhất quán (padding, margin theo bội số chuẩn).
+> **Rule:** Không dùng shadow đen cứng. Luôn dùng shadow rgba với opacity thấp.
 
-### 6.4. Enhance Component Contrast (Tăng cường độ tương phản Component)
+### 6.3. Spacing Scale (Hệ thống khoảng cách)
 
-- **Tách biệt nội dung:** Tăng cường độ tương phản cho các thành phần UI bằng cách sử dụng background-color khác biệt cho các Card
+Bội số **4px** theo hệ Tailwind:
 
-* Sử dụng các icon set đồng bộ ở phần header của mỗi Card để tách biệt rạch ròi các block nội dung.
+| Tailwind | Giá trị | Dùng cho |
+|----------|---------|----------|
+| `p-1` / `gap-1` | 4px | Icon spacing, tiny gaps |
+| `p-2` / `gap-2` | 8px | Button padding nhỏ, icon+text |
+| `p-4` / `gap-4` | 16px | Card padding mặc định |
+| `p-6` / `gap-6` | 24px | Card padding rộng |
+| `mb-8` | 32px | Section separation |
+| `mb-10` | 40px | Page Header margin-bottom |
 
-- _Mục đích:_ Giúp các thành phần không bị lẫn vào nhau, định hình rõ ranh giới của từng khối thông tin.
+### 6.4. Component Contrast
 
-### 6.5. Integrate Prominent Call-to-Action (Tích hợp CTA nổi bật)
+- Card luôn dùng `bg-white` trên nền `var(--canvas-gray)`.
+- Card headers: icon Lucide (20px, `var(--primary-teal)`) ở đầu mỗi section để phân biệt block.
+- Viền phân cách: `border border-gray-200` (không dùng `border-gray-300` — quá tối).
 
-- **Vị trí chiến lược:** Thêm các nút hành động (CTA) có độ nổi bật cao (theo chuẩn Primary / Gamification Buttons) tại các vị trí dễ thấy và logic theo dòng chảy trải nghiệm (ví dụ: cuối bài học, góc trên bên phải).
-- _Mục đích:_ Điều hướng người dùng thực hiện các mục tiêu cụ thể (VD: "Làm bài tập", "Nộp bài ngay", "Khám phá bài học tiếp theo") một cách mượt mà và chủ động.
+### 6.5. Prominent Call-to-Action
 
-### 6.6. Page Header Standards (Tiêu chuẩn Tiêu đề Trang)
+CTA nổi bật đặt tại: cuối bài học, góc trên phải header, bottom của form.
 
-- **Maximize Negative Space:** Mở rộng khoảng cách (margin-bottom lớn, ví dụ `mb-8` hoặc `mb-10`) xung quanh khối Header. Hạn chế độ rộng tối đa của phần mô tả (`max-w-3xl`) để tạo không gian trống (negative space) hào phóng bên phải, giảm tải áp lực thị giác.
-- **Implement Subtle Visual Elements:** Chỉ sử dụng các icon dạng nét mảnh (outline) từ bộ thư viện chuẩn (Lucide) với màu sắc nhã nhặn để trang trí tiêu đề, duy trì sự nhất quán và phong cách "Zen".
-- **Standardize UI Alignment:** Thiết lập quy tắc căn lề nhất quán: Toàn bộ khối Page Header luôn được căn lề trái (left-aligned) đồng bộ trên toàn hệ thống. Mọi yếu tố từ Icon, Title đến Description đều phải thẳng hàng.
+### 6.6. Page Header Standards
+
+- `mb-8` hoặc `mb-10` dưới khối Header.
+- Description: `max-w-3xl` để tạo negative space.
+- Căn **lề trái** tuyệt đối. Icon + Title + Description thẳng hàng.
 
 ### 6.7. Admin UI Consistency (WYSIWYG)
 
-- **Edit Mode & Reading Mode:** Đối với phân hệ Admin (như Course Builder, Onboarding, Thông báo), giao diện xem và chỉnh sửa phải sử dụng chung hệ thống Component với Student Mode.
-- _Mục đích:_ Mang lại trải nghiệm WYSIWYG (What You See Is What You Get) chân thực nhất, giúp Admin dễ dàng căn chỉnh các chi tiết nhỏ mà không gặp rủi ro "bên tạo một kiểu, bên xem một kiểu".
+Admin (Course Builder, Onboarding, Thông báo) dùng chung 100% component với Student Mode.
 
-### 6.8. Mobile Responsiveness Standards (Tiêu chuẩn Giao diện Di động)
+### 6.8. Mobile Responsiveness
 
-- **Responsive Viewports:** Hệ thống giao diện được tối ưu hóa cho màn hình di động theo nguyên tắc co giãn và sắp xếp lại khối (reflow).
-  - *Màn hình nhỏ (Mobile < 768px):* Sidebar ẩn hoàn toàn, chuyển đổi thành Drawer kéo từ mép trái màn hình. Khoảng đệm (padding) của trang giảm từ `2rem` xuống còn `1rem` hoặc `1.25rem`. Các bố cục lưới nhiều cột (grid columns) tự động chuyển về dạng một cột (1 column layout).
-  - *Màn hình vừa (Tablet >= 768px và < 1024px):* Sidebar mặc định ở trạng thái thu gọn (collapsed - rộng 80px) để dành tối đa không gian cho nội dung chính.
-- **Typography Adaptation:** Các tiêu đề lớn tự động giảm kích thước trên di động để tránh ngắt dòng xấu (H1 từ `28px-32px` giảm xuống `20px-24px`).
-- **Touch Targets:** Các nút tương tác và liên kết trên di động phải có vùng đệm tối thiểu hoặc kích thước chiều cao từ `44px` trở lên để đảm bảo tính năng chạm bằng ngón tay hoạt động chính xác.
+- Mobile (<768px): Padding `p-6` → `p-4`. Grid nhiều cột → 1 cột.
+- Touch target tối thiểu: `44px` chiều cao cho mọi interactive element.
+
+---
+
+## 7. Design Tokens Reference
+
+Single source of truth — khai báo trong `src/index.css`.
+
+### 7.1. Color Tokens
+
+| Token | Hex | Ứng dụng |
+|-------|-----|-----------|
+| `--primary-teal` | `#214C54` | Primary button, navbar, active states |
+| `--dark-slate` | `#15333B` | Heading text, body text chính |
+| `--muted-teal` | `#3E5E63` | Secondary text, card border |
+| `--light-gold` | `#FFD94C` | Highlight, warning border nhẹ |
+| `--deep-gold` | `#EAB308` | Gamification, badge, mastery |
+| `--canvas-gray` | `#F0F0F0` | App background |
+| `--cream` | `#FDF5DA` | Scaffolding bg, mastery alert |
+| `--white` | `#FFFFFF` | Card background |
+| `--success` | `#10B981` | Success states |
+| `--warning` | `#F59E0B` | Warning states |
+| `--danger` | `#EF4444` | Danger states |
+
+### 7.2. Typography Tokens
+
+| Token | Giá trị |
+|-------|---------|
+| `--font-sans` | `'Inter', sans-serif` |
+| `--font-mono` | `'JetBrains Mono', monospace` |
+
+### 7.3. Border Radius Tokens
+
+| Token | Giá trị | Dùng cho |
+|-------|---------|----------|
+| `--radius-sm` | `8px` | Form inputs, small badges |
+| `--radius-md` | `12px` | Cards, panels, modals |
+| `--radius-lg` | `16px` | Large cards, hero sections |
+| `--radius-xl` | `24px` | Floating elements, popovers |
+
+### 7.4. Shadow Tokens
+
+| Token | Giá trị | Tầng |
+|-------|---------|------|
+| `--shadow-sm` | `0 1px 3px rgba(0,0,0,0.05)` | Cards thường |
+| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.05)` | Cards hover |
+| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.05)` | Modals |
+| `--shadow-glow` | `0 0 15px rgba(234,179,8,0.2)` | Gamification glow |
+
+---
+
+## 8. Component Specs (Đặc tả Component)
+
+### 8.1. Badge
+
+File: `src/components/ui/Badge.tsx`
+
+| Variant | Nền | Chữ | Ứng dụng |
+|---------|-----|-----|----------|
+| `mastery` | `#FDF5DA` | `#EAB308` | Đạt Mastery, thành tích Gamification |
+| `submitted` | `#EFF6FF` | `#214C54` | Đã nộp bài, chờ chấm |
+| `graded` | `#ECFDF5` | `#10B981` | Đã chấm xong |
+| `pending` | `#F0F0F0` | `#6B7280` | Chưa nộp, chờ mở khóa |
+| `overdue` | `#FEF2F2` | `#EF4444` | Trễ deadline |
+| `info` | `#EFF6FF` | `#3B82F6` | Thông tin chung |
+| `warning` | `#FFFBEB` | `#F59E0B` | Cảnh báo |
+
+### 8.2. Card
+
+Không có file riêng — class pattern chuẩn:
+
+```
+bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-sm)]
+border border-gray-200 p-4 md:p-6
+```
+
+Hover (nếu clickable): `hover:shadow-[var(--shadow-md)] transition-shadow duration-200`
+
+### 8.3. Form Input
+
+Pattern chuẩn cho `<input>`, `<textarea>`, `<select>`:
+
+```
+w-full px-3 py-2 border border-gray-200 rounded-[var(--radius-sm)]
+text-[var(--dark-slate)] bg-white placeholder:text-gray-400
+focus:outline-none focus:ring-2 focus:ring-[#214C54] focus:border-transparent
+transition-all duration-200
+```
+
+Label: `text-sm font-semibold text-[var(--dark-slate)] mb-1 block`
+
+### 8.4. Progress Bar
+
+```css
+/* Track */
+height: 8px; background: #E5E7EB; border-radius: 999px; overflow: hidden;
+
+/* Fill — Standard */
+background: linear-gradient(to right, var(--primary-teal), var(--muted-teal));
+height: 100%; border-radius: 999px; transition: width 0.5s ease-in-out;
+
+/* Fill — Gamification (Hải lý) */
+background: linear-gradient(to right, var(--light-gold), var(--deep-gold));
+```
+
+### 8.5. Modal / Dialog
+
+- Overlay: `bg-black/50 backdrop-blur-sm`
+- Container: `bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] p-6 max-w-lg w-full`
+- Header: H3 + icon, `pb-4 border-b border-gray-200`
+- Footer: `flex flex-row-reverse gap-2` — Primary bên phải, Secondary/Ghost bên trái
+
+---
+
+## 9. Anti-Patterns (Không làm)
+
+| ❌ Không làm | ✅ Thay bằng |
+|-------------|-------------|
+| Dùng vàng gold cho Success alert | `var(--success): #10B981` (xanh lá) |
+| `rounded-none` cho button | `rounded-xl` (12px) |
+| Drop shadow đen cứng | Shadow rgba opacity thấp từ token |
+| Mix Lucide solid + outline cùng nhóm | Thống nhất Lucide outline, `strokeWidth={1.5}` |
+| `font-family: Roboto` hoặc `Fira Code` | `var(--font-sans)` hoặc `var(--font-mono)` |
+| Hardcode hex brand trực tiếp trong JSX | CSS variable hoặc `bg-[#214C54]` |
+| Nhiều hơn 1 Primary button / màn hình | Chỉ 1 Primary, còn lại Secondary/Ghost |
+| `variant="amber"` trong `<Button>` | `variant="gamification"` |
+
+---
+
+## 10. Đặc tả Thiết kế Badge (Brilliant.org Flat Style)
+
+Để tránh cảm giác hình ảnh "AI-generated" (phức tạp, nhiều bóng đổ giả 3D), toàn bộ 7 Huy hiệu Hành động của hệ thống được chuẩn hóa theo phong cách **Flat Geometric Vector** của Brilliant:
+
+### 📐 Quy chuẩn Visual
+- **Khung bao chung (Badge Container)**: Hình tròn hoặc hình lục giác đều bo nhẹ các góc (`border-radius: 20%`), sử dụng đường viền kép (Double Stroke) 1.5px.
+- **Tone màu chủ đạo**: Phối màu tối giản duotone:
+  - Viền & nét vẽ chính: `#214C54` (`var(--primary-teal)`) để giữ tính kỹ thuật vững chãi.
+  - Mảng màu tô (Flat Fill): `#EAB308` (`var(--deep-gold)`) tạo điểm nhấn thành tựu rực rỡ.
+  - Nền phụ (Background fill): `#FDF5DA` (Kem nhạt/Soft Cream) hoặc trong suốt.
+- **Nét vẽ (Iconography Details)**: Nét line dày (`stroke-width: 2px`), dạng nét đứt hoặc nét liền mạch đơn giản, không đổ bóng, không chuyển sắc (gradients).
+
+### 🏷️ Chi tiết thiết kế Vector cho 7 Badges
+
+#### 1. 🪪 Huy hiệu "Thẻ Căn Cước Thủy Thủ"
+- **Khái niệm hình ảnh**: Một chiếc thẻ thủy thủ nằm nghiêng, kết hợp các nét kẻ sọc ngang biểu trưng cho thông tin hồ sơ và một chấm tròn biểu trưng cho avatar.
+- **Thiết kế**: 
+  - Khung bao: Lục giác đều nét teal mảnh.
+  - Icon chính: Khung chữ nhật nằm ngang (`rx: 4px`) được vẽ nét teal, bên trong có 3 đường line vàng ngang phẳng và 1 hình tròn vàng đặc biểu trưng cho chân dung.
+
+#### 2. ⛵ Huy hiệu "Cánh Buồm Khởi Hành"
+- **Khái niệm hình ảnh**: Một cánh buồm tam giác căng gió, tối giản theo cấu trúc hình học phẳng.
+- **Thiết kế**:
+  - Khung bao: Tròn viền teal.
+  - Icon chính: Một đường ngang biểu diễn mặt nước, bên trên là một cánh buồm tam giác lớn màu vàng được bo nhẹ đỉnh, kết hợp một cột buồm dọc thẳng màu teal.
+
+#### 3. 🌊 Huy hiệu "Vượt Sóng Băng Băng"
+- **Khái niệm hình ảnh**: Những làn sóng biển hình học nhấp nhô nối đuôi nhau.
+- **Thiết kế**:
+  - Khung bao: Tròn viền teal.
+  - Icon chính: 3 đường sóng lượn song song nghiêng nhẹ 15 độ được vẽ bằng nét line teal dày (`stroke-width: 2.5px`), mảng tô dưới chân các con sóng sử dụng màu vàng phẳng.
+
+#### 4. ⚓ Huy hiệu "Thủy Thủ Lão Luyện"
+- **Khái niệm hình ảnh**: Biểu tượng mỏ neo hàng hải cách điệu tối giản.
+- **Thiết kế**:
+  - Khung bao: Lục giác đều viền teal.
+  - Icon chính: Trục dọc mỏ neo thẳng đứng màu teal kết hợp cung tròn đáy màu vàng phẳng có hai mũi tên nhọn bo góc ở hai đầu cung.
+
+#### 5. 📝 Huy hiệu "Bài Tập Đầu Tay"
+- **Khái niệm hình ảnh**: Một trang giấy bài nộp có dấu tích hoàn thành lớn.
+- **Thiết kế**:
+  - Khung bao: Tròn viền teal.
+  - Icon chính: Một tờ giấy trắng bo góc màu teal, bên trong có các dòng kẻ, đè lên trên là một dấu tích vương miện hoặc tích check (`✓`) lớn màu vàng đậm rực rỡ chiếm 50% diện tích badge.
+
+#### 6. ✍️ Huy hiệu "Thủy Thủ Chăm Chỉ"
+- **Khái niệm hình ảnh**: Quyển sổ hải trình mở và cây bút lông/bút vẽ.
+- **Thiết kế**:
+  - Khung bao: Lục giác đều viền teal.
+  - Icon chính: Hai trang sổ mở phẳng màu vàng kem, bên trên vẽ chéo một chiếc bút line teal đơn giản.
+
+#### 7. 🧑‍✈️ Huy hiệu "Thuyền Trưởng Gương Mẫu"
+- **Khái niệm hình ảnh**: Chiếc mũ thuyền trưởng/bánh lái tàu biểu trưng cho kỷ luật thép.
+- **Thiết kế**:
+  - Khung bao: Tròn viền teal kép dày.
+  - Icon chính: Bánh lái tàu 8 nan tròn đối xứng vẽ bằng nét teal mảnh, trục tâm bánh lái là một hình sao 8 cánh hàng hải màu vàng rực rỡ nằm chính giữa.

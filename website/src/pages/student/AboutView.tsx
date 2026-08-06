@@ -60,7 +60,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
 
   const [activeEditorId, setActiveEditorId] = useState<string | null>(null);
 
-  // Helper to load state from localStorage or fallback to default
+  // Helper to load state from localStorage or fallback to default (kept for backward compat)
   const getStoredItem = (key: string, fallback: string) => {
     return localStorage.getItem(key) || fallback;
   };
@@ -75,7 +75,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
     return saved ? JSON.parse(saved) : fallback;
   };
 
-  // Sync draft states when context or localStorage loads
+  // Sync draft states from Supabase context (primary source of truth)
   useEffect(() => {
     // Overview main text
     let initialOverview = aboutContent.overviewText || '';
@@ -93,94 +93,55 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
     setDraftSchedule(aboutContent.scheduleText || '');
     setDraftBenefits(aboutContent.benefitsText || '');
 
-    // Video Loom Url
-    setDraftVideoUrl(getStoredItem('about_draft_video_url', DEFAULT_VIDEO_URL));
-
-    // Invalidate old platform buttons cache if names are long
-    const cachedPlatforms = localStorage.getItem('about_draft_platform_buttons');
-    if (cachedPlatforms) {
-      try {
-        const parsed = JSON.parse(cachedPlatforms);
-        if (Array.isArray(parsed) && parsed.some(p => p.title.includes('học liệu tổng hợp') || p.title.includes('lớp học'))) {
-          localStorage.removeItem('about_draft_platform_buttons');
-        }
-      } catch (e) {}
-    }
-
-    // Dynamic Platform Buttons
-    setDraftPlatformButtons(getStoredObject<PlatformButton[]>('about_draft_platform_buttons', DEFAULT_PLATFORM_BUTTONS));
-
-    // Invalidate old cache
-    const cachedClubs = localStorage.getItem('about_draft_benefit_clubs');
-    if (cachedClubs) {
-      try {
-        const parsed = JSON.parse(cachedClubs);
-        // Invalidate if Office Hour card still present, or too many/few cards
-        if (Array.isArray(parsed) && (parsed.length !== 3 || parsed.some((c: any) => c.name === 'Office Hour'))) {
-          localStorage.removeItem('about_draft_benefit_clubs');
-        }
-      } catch (e) {}
-    }
-
-    // Dynamic Benefit Clubs (Benefits Tab)
-    setDraftBenefitClubs(getStoredObject<BenefitClub[]>('about_draft_benefit_clubs', DEFAULT_BENEFIT_CLUBS));
-
-    // Quotes & Lists
-    setDraftQuote(getStoredItem('about_draft_quote', DEFAULT_QUOTE));
-    setDraftGachDauDong(getStoredArray('about_draft_gach_dau_dong', DEFAULT_GACH_DAU_DONG));
-
-    // 3 Trụ Cột
-    setDraftTruCot1(getStoredObject('about_draft_tru_cot_1', DEFAULT_TRU_COT_1));
-    setDraftTruCot2(getStoredObject('about_draft_tru_cot_2', DEFAULT_TRU_COT_2));
-    setDraftTruCot3(getStoredObject('about_draft_tru_cot_3', DEFAULT_TRU_COT_3));
-
-    // Outro cam kết
-    setDraftOutro(getStoredItem('about_draft_outro', DEFAULT_OUTRO));
-
-    // SĐT Liên hệ & Office hour
-    setDraftSdtNote(getStoredItem('about_draft_sdt_note', DEFAULT_SDT_NOTE));
-    setDraftOfficeHourDesc(getStoredItem('about_draft_office_hour_desc', DEFAULT_OFFICE_HOUR_DESC));
-
-    // Lưu ý màu vàng
-    setDraftLuuYGold(getStoredItem('about_draft_luu_y_gold', DEFAULT_LUU_Y_GOLD));
+    // Use Supabase data first, then fall back to localStorage, then hardcoded defaults
+    setDraftVideoUrl(aboutContent.videoUrl || getStoredItem('about_draft_video_url', DEFAULT_VIDEO_URL));
+    setDraftPlatformButtons(aboutContent.platformButtons || getStoredObject<PlatformButton[]>('about_draft_platform_buttons', DEFAULT_PLATFORM_BUTTONS));
+    setDraftBenefitClubs(aboutContent.benefitClubs || getStoredObject<BenefitClub[]>('about_draft_benefit_clubs', DEFAULT_BENEFIT_CLUBS));
+    setDraftQuote(aboutContent.quote || getStoredItem('about_draft_quote', DEFAULT_QUOTE));
+    setDraftGachDauDong(aboutContent.gachDauDong || getStoredArray('about_draft_gach_dau_dong', DEFAULT_GACH_DAU_DONG));
+    setDraftTruCot1(aboutContent.truCot1 || getStoredObject('about_draft_tru_cot_1', DEFAULT_TRU_COT_1));
+    setDraftTruCot2(aboutContent.truCot2 || getStoredObject('about_draft_tru_cot_2', DEFAULT_TRU_COT_2));
+    setDraftTruCot3(aboutContent.truCot3 || getStoredObject('about_draft_tru_cot_3', DEFAULT_TRU_COT_3));
+    setDraftOutro(aboutContent.outro || getStoredItem('about_draft_outro', DEFAULT_OUTRO));
+    setDraftSdtNote(aboutContent.sdtNote || getStoredItem('about_draft_sdt_note', DEFAULT_SDT_NOTE));
+    setDraftOfficeHourDesc(aboutContent.officeHourDesc || getStoredItem('about_draft_office_hour_desc', DEFAULT_OFFICE_HOUR_DESC));
+    setDraftLuuYGold(aboutContent.luuYGold || getStoredItem('about_draft_luu_y_gold', DEFAULT_LUU_Y_GOLD));
   }, [aboutContent]);
 
 
   const handleSave = () => {
-    // Save primary fields
+    // Save ALL fields to Supabase via context (no more localStorage)
     updateAboutContent({
       overviewText: draftOverview,
       scheduleText: draftSchedule,
       benefitsText: draftBenefits,
+      videoUrl: draftVideoUrl,
+      platformButtons: draftPlatformButtons,
+      benefitClubs: draftBenefitClubs,
+      quote: draftQuote,
+      gachDauDong: draftGachDauDong,
+      truCot1: draftTruCot1,
+      truCot2: draftTruCot2,
+      truCot3: draftTruCot3,
+      outro: draftOutro,
+      sdtNote: draftSdtNote,
+      officeHourDesc: draftOfficeHourDesc,
+      luuYGold: draftLuuYGold,
     });
 
-    // Save secondary dynamic fields locally
-    localStorage.setItem('about_draft_quote', draftQuote);
-    localStorage.setItem('about_draft_gach_dau_dong', JSON.stringify(draftGachDauDong));
-    localStorage.setItem('about_draft_tru_cot_1', JSON.stringify(draftTruCot1));
-    localStorage.setItem('about_draft_tru_cot_2', JSON.stringify(draftTruCot2));
-    localStorage.setItem('about_draft_tru_cot_3', JSON.stringify(draftTruCot3));
-    localStorage.setItem('about_draft_outro', draftOutro);
-    localStorage.setItem('about_draft_sdt_note', draftSdtNote);
-    localStorage.setItem('about_draft_office_hour_desc', draftOfficeHourDesc);
-    localStorage.setItem('about_draft_luu_y_gold', draftLuuYGold);
-    localStorage.setItem('about_draft_video_url', draftVideoUrl);
-    localStorage.setItem('about_draft_platform_buttons', JSON.stringify(draftPlatformButtons));
-    localStorage.setItem('about_draft_benefit_clubs', JSON.stringify(draftBenefitClubs));
-
-    alert('Đã lưu tất cả thay đổi trên trang thành công! 🎉');
-  };
-
-  const handleCancel = () => {
-    const keys = [
+    // Clean up any leftover localStorage keys from old approach
+    [
       'about_draft_quote', 'about_draft_gach_dau_dong', 'about_draft_tru_cot_1',
       'about_draft_tru_cot_2', 'about_draft_tru_cot_3', 'about_draft_outro',
       'about_draft_sdt_note', 'about_draft_office_hour_desc', 'about_draft_luu_y_gold',
       'about_draft_video_url', 'about_draft_platform_buttons', 'about_draft_benefit_clubs'
-    ];
-    keys.forEach(k => localStorage.removeItem(k));
-    
-    // Reset inputs
+    ].forEach(k => localStorage.removeItem(k));
+
+    alert('Đã lưu tất cả thay đổi lên Supabase thành công! 🎉');
+  };
+
+  const handleCancel = () => {
+    // Reset all drafts from context (no more localStorage)
     window.location.reload();
   };
 

@@ -10,7 +10,7 @@ interface ProfileViewProps {
 
 export const ProfileView: React.FC<ProfileViewProps> = ({ onPageChange: _onPageChange }) => {
   const { activeUser, updateProfile } = useAuth();
-  const { badges, profileBadges, nauticalTransactions } = useGamification();
+  const { nauticalTransactions } = useGamification();
   const { addNotification } = useCommunity();
 
   // Helpers to parse fields that can be "Other"
@@ -183,10 +183,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onPageChange: _onPageC
   // Filter transaction list
   const userTx = nauticalTransactions.filter(t => t.student_id === activeUser.id);
 
-  // Check which badges are unlocked
-  const unlockedBadgeIds = profileBadges
-    .filter(pb => pb.student_id === activeUser.id)
-    .map(pb => pb.badge_id);
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in select-none">
@@ -434,34 +431,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onPageChange: _onPageC
       {/* Right Column: Badges Shelf & Nautical Transactions (5 cols) */}
       <div className="lg:col-span-5 space-y-6">
         
-        {/* Badges Grid */}
-        <div className="card space-y-4">
-          <h3 className="font-extrabold text-sm text-[#15333B] flex items-center gap-1.5 border-b border-gray-100 pb-3">
-            <span>🎖️</span> Bộ Sưu Tập Huy Hiệu (Badges)
-          </h3>
-          
-          <div className="grid grid-cols-3 gap-3">
-            {badges.map((badge) => {
-              const isUnlocked = unlockedBadgeIds.includes(badge.id);
-              return (
-                <div 
-                  key={badge.id}
-                  title={`${badge.name}: ${badge.description}`}
-                  className={`flex flex-col items-center p-3 rounded-xl border text-center transition-all ${
-                    isUnlocked 
-                      ? 'bg-amber-50/50 border-[#EAB308] text-[#15333B]' 
-                      : 'bg-gray-50/50 border-gray-100 opacity-40 grayscale select-none'
-                  }`}
-                >
-                  <span className="text-3xl filter drop-shadow">{badge.icon}</span>
-                  <span className="text-[9px] font-black mt-2 leading-tight truncate w-full">{badge.name}</span>
-                  <span className="text-[7px] text-gray-400 font-bold mt-1 line-clamp-1">{isUnlocked ? 'Đã mở' : 'Chưa mở'}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Transactions History */}
         <div className="card space-y-4">
           <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-100 pb-3">

@@ -1,17 +1,19 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Announcement, CalendarEvent, OnboardingDay, AboutContent, NotificationLog } from '../types/database';
+import type { Announcement, CalendarEvent, OnboardingDay, AboutContent, NotificationLog, HelpDeskFaq } from '../types/database';
 
 export interface CommunityContextType {
   announcements: Announcement[];
   calendarEvents: CalendarEvent[];
   onboardingDays: OnboardingDay[];
   aboutContent: AboutContent;
+  helpDeskFaqs: HelpDeskFaq[];
   notifications: NotificationLog[];
   setAnnouncements: React.Dispatch<React.SetStateAction<Announcement[]>>;
   setCalendarEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
   setOnboardingDays: React.Dispatch<React.SetStateAction<OnboardingDay[]>>;
   setAboutContent: React.Dispatch<React.SetStateAction<AboutContent>>;
+  setHelpDeskFaqs: React.Dispatch<React.SetStateAction<HelpDeskFaq[]>>;
   setNotifications: React.Dispatch<React.SetStateAction<NotificationLog[]>>;
   addNotification: (title: string, message: string, type?: 'telegram' | 'system') => void;
   addAnnouncement: (title: string, content: string, sendEmail: boolean, mediaUrls?: string[]) => void;
@@ -23,6 +25,9 @@ export interface CommunityContextType {
   shiftCalendarEvents: (startDateStr: string, daysToShift: number) => void;
   updateOnboardingDay: (dayNumber: number, updates: Partial<OnboardingDay>) => void;
   updateAboutContent: (updates: Partial<AboutContent>) => void;
+  updateHelpDeskFaq: (id: string, updates: Partial<HelpDeskFaq>) => void;
+  addHelpDeskFaq: (faq: Omit<HelpDeskFaq, 'order_index'>) => void;
+  deleteHelpDeskFaq: (id: string) => void;
 }
 
 const CommunityContext = createContext<CommunityContextType | undefined>(undefined);
@@ -31,12 +36,58 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>([]);
+  const [helpDeskFaqs, setHelpDeskFaqs] = useState<HelpDeskFaq[]>([]);
   const [notifications, setNotifications] = useState<NotificationLog[]>([]);
   const [aboutContent, setAboutContent] = useState<AboutContent>({
     overviewText: '',
     scheduleText: '',
     benefitsText: ''
   });
+
+  // ── Initial data fetch from Supabase ──────────────────────────────────────
+  useEffect(() => {
+    const loadCommunityData = async () => {
+      const [
+        { data: announcementsData },
+        { data: calendarData },
+        { data: onboardingData },
+        { data: aboutData },
+        { data: faqsData },
+      ] = await Promise.all([
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }),
+        supabase.from('calendar_events').select('*'),
+        supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
+        supabase.from('about_content').select('*').eq('id', 'default').single(),
+        supabase.from('help_desk_faqs').select('*').order('order_index', { ascending: true }),
+      ]);
+
+      if (announcementsData) setAnnouncements(announcementsData);
+      if (calendarData) setCalendarEvents(calendarData);
+      if (onboardingData) setOnboardingDays(onboardingData);
+      if (faqsData) setHelpDeskFaqs(faqsData);
+      if (aboutData) {
+        setAboutContent({
+          overviewText: aboutData.overview_text ?? '',
+          scheduleText: aboutData.schedule_text ?? '',
+          benefitsText: aboutData.benefits_text ?? '',
+          videoUrl: aboutData.video_url ?? undefined,
+          platformButtons: aboutData.platform_buttons ?? undefined,
+          benefitClubs: aboutData.benefit_clubs ?? undefined,
+          quote: aboutData.quote ?? undefined,
+          gachDauDong: aboutData.gach_dau_dong ?? undefined,
+          truCot1: aboutData.tru_cot_1 ?? undefined,
+          truCot2: aboutData.tru_cot_2 ?? undefined,
+          truCot3: aboutData.tru_cot_3 ?? undefined,
+          outro: aboutData.outro ?? undefined,
+          sdtNote: aboutData.sdt_note ?? undefined,
+          officeHourDesc: aboutData.office_hour_desc ?? undefined,
+          luuYGold: aboutData.luu_y_gold ?? undefined,
+        });
+      }
+    };
+
+    loadCommunityData();
+  }, []);
 
   const addNotification = (title: string, message: string, type: 'telegram' | 'system' = 'system') => {
     const newLog: NotificationLog = {
@@ -160,9 +211,50 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     supabase.from('about_content').update({
       overview_text: updated.overviewText,
       schedule_text: updated.scheduleText,
-      benefits_text: updated.benefitsText
+      benefits_text: updated.benefitsText,
+      video_url: updated.videoUrl,
+      platform_buttons: updated.platformButtons,
+      benefit_clubs: updated.benefitClubs,
+      quote: updated.quote,
+      gach_dau_dong: updated.gachDauDong,
+      tru_cot_1: updated.truCot1,
+      tru_cot_2: updated.truCot2,
+      tru_cot_3: updated.truCot3,
+      outro: updated.outro,
+      sdt_note: updated.sdtNote,
+      office_hour_desc: updated.officeHourDesc,
+      luu_y_gold: updated.luuYGold,
     }).eq('id', 'default').then(({ error }) => {
       if (error) console.error('Lỗi khi cập nhật about_content trên Supabase:', error);
+    });
+  };
+
+  // ── Help Desk FAQ CRUD ─────────────────────────────────────────────────────
+  const addHelpDeskFaq = (faq: Omit<HelpDeskFaq, 'order_index'>) => {
+    const newFaq: HelpDeskFaq = {
+      ...faq,
+      order_index: helpDeskFaqs.length + 1,
+    };
+    setHelpDeskFaqs(prev => [...prev, newFaq]);
+    addNotification('FAQ mới', `Đã thêm câu hỏi: "${faq.question}"`, 'system');
+    supabase.from('help_desk_faqs').insert([newFaq]).then(({ error }) => {
+      if (error) console.error('Lỗi khi thêm FAQ lên Supabase:', error);
+    });
+  };
+
+  const updateHelpDeskFaq = (id: string, updates: Partial<HelpDeskFaq>) => {
+    setHelpDeskFaqs(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+    addNotification('Cập nhật FAQ', 'Nội dung câu hỏi đã được chỉnh sửa', 'system');
+    supabase.from('help_desk_faqs').update(updates).eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi cập nhật FAQ trên Supabase:', error);
+    });
+  };
+
+  const deleteHelpDeskFaq = (id: string) => {
+    setHelpDeskFaqs(prev => prev.filter(f => f.id !== id));
+    addNotification('Xóa FAQ', 'Đã xóa câu hỏi khỏi hệ thống', 'system');
+    supabase.from('help_desk_faqs').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Lỗi khi xóa FAQ trên Supabase:', error);
     });
   };
 
@@ -172,11 +264,13 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       calendarEvents,
       onboardingDays,
       aboutContent,
+      helpDeskFaqs,
       notifications,
       setAnnouncements,
       setCalendarEvents,
       setOnboardingDays,
       setAboutContent,
+      setHelpDeskFaqs,
       setNotifications,
       addNotification,
       addAnnouncement,
@@ -187,7 +281,10 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       deleteCalendarEvent,
       shiftCalendarEvents,
       updateOnboardingDay,
-      updateAboutContent
+      updateAboutContent,
+      addHelpDeskFaq,
+      updateHelpDeskFaq,
+      deleteHelpDeskFaq,
     }}>
       {children}
     </CommunityContext.Provider>

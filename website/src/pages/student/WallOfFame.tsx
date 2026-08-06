@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
 import { Shield } from 'lucide-react';
+import { BadgeIcon } from '../../components/ui/BadgeIcon';
 
 
 
@@ -164,10 +165,14 @@ export const WallOfFame: React.FC = () => {
                       : 'bg-gray-50/50 border-gray-150 opacity-60'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm shrink-0 border ${
-                    isUnlocked ? 'bg-amber-100 border-amber-200' : 'bg-gray-200 border-gray-300 text-gray-400'
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm shrink-0 border ${
+                    isUnlocked ? 'bg-[#FDF5DA] border-amber-200' : 'bg-gray-100 border-gray-200 text-gray-400'
                   }`}>
-                    {isUnlocked ? badge.icon : '🔒'}
+                    {isUnlocked ? (
+                      <BadgeIcon name={badge.icon} size={22} isUnlocked={true} />
+                    ) : (
+                      <BadgeIcon name={badge.icon} size={22} isUnlocked={false} />
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">

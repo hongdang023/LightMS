@@ -1,5 +1,7 @@
 # LightMS - A6: Quy định về Gamification (Trò chơi hóa)
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với B2_Database_Schema
+
 Để duy trì động lực (Emotional) và tăng tính gắn kết cộng đồng (Social), LightMS áp dụng hệ thống Gamification xuyên suốt khóa học. 
 
 **Theme chủ đạo:** 🌊 **"Hải trình vượt biển cùng The1ight"**
@@ -11,35 +13,18 @@ Học viên sẽ hóa thân thành những Thủy thủ, cùng nhau vượt qua 
 
 Điểm kinh nghiệm trong hệ thống được gọi là **Hải lý (Nautical Miles)**. Tàu đi được càng xa chứng tỏ sự nỗ lực và đóng góp của học viên càng lớn.
 
-### Nhóm 1: Tiến độ và Kỷ luật (Sailing Speed)
-- **Nộp bài tập đúng hạn (On-time):** +50 Hải lý (Giúp con tàu đi đúng tốc độ).
-- **Nộp bài tập trễ hạn (Late):** +10 Hải lý (Vẫn đi về phía trước nhưng chậm hơn).
-- **Hoàn thành bài học video/doc:** +5 Hải lý / bài (Tích lũy từng chặng nhỏ).
+### Nhóm 1: Khởi động & Hoàn thiện Hồ sơ (Setting Sail)
+- **Hoàn thành khai báo 100% Profile (lần đầu):** +50 Hải lý (`profile_completion`).
+- **Hoàn thành mỗi ngày Onboarding (Day 1 - Day 7):** +50 Hải lý / ngày (`onboarding_day_complete`) — check-off hết các task bắt buộc trong ngày.
 
-### Nhóm 2: Chất lượng Năng lực (Discovering Treasures)
-- Admin đánh giá đạt **Đạt (Meets Expectations):** +100 Hải lý.
-- Admin đánh giá đạt **Xuất sắc (Mastery):** +150 Hải lý.
-
-### Nhóm 3: Tương tác Cộng đồng (Crew Collaboration)
-- **Bình luận/Hỏi đáp trên Threads:** +5 Hải lý / comment (Tương tác với đồng đội).
-- **Được nhận 1 Lượt thả tim (Upvote) trên Threads:** +10 Hải lý (Khuyến khích bình luận có chất lượng).
-- **Nhận được "Tích xanh" (Verified) từ Admin cho câu trả lời hay:** +200 Hải lý (Hành động "cứu net" đồng đội xuất sắc).
+### Nhóm 2: Tiến độ Học tập (Sailing Speed)
+- **Hoàn thành bài học không có bài tập:** +20 Hải lý (`lesson_complete`).
+- **Hoàn thành bài học có bài tập** (tự đối chiếu đủ Rubric Checklist): +50 Hải lý (`assignment_graded`).
 
 ---
 
-## 2. Hệ thống Cấp bậc (Leveling / Ranks)
 
-Số "Hải lý" tích lũy sẽ giúp học viên thăng cấp trên con tàu The1ight. Để tối ưu hóa trải nghiệm, **hệ thống Cấp bậc được tích hợp trực tiếp vào Bộ sưu tập Huy hiệu**. Khi đạt đến cột mốc điểm số tương ứng, học viên sẽ tự động mở khóa (Unlock) Huy hiệu cấp bậc đó trong Hồ sơ cá nhân (My Profile) và thăng hạng:
-
-1. **Thủy thủ tập sự (Novice Sailor):** 0 - 500 Hải lý (Huy hiệu ⛵ - Có sẵn khi tham gia).
-2. **Hoa tiêu (Navigator):** 501 - 1,500 Hải lý (Huy hiệu 🗺️ - Quyền lợi: Xem lịch học và mở khóa kho tài nguyên).
-3. **Thuyền phó (First Mate):** 1,501 - 3,000 Hải lý (Huy hiệu ⚔️ - Quyền lợi: Được quyền duyệt bài viết nhanh).
-4. **Thuyền trưởng (Captain):** 3,001 - 5,000 Hải lý (Huy hiệu 🧭 - Quyền lợi: Cơ hội làm Trợ giảng đồng hành cùng Ban vận hành).
-5. **Huyền thoại biển cả (Legend of the Sea):** Đạt 5,000+ Hải lý (Huy hiệu 👑 - Quyền lợi: Vinh danh Bảng Vàng vĩnh viễn).
-
----
-
-## 2.5. Bảng xếp hạng (Leaderboard - Skool & Duolingo Style)
+## 2. Bảng xếp hạng (Leaderboard - Skool & Duolingo Style)
 
 Thay vì chỉ có một Wall of Fame nhàm chán, hệ thống áp dụng triết lý thiết kế của **Skool** và **Duolingo**:
 - **Trực quan & Cạnh tranh:** Bảng xếp hạng (Leaderboard) thiết kế rõ ràng top 3 dẫn đầu, khuyến khích học viên cạnh tranh lành mạnh.
@@ -49,21 +34,15 @@ Thay vì chỉ có một Wall of Fame nhàm chán, hệ thống áp dụng tri�
 
 ## 3. Các dạng Huy hiệu (Badges / Achievements)
 
-Huy hiệu được phân làm 2 nhóm chính và được trưng bày trực quan trong **Hồ sơ cá nhân (My Profile)**:
+Huy hiệu được trưng bày trực quan tại khu vực **Bảng vinh danh (Wall of Fame)**:
 
-### Nhóm 1: Huy hiệu Cột mốc (Milestone Badges)
-Được tự động mở khóa khi tổng số Hải lý tích lũy đạt các mốc thăng cấp:
-- ⛵ **Huy hiệu: Thủy thủ tập sự:** Đạt 0+ Hải lý.
-- 🗺️ **Huy hiệu: Hoa tiêu:** Đạt 501+ Hải lý.
-- ⚔️ **Huy hiệu: Thuyền phó:** Đạt 1501+ Hải lý.
-- 🧭 **Huy hiệu: Thuyền trưởng:** Đạt 3001+ Hải lý.
-- 👑 **Huy hiệu: Huyền thoại biển cả:** Đạt 5000+ Hải lý.
 
-### Nhóm 2: Huy hiệu Hành động (Action Badges)
-Được mở khóa khi thực hiện các "cú hích" đặc biệt hoặc hoàn thành nhiệm vụ cụ thể:
-- 🪪 **Thẻ Căn Cước Thủy Thủ:** Khai báo thông tin cá nhân đầy đủ 100% trong Hồ sơ cá nhân lần đầu.
-- 💨 **Cánh buồm no gió (Full Sail):** Hoàn thành xuất sắc toàn bộ bài tập của Tuần lễ Onboarding.
-- ⚓ **Mỏ neo thép (Iron Anchor):** Có chuỗi nộp bài đúng hạn (Streak) 3 lần liên tiếp.
-- 🛟 **Phao cứu sinh (Lifebuoy):** Nhận tổng cộng 50 Upvotes từ các bình luận hỗ trợ bạn bè.
-- 🗼 **Ngọn hải đăng (The Lighthouse):** Có bài nộp đạt điểm "Mastery" (Excellent) và được Admin ghim lên đầu phòng Thảo luận làm mẫu.
-- 🗺️ **Bản đồ kho báu (Treasure Map):** Hoàn thành 100% Lộ trình khóa học (Syllabus) với kết quả đạt trở lên.
+### Danh sách Huy hiệu Hành động (Action Badges)
+Được mở khóa khi thực hiện các hoạt động đặc biệt hoặc hoàn thành các thử thách cụ thể:
+- 🪪 **Thẻ Căn Cước Thủy Thủ:** Khai báo thông tin cá nhân đầy đủ 100% trên Hồ sơ.
+- ⛵ **Cánh Buồm Khởi Hành:** Đặt chân lên tàu và hoàn thành ngày học Onboarding đầu tiên.
+- 🌊 **Vượt Sóng Băng Băng:** Giữ vững phong độ, hoàn thành mốc 3 ngày Onboarding đầu tiên.
+- ⚓ **Thủy Thủ Lão Luyện:** Xuất sắc chinh phục trọn vẹn hành trình 7 ngày Onboarding.
+- 📝 **Bài Tập Đầu Tay:** Khởi đầu hành trình rèn luyện với bài tập về nhà đầu tiên được hoàn thành.
+- ✍️ **Thủy Thủ Chăm Chỉ:** Tinh thần kiên trì rèn luyện, hoàn thành mốc 3 bài tập về nhà.
+- 🧑‍✈️ **Thuyền Trưởng Gương Mẫu:** Tinh thần kỷ luật thép. Hoàn thành đầy đủ 100% bài tập về nhà của khóa học.

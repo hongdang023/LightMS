@@ -1,5 +1,7 @@
 # LightMS - Functional Requirements (Yêu cầu chức năng)
 
+> **Last Updated:** 2026-08-07 | **Status:** ✅ Updated với các tính năng đã build
+
 Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết các Yêu cầu chức năng (Functional Requirements) cho LightMS.
 
 ## 1. Phân hệ Học viên (Student Portal)
@@ -17,10 +19,11 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 - **FR-STU-07 (View Feedback):** Học viên có thể xem phản hồi đánh giá của Admin ngay tại khu vực bài tập.
 ### 1.3. Cộng đồng & Hỗ trợ (Hỏi đáp & Hỗ trợ)
 
-- **FR-STU-11 (FAQ Knowledge Base):** Cung cấp hệ thống câu hỏi thường gặp (FAQ) để giải đáp nhanh.
+- **FR-STU-11 (FAQ Knowledge Base):** Cung cấp hệ thống câu hỏi thường gặp (FAQ) phân nhóm theo category, có tính năng tìm kiếm nhanh và nội dung chi tiết dạng accordion sections.
 - **FR-STU-12 (Live Support Link):** Có nút bấm chuyển hướng trực tiếp đến phòng hỗ trợ Light Support trên Telegram.
-- **FR-STU-13 (Wall of Fame):** Hiển thị bảng vinh danh những học viên có thành tích xuất sắc.
-- **FR-STU-16 (View Announcements):** Học viên có thể xem danh sách các thông báo từ Ban tổ chức khóa học.
+- **FR-STU-13 (Wall of Fame):** Hiển thị bảng vinh danh kết hợp Leaderboard (xếp hạng theo Hải lý) và gạch dưới top 3 nổi bật.
+- **FR-STU-16 (View Announcements):** Học viên có thể xem danh sách các thông báo từ Ban tổ chức khóa học, phân loại theo category (system, leaderboard, content_update, schedule, achievement).
+- **FR-STU-17 (Onboarding Profile Form):** Học viên điền form khai báo thông tin cá nhân lần đầu (nhân khẩu học, lĩnh vực, ý tưởng sản phẩm) để hoàn thiện Profile và mở khóa Huy hiệu "Thẻ Căn Cước Thủy Thủ".
 
 ### 1.5. Hồ sơ cá nhân (My Profile)
 
@@ -65,6 +68,8 @@ Dựa trên User Stories và Sitemap đã chốt, dưới đây là chi tiết c
 
 - **FR-AD-18 (Create Announcements & NavItem Sync):** Admin có mục Thông báo để soạn và đăng tin. Mỗi lần viết xong bài, thông báo sẽ được cập nhật hiển thị ngay tại NavItem "Thông báo" của học viên.
 - **FR-AD-19 (Email Broadcast):** Admin có button chức năng gửi email thông báo hàng loạt cho toàn bộ học viên đối với bài đăng đó.
+- **FR-AD-24 (AboutContent Editing):** Admin có thể chỉnh sửa toàn bộ nội dung trang Giới thiệu (video, mô tả, club, truyết ngôn...) trực tiếp trên giao diện mà không cần deploy lại code.
+- **FR-AD-25 (Automated Announcement System):** Hệ thống tự động tạo thông báo theo sự kiện: thay đổi Leaderboard top 1, cập nhật tài liệu bài học mới, nhắc lịch buổi học hôm nay. Thông báo auto được đánh dấu `is_auto = true` và có `category` riêng để Admin kiểm soát.
 
 ---
 

@@ -1,5 +1,4 @@
 export type UserRole = 'student' | 'admin';
-export type SubmissionStatus = 'draft' | 'submitted' | 'graded';
 
 export type AdminRole = 'Founder' | 'Trainer' | 'Teaching Assistant (TA)' | 'Operations';
 
@@ -78,32 +77,11 @@ export interface Lesson {
   assignment_rubric_checklist?: { item: string; checked: boolean; is_optional?: boolean }[];
 }
 
-export interface Submission {
-  id: string;
-  assignment_id: string;
-  batch_id: string;
-  student_id: string;
-  content: string;
-  status: SubmissionStatus;
-  created_at: string;
-  upvotes_count?: number;
-  upvoted_by?: string[];
-  media_urls?: string[];
-}
-
-export interface Feedback {
-  id: string;
-  submission_id: string;
-  mentor_id: string;
-  content: string;
-  created_at: string;
-}
-
 export interface NauticalMilesTransaction {
   id: string;
   student_id: string;
   amount: number;
-  action_type: 'profile_completion' | 'lesson_complete' | 'assignment_submitted' | 'assignment_graded' | 'comment_added' | 'comment_upvoted' | 'comment_verified' | 'post_created' | 'post_upvoted' | 'submission_kudos';
+  action_type: 'profile_completion' | 'lesson_complete' | 'assignment_submitted' | 'assignment_graded' | 'submission_kudos' | 'onboarding_day_complete';
   reference_id?: string;
   description: string;
   created_at: string;
@@ -117,6 +95,11 @@ export interface Badge {
   condition: string;
 }
 
+/**
+ * @deprecated Không còn dùng junction table profile_badges.
+ * Badges học viên được lưu trực tiếp trong profiles.badges (JSONB array).
+ * Interface này giữ lại tạm thời để tránh breaking GamificationContext.
+ */
 export interface ProfileBadge {
   student_id: string;
   badge_id: string;
@@ -197,4 +180,33 @@ export interface AboutContent {
   overviewText: string;
   scheduleText: string;
   benefitsText: string;
+  // Extended editable fields
+  videoUrl?: string;
+  platformButtons?: { icon: string; title: string; subtitle: string; url: string }[];
+  benefitClubs?: { icon: string; name: string; desc: string; links: { label: string; url: string }[] }[];
+  quote?: string;
+  gachDauDong?: string[];
+  truCot1?: { title: string; subtitle: string; desc: string };
+  truCot2?: { title: string; subtitle: string; desc: string };
+  truCot3?: { title: string; subtitle: string; desc: string };
+  outro?: string;
+  sdtNote?: string;
+  officeHourDesc?: string;
+  luuYGold?: string;
+}
+
+export interface HelpDeskFaqSection {
+  id: string;
+  title: string;
+  content: string; // Markdown string
+}
+
+export interface HelpDeskFaq {
+  id: string;
+  category: string;
+  question: string;
+  description: string;
+  last_updated: string;
+  sections: HelpDeskFaqSection[];
+  order_index: number;
 }
