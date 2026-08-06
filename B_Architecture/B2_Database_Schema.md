@@ -6,18 +6,16 @@ Hệ thống sử dụng **PostgreSQL** trên nền tảng **Supabase**. Cấu t
 
 ## 1. User & Access Management (Quản lý Người dùng)
 
-Xác thực (Authentication) được quản lý qua bảng mặc định `auth.users` của Supabase. Bảng `profiles` liên kết 1-1 với `auth.users` để lưu thông tin nghiệp vụ.
+Xác thực (Authentication) được quản lý qua bảng mặc định `auth.users` của Supabase. Hệ thống tách riêng **`profiles`** (dành riêng cho Học viên) và **`admins`** (dành riêng cho Quản trị viên).
 
-### `profiles` (Hồ sơ người dùng)
+### `profiles` (Hồ sơ học viên)
 
 | Column Name               | Type          | Constraints                       | Description                                                        |
 | :------------------------ | :------------ | :-------------------------------- | :----------------------------------------------------------------- |
 | `id`                      | `uuid`        | PK, FK (`auth.users.id`)          | Liên kết với Supabase Auth                                         |
-| `full_name`               | `text`        | NOT NULL                          | Họ và tên                                                          |
+| `full_name`               | `text`        | NOT NULL                          | Họ và tên học viên                                                 |
 | `avatar_url`              | `text`        |                                   | Link ảnh đại diện                                                  |
-| `role`                    | `enum`        | `'student', 'admin'`              | Phân quyền vai trò                                                 |
-
-| `gmail`                   | `text`        |                                   | Email liên kết Google Workspace/Calendar                           |
+| `gmail`                   | `text`        | NOT NULL, UNIQUE                  | Email liên kết Google Workspace/Calendar                           |
 | `phone_number`            | `text`        |                                   | Số điện thoại liên hệ (Zalo)                                       |
 | `facebook_url`            | `text`        |                                   | Đường dẫn đến profile Facebook cá nhân                             |
 | `industry`                | `text`        |                                   | Lĩnh vực hoạt động chuyên môn                                      |
@@ -32,9 +30,26 @@ Xác thực (Authentication) được quản lý qua bảng mặc định `auth.
 | `living_region`           | `text`        |                                   | Hiện tại bạn đang sinh sống ở khu vực nào? (Lựa chọn từ danh sách) |
 | `gender`                  | `text`        |                                   | Giới tính (Nam, Nữ, Other)                                         |
 | `age_group`               | `text`        |                                   | Bạn năm nay bao nhiêu tuổi? (Lựa chọn từ danh sách)                |
-| `onboarding_tasks`        | `jsonb`       |                                   | Danh sách check-off các nhiệm vụ onboarding (dạng Object mapping)  |
+| `onboarding_tasks`        | `jsonb`       | DEFAULT `'{}'::jsonb`             | Danh sách check-off các nhiệm vụ onboarding (dạng Object mapping)  |
+| `liveclass_tasks`         | `jsonb`       | DEFAULT `'{}'::jsonb`             | Danh sách check-off các bài tập/tiêu chí Live Class                |
 | `badges`                  | `jsonb`       | DEFAULT `'[]'::jsonb`             | Danh sách các huy hiệu học viên sở hữu (dạng Array Object)         |
 | `created_at`              | `timestamptz` | DEFAULT `now()`                   |                                                                    |
+
+### `admins` (Hồ sơ quản trị viên)
+
+| Column Name        | Type          | Constraints              | Description                                                                     |
+| :----------------- | :------------ | :----------------------- | :------------------------------------------------------------------------------ |
+| `id`               | `uuid`        | PK, FK (`auth.users.id`) | Liên kết với Supabase Auth                                                      |
+| `full_name`        | `text`        | NOT NULL                 | Họ và tên Admin                                                                 |
+| `avatar_url`       | `text`        |                          | Link ảnh đại diện                                                               |
+| `gmail`            | `text`        | NOT NULL, UNIQUE         | Email liên hệ / đăng nhập                                                       |
+| `phone_number`     | `text`        |                          | Số điện thoại liên hệ                                                           |
+| `admin_role`       | `enum`        | DEFAULT `'Operations'`   | Vai trò: `'Founder'`, `'Trainer'`, `'Teaching Assistant (TA)'`, `'Operations'` |
+| `assigned_batches` | `text[]`      | DEFAULT `'{}'`           | Lớp học phụ trách                                                               |
+| `expertise_areas`  | `text`        |                          | Thế mạnh chuyên môn (Tự điền)                                                   |
+| `is_onboarded`     | `boolean`     | DEFAULT `false`          | Đã hoàn thành khảo sát Onboarding Admin                                         |
+| `telegram_id`      | `text`        |                          | ID Telegram hỗ trợ                                                              |
+| `created_at`       | `timestamptz` | DEFAULT `now()`          |                                                                                 |
 ---
 
 ## 2. Course, Cohorts & Learning Materials (Khóa học & Lớp học)

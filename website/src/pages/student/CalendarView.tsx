@@ -5,7 +5,8 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 
 export const CalendarView: React.FC = () => {
   const { addNotification, calendarEvents } = useDatabase();
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 6, 1)); // Month is 0-indexed, 6 = July 2026
+  // Default to July 2026 (Course starting month) or current date if desired
+  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 6, 1));
 
   // Helper to get days in month
   const getDaysInMonth = (year: number, month: number) => {
@@ -219,7 +220,7 @@ export const CalendarView: React.FC = () => {
   const monthNames = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in select-none">
+    <div className="space-y-4 max-w-7xl mx-auto animate-fade-in select-none">
       <PageHeader
         title="Lịch học"
         description="Lịch Zoom Class và các buổi Checkpoint trực tiếp từ Mentor."
@@ -250,16 +251,16 @@ export const CalendarView: React.FC = () => {
       
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between px-6 py-4">
-          <h2 className="text-xl font-bold text-[#15333B]">
+        <div className="flex items-center justify-between px-5 py-2.5">
+          <h2 className="text-lg font-bold text-[#15333B]">
             Tháng {monthNames[month]}.{year}
           </h2>
           <div className="flex items-center gap-2">
-            <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded bg-[#e65100] text-white hover:bg-[#cc4800] transition-colors">
-              <ChevronLeft size={18} />
+            <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center rounded bg-[#e65100] text-white hover:bg-[#cc4800] transition-colors">
+              <ChevronLeft size={16} />
             </button>
-            <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded bg-[#e65100] text-white hover:bg-[#cc4800] transition-colors">
-              <ChevronRight size={18} />
+            <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center rounded bg-[#e65100] text-white hover:bg-[#cc4800] transition-colors">
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -267,14 +268,14 @@ export const CalendarView: React.FC = () => {
         {/* Days Header */}
         <div className="grid grid-cols-7 border-t border-b border-gray-100 bg-gray-50/50">
           {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day) => (
-            <div key={day} className="py-3 text-center text-xs font-semibold text-gray-400">
+            <div key={day} className="py-1.5 text-center text-xs font-semibold text-gray-400">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 auto-rows-[minmax(140px,auto)]">
+        <div className="grid grid-cols-7 auto-rows-[minmax(75px,auto)] lg:auto-rows-[minmax(82px,auto)]">
           {gridCells.map((cell, idx) => {
             const cellMonth = cell.isCurrentMonth ? month : (cell.date > 15 ? month - 1 : month + 1);
             const cellYear = cellMonth < 0 ? year - 1 : cellMonth > 11 ? year + 1 : year;
@@ -286,12 +287,12 @@ export const CalendarView: React.FC = () => {
             return (
               <div 
                 key={idx} 
-                className={`border-r border-b border-gray-100 p-2 ${
+                className={`border-r border-b border-gray-100 p-1 ${
                   !cell.isCurrentMonth ? 'bg-gray-50/30' : 'bg-white'
                 } ${idx % 7 === 6 ? 'border-r-0' : ''}`}
               >
-                <div className="flex justify-center mb-2">
-                  <span className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold ${
+                <div className="flex justify-center mb-0.5">
+                  <span className={`w-5.5 h-5.5 flex items-center justify-center rounded-full text-[11px] font-bold ${
                     isToday ? 'bg-red-500 text-white' : 
                     !cell.isCurrentMonth ? 'text-gray-300' : 'text-gray-700'
                   }`}>
@@ -299,15 +300,15 @@ export const CalendarView: React.FC = () => {
                   </span>
                 </div>
                 
-                <div className="space-y-1.5 px-1">
+                <div className="space-y-0.5 px-0.5">
                   {cell.isCurrentMonth && events.map((event, eIdx) => (
                     <div 
                       key={`${event.id}-${eIdx}`}
-                      className={`group relative text-[10px] font-bold px-2 py-1.5 rounded-md truncate cursor-pointer transition-transform hover:scale-[1.02] ${event.colorClass}`}
+                      className={`group relative text-[9.5px] font-bold px-1.5 py-0.5 rounded-md truncate cursor-pointer transition-transform hover:scale-[1.02] ${event.colorClass}`}
                       title={event.details}
                     >
                       {event.dotColorClass ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${event.dotColorClass}`}></span>
                           <span>{event.time} {event.title}</span>
                         </div>
@@ -344,29 +345,29 @@ export const CalendarView: React.FC = () => {
       </div>
 
       {/* Legend Footer */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6 flex flex-col md:flex-row gap-8">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-3.5 mt-3 flex flex-col md:flex-row gap-4">
         <div className="flex-1">
-          <p className="text-sm text-gray-700 leading-relaxed font-medium mb-4">
+          <p className="text-xs text-gray-700 leading-relaxed font-medium mb-1.5">
             Với <strong className="text-[#d94a11]">màu da cam</strong>, thì đó là ngày học trực tiếp (Kick-off, Live Class).
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <div className="bg-[#d94a11] text-white text-[11px] font-bold px-3 py-1.5 rounded-md inline-flex items-center tracking-wide">
+            <div className="bg-[#d94a11] text-white text-[10px] font-bold px-2.5 py-1 rounded-md inline-flex items-center tracking-wide">
               20:00 KICK-OFF MEETING
             </div>
-            <div className="bg-[#d94a11] text-white text-[11px] font-bold px-3 py-1.5 rounded-md inline-flex items-center tracking-wide">
+            <div className="bg-[#d94a11] text-white text-[10px] font-bold px-2.5 py-1 rounded-md inline-flex items-center tracking-wide">
               20:30 LIVE CLASS
             </div>
           </div>
         </div>
         <div className="flex-1">
-          <p className="text-sm text-gray-700 leading-relaxed font-medium mb-4">
+          <p className="text-xs text-gray-700 leading-relaxed font-medium mb-1.5">
             Với <strong className="text-blue-600">màu xanh và các màu khác</strong>, đó là các sự kiện cộng đồng, hỗ trợ (Office Hour, Onboarding).
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
-            <div className="bg-purple-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-md inline-flex items-center tracking-wide">
+            <div className="bg-purple-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-md inline-flex items-center tracking-wide">
               ONBOARDING WEEK
             </div>
-            <div className="bg-blue-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-md inline-flex items-center tracking-wide">
+            <div className="bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-md inline-flex items-center tracking-wide">
               20:00 OFFICE HOUR
             </div>
           </div>

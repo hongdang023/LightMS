@@ -4,7 +4,7 @@ import { BrandLogo } from '../../components/BrandLogo';
 import { ChevronRight, ChevronLeft, Award, Sparkles, Compass, Check } from 'lucide-react';
 
 export const OnboardingForm: React.FC = () => {
-  const { activeUser, updateProfile } = useDatabase();
+  const { activeUser, updateProfile, addNauticalMiles } = useDatabase();
   const [step, setStep] = useState(1);
   const [celebrate, setCelebrate] = useState(false);
 
@@ -147,6 +147,16 @@ export const OnboardingForm: React.FC = () => {
       gmail: activeUser.gmail,
       is_profile_completed: true
     });
+
+    if (success && !activeUser.is_profile_completed) {
+      await addNauticalMiles(
+        activeUser.id,
+        50,
+        'profile_complete',
+        'Hoàn thành 100% Hồ sơ cá nhân',
+        `profile-${activeUser.id}`
+      );
+    }
 
     setIsSubmitting(false);
 

@@ -4,7 +4,6 @@ import {
   SEED_BADGES,
   SEED_COURSES,
   SEED_BATCHES,
-  SEED_LESSONS,
   SEED_PROFILES,
   SEED_TRANSACTIONS,
   SEED_NOTIFICATIONS,
@@ -14,6 +13,7 @@ import type {
   UserRole,
   SubmissionStatus,
   Profile,
+  Admin,
   Course,
   Batch,
   Lesson,
@@ -70,9 +70,12 @@ const generateUUID = (): string => {
 interface DatabaseContextType {
   // Authentication & Session
   activeUser: Profile;
+  activeAdmin: Admin | null;
   switchUser: (role: UserRole) => void;
   users: Profile[];
+  admins: Admin[];
   updateProfile: (profileId: string, updates: Partial<Profile>) => Promise<boolean>;
+  updateAdminProfile: (adminId: string, updates: Partial<Admin>) => Promise<boolean>;
   isAuthenticated: boolean;
   loginWithGmail: (email: string, role?: UserRole) => Profile | null;
   loginWithSupabaseGoogle: (role?: UserRole) => Promise<void>;
@@ -153,7 +156,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ── MASTER VERSION GUARD ─────────────────────────────────────────────────
   // Bump DB_VERSION whenever a breaking schema/seed change is made.
   // This auto-clears ALL localStorage so stale cached data never blocks updates.
-  const DB_VERSION = 'lms_v23';
+  const DB_VERSION = 'lms_v24';
   const storedDbVersion = localStorage.getItem('lms_db_version');
   if (storedDbVersion !== DB_VERSION) {
     // Wipe everything except the active user preference
@@ -188,9 +191,9 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 
 
-  const [profiles, setProfiles] = useState<Profile[]>(() => 
-    safeParse('lms_profiles', SEED_PROFILES)
-  );
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+
+  const [admins, setAdmins] = useState<Admin[]>([]);
 
 
 
@@ -242,9 +245,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('lms_active_user_id', activeUserId);
   }, [activeUserId]);
 
-  useEffect(() => {
-    localStorage.setItem('lms_profiles', JSON.stringify(profiles));
-  }, [profiles]);
+  // profiles, announcements, calendarEvents, onboardingDays are NOT cached in localStorage
+  // — always fetched fresh from Supabase.
 
 
 
@@ -301,6 +303,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       const [
         resProfiles,
+        resAdmins,
         resLessons,
         resAnnouncements,
         resCalendarEvents,
@@ -308,6 +311,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         resBatches,
       ] = await Promise.all([
         supabase.from('profiles').select('*'),
+        supabase.from('admins').select('*'),
         supabase.from('lessons').select('*').order('order_index', { ascending: true }),
         supabase.from('announcements').select('*').order('created_at', { ascending: false }),
         supabase.from('calendar_events').select('*'),
@@ -315,11 +319,18 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         supabase.from('batches').select('*'),
       ]);
 
+      if (resAdmins.data && resAdmins.data.length > 0) {
+        setAdmins(resAdmins.data);
+      }
+
       if (resProfiles.data && resProfiles.data.length > 0) {
         setProfiles(prev => {
           const fetchedProfiles = resProfiles.data as Profile[];
           const newProfiles = fetchedProfiles.map(dbP => {
-            return dbP;
+            return {
+              ...dbP,
+              role: (dbP.role || 'student') as UserRole
+            };
           });
           
           // Giữ lại profile đang được active ở local (nhưng do lỗi insert chưa kịp lên DB)
@@ -390,8 +401,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Check admin emails list
       const adminEmails = [
         'dangtuyethong2324@gmail.com',
-        'tuyethong.cym@gmail.com',
-        'thongdang.upyouth@gmail.com',
         'quangnhatnguyen2403@gmail.com',
         'chinn2006@gmail.com'
       ];
@@ -482,6 +491,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Derived Active User object
   const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
+  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail === activeUser?.gmail) || admins[0] || null;
 
   // Auto unlock current level badges on activeUser changes (silently on load)
   useEffect(() => {
@@ -515,8 +525,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Check if admin
     const adminEmails = [
       'dangtuyethong2324@gmail.com',
-      'tuyethong.cym@gmail.com',
-      'thongdang.upyouth@gmail.com',
       'quangnhatnguyen2403@gmail.com',
       'chinn2006@gmail.com'
     ];
@@ -608,6 +616,24 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('id', profileId);
       if (error) {
         console.error('Lỗi khi cập nhật profile lên Supabase:', error);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  };
+
+  const updateAdminProfile = async (adminId: string, updates: Partial<Admin>): Promise<boolean> => {
+    setAdmins(prev => prev.map(a => a.id === adminId ? { ...a, ...updates } : a));
+    try {
+      const { error } = await supabase
+        .from('admins')
+        .update(updates)
+        .eq('id', adminId);
+      if (error) {
+        console.error('Lỗi khi cập nhật admin profile lên Supabase:', error);
         return false;
       }
       return true;
@@ -951,9 +977,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   return (
     <DatabaseContext.Provider value={{
       activeUser,
+      activeAdmin,
       switchUser,
       users: profiles,
+      admins,
       updateProfile,
+      updateAdminProfile,
       isAuthenticated,
       loginWithGmail,
       loginWithSupabaseGoogle,

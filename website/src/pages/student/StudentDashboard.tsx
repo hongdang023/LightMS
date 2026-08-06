@@ -141,7 +141,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     return [...users]
       .filter(u => 
         u.role === 'student' && 
-        u.gmail !== 'tuyethong.cym@gmail.com' && 
         u.gmail !== 'dangtuyethong2324@gmail.com'
       )
       .sort((a, b) => b.nautical_miles - a.nautical_miles);

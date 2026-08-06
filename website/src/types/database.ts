@@ -1,11 +1,27 @@
 export type UserRole = 'student' | 'admin';
 export type SubmissionStatus = 'draft' | 'submitted' | 'graded';
 
+export type AdminRole = 'Founder' | 'Trainer' | 'Teaching Assistant (TA)' | 'Operations';
+
+export interface Admin {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+  gmail: string;
+  phone_number?: string;
+  admin_role?: AdminRole;
+  assigned_batches?: string[];
+  expertise_areas?: string;
+  is_onboarded?: boolean;
+  telegram_id?: string;
+  created_at: string;
+}
+
 export interface Profile {
   id: string;
   full_name: string;
   avatar_url: string;
-  role: UserRole;
+  role?: UserRole;
   gmail: string;
   phone_number?: string;
   facebook_url?: string;
@@ -22,6 +38,7 @@ export interface Profile {
   gender?: string;
   age_group?: string;
   onboarding_tasks?: Record<string, boolean>;
+  liveclass_tasks?: Record<string, boolean>;
   badges?: { badge_id: string; unlocked_at: string }[];
   created_at: string;
 }

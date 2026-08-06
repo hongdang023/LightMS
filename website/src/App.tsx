@@ -5,6 +5,7 @@ import { GlobalHeader } from './components/GlobalHeader';
 import { ParrotMascot } from './components/ParrotMascot';
 import { Login } from './pages/Login';
 import { OnboardingForm } from './pages/student/OnboardingForm';
+import { AdminOnboardingForm } from './pages/admin/AdminOnboardingForm';
 import { ProductTour } from './components/ProductTour';
 
 // Pages
@@ -20,6 +21,7 @@ import { HelpDesk } from './pages/student/HelpDesk';
 import { ProfileView } from './pages/student/ProfileView';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { AdminProfileView } from './pages/admin/AdminProfileView';
 import { CourseBuilder } from './pages/admin/CourseBuilder';
 import { StudentManagement } from './pages/admin/StudentManagement';
 import { InternalTeam } from './pages/admin/InternalTeam';
@@ -30,7 +32,7 @@ import { Settings as AdminSettings } from './pages/admin/Settings';
 import './App.css';
 
 function MainAppShell() {
-  const { isAuthenticated, activeUser, incrementVisits } = useDatabase();
+  const { isAuthenticated, activeUser, activeAdmin, incrementVisits } = useDatabase();
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
@@ -60,8 +62,14 @@ function MainAppShell() {
     return <Login />;
   }
 
-  if (activeUser.role !== 'admin' && !activeUser.is_profile_completed) {
-    return <OnboardingForm />;
+  if (activeUser.role === 'admin') {
+    if (activeAdmin && !activeAdmin.is_onboarded) {
+      return <AdminOnboardingForm />;
+    }
+  } else {
+    if (!activeUser.is_profile_completed) {
+      return <OnboardingForm />;
+    }
   }
 
   // Render active page component
@@ -85,7 +93,7 @@ function MainAppShell() {
       case 'help':
         return <HelpDesk onPageChange={handlePageChange} />;
       case 'profile':
-        return <ProfileView />;
+        return activeUser.role === 'admin' ? <AdminProfileView /> : <ProfileView />;
 
       // Admin Portal
       case 'admin-dashboard':

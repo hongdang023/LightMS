@@ -4,28 +4,6 @@ import { Shield } from 'lucide-react';
 
 
 
-// ─── Mock Classmates to make Leaderboard active & alive ───────────────────────
-const MOCK_CLASSMATES: { id: string; full_name: string; avatar_url: string; role: string; nautical_miles: number }[] = [];
-
-
-// ─── Points Helper (Deterministic scaling) ──────────────────────────────────
-const getPointsForType = (student: { id: string; nautical_miles: number }, type: 'daily' | '7day' | 'alltime'): number => {
-  if (type === 'alltime') {
-    return student.nautical_miles;
-  }
-  
-  const seed = student.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  if (type === '7day') {
-    const factor = 0.15 + (seed % 15) / 100; // 15% to 29%
-    return Math.floor(student.nautical_miles * factor);
-  }
-  
-  // daily points
-  const factor = 0.02 + (seed % 8) / 100; // 2% to 9%
-  return Math.floor(student.nautical_miles * factor);
-};
-
 // ─── Custom SVG Medal component for Ranks 1, 2, 3 ──────────────────────────────
 const RankMedal: React.FC<{ rank: number }> = ({ rank }) => {
   if (rank === 1) {
@@ -73,7 +51,7 @@ const RankMedal: React.FC<{ rank: number }> = ({ rank }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const WallOfFame: React.FC = () => {
-  const { users, activeUser, badges, profileBadges } = useDatabase();
+  const { users, activeUser, badges, profileBadges, nauticalTransactions } = useDatabase();
   const [lastUpdated, setLastUpdated] = useState('');
 
   useEffect(() => {
@@ -83,38 +61,45 @@ export const WallOfFame: React.FC = () => {
     setLastUpdated(`Cập nhật lúc: ${timeStr} ngày ${dateStr}`);
   }, []);
 
-  // Merge database students and mock classmates, filtering duplicates
-  const realStudents = users.filter(u => 
-    u.role === 'student' && 
-    u.gmail !== 'tuyethong.cym@gmail.com' && 
-    u.gmail !== 'dangtuyethong2324@gmail.com'
-  );
-  const allStudents = [
-    ...realStudents,
-    ...MOCK_CLASSMATES.filter(m => !realStudents.some(u => u.full_name === m.full_name))
-  ];
+  const displayActiveUser = activeUser;
 
-  // If active user is admin, add them as student for preview purposes
-  const isAdminEmail = activeUser.gmail === 'tuyethong.cym@gmail.com' || activeUser.gmail === 'dangtuyethong2324@gmail.com';
-  const isActiveUserStudent = activeUser.role === 'student' && !isAdminEmail;
-  const displayActiveUser = isActiveUserStudent 
-    ? activeUser 
-    : { ...activeUser, role: 'student', nautical_miles: 0 }; // Fallback miles for admin if needed for display
+  // Real students fetched from profiles table
+  const realStudents = users.filter(u => u.role === 'student');
+  const finalStudents = realStudents.some(s => s.id === displayActiveUser.id)
+    ? realStudents
+    : [...realStudents, displayActiveUser];
 
-  const finalStudents = (allStudents.some(s => s.id === displayActiveUser.id) || !isActiveUserStudent)
-    ? allStudents
-    : [...allStudents, displayActiveUser];
-
-  // Helper to calculate leaderboard list
+  // Helper to calculate leaderboard list based exclusively on real transactions and real profiles from Supabase
   const getLeaderboardData = (type: 'daily' | '7day' | 'alltime') => {
+    const now = new Date().getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const sevenDaysMs = 7 * oneDayMs;
+
     return finalStudents
-      .map(s => ({
-        id: s.id,
-        full_name: s.full_name,
-        avatar_url: s.avatar_url,
-        points: getPointsForType(s, type),
-        nautical_miles: s.nautical_miles
-      }))
+      .map(s => {
+        const studentTxs = (nauticalTransactions || []).filter(t => t.student_id === s.id && (t.amount || 0) > 0);
+        let points = 0;
+
+        if (type === 'alltime') {
+          const txSum = studentTxs.reduce((sum, t) => sum + (t.amount || 0), 0);
+          points = Math.max(txSum, s.nautical_miles || 0);
+        } else {
+          const thresholdMs = type === 'daily' ? oneDayMs : sevenDaysMs;
+          const filteredTxs = studentTxs.filter(t => {
+            const txTime = new Date(t.created_at).getTime();
+            return (now - txTime) <= thresholdMs;
+          });
+          points = filteredTxs.reduce((sum, t) => sum + (t.amount || 0), 0);
+        }
+
+        return {
+          id: s.id,
+          full_name: s.full_name,
+          avatar_url: s.avatar_url,
+          points,
+          nautical_miles: s.nautical_miles || 0
+        };
+      })
       .sort((a, b) => b.points - a.points || b.nautical_miles - a.nautical_miles);
   };
 
@@ -268,12 +253,17 @@ const LeaderboardColumn: React.FC<LeaderboardColumnProps> = ({
   activeUserId,
   isPrefix,
 }) => {
-  const top10 = data.slice(0, 10);
+  // For daily and 7day, show students with new points > 0 (or all if empty)
+  // For alltime, show all registered students in Supabase so Admin/Student can view student rankings
+  const filteredData = type === 'alltime' 
+    ? data 
+    : data.filter(s => s.points > 0);
+  const top10 = filteredData.slice(0, 10);
   
   // Find active user rank in whole list
-  const activeUserRankIndex = data.findIndex(s => s.id === activeUserId);
+  const activeUserRankIndex = filteredData.findIndex(s => s.id === activeUserId);
   const myRank = activeUserRankIndex !== -1 ? activeUserRankIndex + 1 : 999;
-  const myData = activeUserRankIndex !== -1 ? data[activeUserRankIndex] : null;
+  const myData = activeUserRankIndex !== -1 ? filteredData[activeUserRankIndex] : null;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
