@@ -2,11 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { supabase } from '../lib/supabase';
 import {
   SEED_BADGES,
-  SEED_COURSES,
-  SEED_BATCHES,
-  SEED_TRANSACTIONS,
-  SEED_NOTIFICATIONS,
-  SEED_ABOUT_CONTENT
+  SEED_COURSES
 } from './seedData';
 import type {
   UserRole,
@@ -167,18 +163,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  const safeParse = <T,>(key: string, fallback: T): T => {
-    try {
-      const value = localStorage.getItem(key);
-      if (!value || value === 'undefined') return fallback;
-      return JSON.parse(value);
-    } catch (e) {
-      console.error(`Error parsing localStorage key "${key}":`, e);
-      localStorage.removeItem(key);
-      return fallback;
-    }
-  };
-
   // Load initial states from LocalStorage or use preloaded seed data
   const [activeUserId, setActiveUserId] = useState<string>(() => {
     return localStorage.getItem('lms_active_user_id') || 'f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e';
@@ -196,9 +180,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 
 
-  const [nauticalTransactions, setNauticalTransactions] = useState<NauticalMilesTransaction[]>(() => 
-    safeParse('lms_nautical_transactions', SEED_TRANSACTIONS)
-  );
+  const [nauticalTransactions, setNauticalTransactions] = useState<NauticalMilesTransaction[]>([]);
+  const [notifications, setNotifications] = useState<NotificationLog[]>([]);
 
   const profileBadges = useMemo(() => {
     const list: ProfileBadge[] = [];
@@ -216,10 +199,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return list;
   }, [profiles]);
 
-  const [notifications, setNotifications] = useState<NotificationLog[]>(() => 
-    safeParse('lms_notifications', SEED_NOTIFICATIONS)
-  );
-
   // Lessons always come from Supabase — start empty, populated after fetch.
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLessonsLoading, setIsLessonsLoading] = useState(true);
@@ -229,15 +208,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>([]);
 
+  const [aboutContent, setAboutContent] = useState<AboutContent>({
+    overviewText: '',
+    scheduleText: '',
+    benefitsText: ''
+  });
 
-
-  const [aboutContent, setAboutContent] = useState<AboutContent>(() => 
-    safeParse('lms_about_content', SEED_ABOUT_CONTENT)
-  );
-
-  const [batches, setBatches] = useState<Batch[]>(() => 
-    safeParse('lms_batches', SEED_BATCHES)
-  );
+  const [batches, setBatches] = useState<Batch[]>([]);
 
   // Sync to local storage
   useEffect(() => {
