@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 import { Megaphone, Trash2, Edit3, Send, Clock, PlusCircle, X, Check, Mail } from 'lucide-react';
 
 export const Announcements: React.FC = () => {
-  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement, users } = useDatabase();
+  const { users } = useAuth();
+  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useCommunity();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

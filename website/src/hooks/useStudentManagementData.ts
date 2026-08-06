@@ -1,9 +1,15 @@
 import { useState } from 'react';
-import { useDatabase } from '../context/DatabaseContext';
+import { useAuth } from '../context/AuthContext';
+import { useCourse } from '../context/CourseContext';
+import { useGamification } from '../context/GamificationContext';
+import { useCommunity } from '../context/CommunityContext';
 import { getDemographics } from '../components/admin/StudentDemographics';
 
 export const useStudentManagementData = () => {
-  const { users, lessons, onboardingDays, nauticalTransactions, addNotification } = useDatabase();
+  const { users } = useAuth();
+  const { lessons } = useCourse();
+  const { nauticalTransactions } = useGamification();
+  const { onboardingDays, addNotification } = useCommunity();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding' | 'guest'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');

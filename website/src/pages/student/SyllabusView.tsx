@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCourse } from '../../context/CourseContext';
+import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
-import type { Lesson } from '../../context/DatabaseContext';
+import type { Lesson } from '../../types/database';
 import { EditableText } from '../../components/EditableText';
 import { Trash2, Plus, X, Save, Undo } from 'lucide-react';
 
@@ -9,14 +11,9 @@ export const SyllabusView: React.FC<{
   onPageChange?: (page: string) => void;
   isEditMode?: boolean;
 }> = ({ isEditMode = false }) => {
-  const { 
-    lessons, 
-    nauticalTransactions,
-    completeLesson,
-    activeUser,
-    updateLesson,
-  } = useDatabase();
-  const { isLessonsLoading } = useDatabase();
+  const { activeUser } = useAuth();
+  const { lessons, isLessonsLoading, completeLesson, updateLesson } = useCourse();
+  const { nauticalTransactions } = useGamification();
 
   const filteredLessons = lessons;
 

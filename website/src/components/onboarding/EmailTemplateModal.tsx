@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail } from 'lucide-react';
-import type { OnboardingDay } from '../../context/DatabaseContext';
+import type { OnboardingDay } from '../../types/database';
 import { 
   getDefaultEmailSubject,
   getDefaultEmailBody,

@@ -1,5 +1,8 @@
 import React from 'react';
-import { useDatabase } from '../context/DatabaseContext';
+import { useAuth } from '../context/AuthContext';
+import { useCourse } from '../context/CourseContext';
+import { useGamification } from '../context/GamificationContext';
+import { useCommunity } from '../context/CommunityContext';
 // No lucide-react imports
 
 interface HeaderProps {
@@ -8,7 +11,10 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions, onboardingDays } = useDatabase();
+  const { activeUser, switchUser } = useAuth();
+  const { lessons } = useCourse();
+  const { nauticalTransactions } = useGamification();
+  const { onboardingDays } = useCommunity();
   const isStudent = activeUser.role === 'student';
 
   // Get current page display title

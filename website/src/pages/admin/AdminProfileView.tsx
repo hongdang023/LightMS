@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 import { 
   Mail, 
@@ -11,7 +12,8 @@ import {
 import type { AdminRole } from '../../types/database';
 
 export const AdminProfileView: React.FC = () => {
-  const { activeAdmin, updateAdminProfile, addNotification } = useDatabase();
+  const { activeAdmin, updateAdminProfile } = useAuth();
+  const { addNotification } = useCommunity();
 
   const [fullName, setFullName] = useState(activeAdmin?.full_name || '');
   const [gmail] = useState(activeAdmin?.gmail || '');

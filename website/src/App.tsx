@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { DatabaseProvider, useDatabase } from './context/DatabaseContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CourseProvider } from './context/CourseContext';
+import { GamificationProvider } from './context/GamificationContext';
+import { CommunityProvider } from './context/CommunityContext';
 import { GlobalNavigationSidebar } from './components/GlobalNavigationSidebar';
 import { GlobalHeader } from './components/GlobalHeader';
 import { ParrotMascot } from './components/ParrotMascot';
@@ -32,7 +35,7 @@ import { Settings as AdminSettings } from './pages/admin/Settings';
 import './App.css';
 
 function MainAppShell() {
-  const { isAuthenticated, activeUser, activeAdmin, incrementVisits } = useDatabase();
+  const { isAuthenticated, activeUser, activeAdmin, incrementVisits } = useAuth();
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
@@ -42,115 +45,74 @@ function MainAppShell() {
       if (activeUser.role === 'admin') {
         setCurrentPage('admin-dashboard');
       } else {
-        // First-time users (visits <= 2) land on the 'about' tab, others land on 'dashboard'
-        if (activeUser.visits <= 2) {
-          setCurrentPage('about');
-        } else {
-          setCurrentPage('dashboard');
-        }
+        const visitCount = activeUser.visits || 0;
+        setCurrentPage(visitCount <= 2 ? 'about' : 'dashboard');
       }
     }
-  }, [isAuthenticated, activeUser.role]);
+  }, [isAuthenticated, activeUser?.id, activeUser?.role]);
 
   const handlePageChange = (page: string) => {
     setCurrentPage(page);
     setIsSidebarOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Route guarding
   if (!isAuthenticated) {
     return <Login />;
   }
 
-  if (activeUser.role === 'admin') {
-    if (activeAdmin && !activeAdmin.is_onboarded) {
-      return <AdminOnboardingForm />;
-    }
-  } else {
-    if (!activeUser.is_profile_completed) {
-      return <OnboardingForm />;
-    }
+  if (activeUser.role === 'student' && !activeUser.is_profile_completed) {
+    return <OnboardingForm onComplete={() => setCurrentPage('about')} />;
   }
 
-  // Render active page component
+  if (activeUser.role === 'admin' && activeAdmin && !activeAdmin.full_name) {
+    return <AdminOnboardingForm onComplete={() => setCurrentPage('admin-dashboard')} />;
+  }
+
   const renderPage = () => {
     switch (currentPage) {
-      // Student Portal
-      case 'dashboard':
-        return <StudentDashboard onPageChange={handlePageChange} />;
-      case 'announcements':
-        return <AnnouncementsView onPageChange={handlePageChange} />;
-      case 'about':
-        return <AboutView onPageChange={handlePageChange} />;
-      case 'onboarding':
-        return <OnboardingView onPageChange={handlePageChange} />;
-      case 'syllabus':
-        return <SyllabusView onPageChange={handlePageChange} />;
-      case 'calendar':
-        return <CalendarView />;
-      case 'walloffame':
-        return <WallOfFame />;
-      case 'help':
-        return <HelpDesk onPageChange={handlePageChange} />;
-      case 'profile':
-        return activeUser.role === 'admin' ? <AdminProfileView /> : <ProfileView />;
-
-      // Admin Portal
-      case 'admin-dashboard':
-        return <AdminDashboard onPageChange={handlePageChange} />;
-      case 'admin-announcements':
-        return <AdminAnnouncements />;
-      case 'course-builder':
-        return <CourseBuilder onPageChange={handlePageChange} />;
-      case 'admin-calendar':
-        return <AdminCalendarManagement />;
-      case 'student-mgmt':
-        return <StudentManagement />;
-      case 'internal-team':
-        return <InternalTeam />;
-      case 'admin-settings':
-        return <AdminSettings />;
-
-      default:
-        return <StudentDashboard onPageChange={handlePageChange} />;
+      case 'dashboard': return <StudentDashboard onPageChange={handlePageChange} />;
+      case 'about': return <AboutView onPageChange={handlePageChange} />;
+      case 'onboarding': return <OnboardingView onPageChange={handlePageChange} />;
+      case 'syllabus': return <SyllabusView />;
+      case 'calendar': return <CalendarView onPageChange={handlePageChange} />;
+      case 'walloffame': return <WallOfFame />;
+      case 'helpdesk': return <HelpDesk />;
+      case 'profile': return <ProfileView onPageChange={handlePageChange} />;
+      case 'announcements': return <AnnouncementsView onPageChange={handlePageChange} />;
+      case 'admin-dashboard': return <AdminDashboard onPageChange={handlePageChange} />;
+      case 'admin-profile': return <AdminProfileView />;
+      case 'course-builder': return <CourseBuilder />;
+      case 'student-management': return <StudentManagement />;
+      case 'internal-team': return <InternalTeam />;
+      case 'announcements-management': return <AdminAnnouncements />;
+      case 'calendar-management': return <AdminCalendarManagement />;
+      case 'admin-settings': return <AdminSettings />;
+      default: return <StudentDashboard onPageChange={handlePageChange} />;
     }
   };
 
   return (
-    <div className="app-shell">
-      {/* Product Onboarding Tour */}
-      <ProductTour />
+    <div className="app-layout flex h-screen bg-slate-950 text-slate-100 overflow-hidden">
+      <ProductTour activeTab={currentPage} onTabChange={handlePageChange} />
 
-      {/* Global Navigation Sidebar */}
       <GlobalNavigationSidebar 
         currentPage={currentPage} 
-        onPageChange={handlePageChange} 
+        onPageChange={handlePageChange}
         isOpen={isSidebarOpen}
       />
 
-      {/* Sidebar Mobile Backdrop */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main content pane */}
       <div className="main-content">
         <GlobalHeader 
           currentPage={currentPage} 
           onPageChange={handlePageChange} 
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
-        
-        {/* Scrollable page canvas */}
         <main className="page-container custom-scrollbar">
           {renderPage()}
         </main>
       </div>
 
-      {/* Floating Parrot Mascot Assistant */}
       <ParrotMascot currentPage={currentPage} />
     </div>
   );
@@ -158,9 +120,15 @@ function MainAppShell() {
 
 function App() {
   return (
-    <DatabaseProvider>
-      <MainAppShell />
-    </DatabaseProvider>
+    <AuthProvider>
+      <CourseProvider>
+        <GamificationProvider>
+          <CommunityProvider>
+            <MainAppShell />
+          </CommunityProvider>
+        </GamificationProvider>
+      </CourseProvider>
+    </AuthProvider>
   );
 }
 

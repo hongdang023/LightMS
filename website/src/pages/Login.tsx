@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../context/DatabaseContext';
+import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from '../components/BrandLogo';
 import { Shield, User, ArrowRight, X, Lock, BookOpen, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { loginWithGmail, loginWithSupabaseGoogle } = useDatabase();
+  const { loginWithGmail, loginWithSupabaseGoogle } = useAuth();
   
   // Auth flow states: 'role-select' | 'admin-password' | 'google-login'
   const [flowState, setFlowState] = useState<'role-select' | 'admin-password' | 'google-login'>('role-select');

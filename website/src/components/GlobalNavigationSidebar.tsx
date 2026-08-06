@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
-import { useDatabase } from '../context/DatabaseContext';
+import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from './BrandLogo';
 import {
   HomeIcon,
@@ -23,7 +23,7 @@ interface GlobalNavigationSidebarProps {
 }
 
 export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = ({ currentPage, onPageChange, isOpen }) => {
-  const { activeUser } = useDatabase();
+  const { activeUser } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   const isAdminPage = [

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCourse } from '../../context/CourseContext';
+import { useGamification } from '../../context/GamificationContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 import { 
   LayoutDashboard, Users, FileText, CheckSquare, 
@@ -122,10 +125,10 @@ const BarChart: React.FC<BarChartProps> = ({ data, colorClass }) => {
 };
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) => {
-  const { 
-    users, 
-    onboardingDays, lessons, nauticalTransactions
-  } = useDatabase();
+  const { users } = useAuth();
+  const { lessons } = useCourse();
+  const { nauticalTransactions } = useGamification();
+  const { onboardingDays } = useCommunity();
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);

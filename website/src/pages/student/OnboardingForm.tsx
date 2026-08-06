@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useGamification } from '../../context/GamificationContext';
 import { BrandLogo } from '../../components/BrandLogo';
 import { ChevronRight, ChevronLeft, Award, Sparkles, Compass, Check } from 'lucide-react';
 
-export const OnboardingForm: React.FC = () => {
-  const { activeUser, updateProfile, addNauticalMiles } = useDatabase();
+interface OnboardingFormProps {
+  onComplete?: () => void;
+}
+
+export const OnboardingForm: React.FC<OnboardingFormProps> = ({ onComplete: _onComplete }) => {
+  const { activeUser, updateProfile } = useAuth();
+  const { addNauticalMiles } = useGamification();
   const [step, setStep] = useState(1);
   const [celebrate, setCelebrate] = useState(false);
 

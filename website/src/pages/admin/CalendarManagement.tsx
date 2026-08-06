@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
-import { EVENT_TYPE_CONFIG } from '../../context/DatabaseContext';
+import { useCommunity } from '../../context/CommunityContext';
+import { EVENT_TYPE_CONFIG } from '../../types/database';
 import { PageHeader } from '../../components/PageHeader';
 import {
   ChevronLeft, ChevronRight, Plus, X, Trash2, Edit3,
   ChevronsRight, Clock, CalendarDays, List, Calendar,
   AlignLeft, Tag, Repeat, Bell
 } from 'lucide-react';
-import type { CalendarEvent, EventType } from '../../context/DatabaseContext';
+import type { CalendarEvent, EventType } from '../../types/database';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -580,7 +580,7 @@ const EventLegend: React.FC = () => (
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export const CalendarManagement: React.FC = () => {
-  const { calendarEvents, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, shiftCalendarEvents } = useDatabase();
+  const { calendarEvents, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent, shiftCalendarEvents } = useCommunity();
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());

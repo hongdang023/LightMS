@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useGamification } from '../../context/GamificationContext';
 import { Shield } from 'lucide-react';
 
 
@@ -51,7 +52,8 @@ const RankMedal: React.FC<{ rank: number }> = ({ rank }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const WallOfFame: React.FC = () => {
-  const { users, activeUser, badges, profileBadges, nauticalTransactions } = useDatabase();
+  const { users, activeUser } = useAuth();
+  const { badges, profileBadges, nauticalTransactions } = useGamification();
   const [lastUpdated, setLastUpdated] = useState('');
 
   useEffect(() => {

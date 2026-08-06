@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '../context/DatabaseContext';
+import { useAuth } from '../context/AuthContext';
+import { useCommunity } from '../context/CommunityContext';
 
 interface ParrotMascotProps {
   currentPage: string;
 }
 
 export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
-  const { activeUser, notifications } = useDatabase();
+  const { activeUser } = useAuth();
+  const { notifications } = useCommunity();
   const [bubbleText, setBubbleText] = useState('');
   const [showBubble, setShowBubble] = useState(false);
   const [isWiggling, setIsWiggling] = useState(false);

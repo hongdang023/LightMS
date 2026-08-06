@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnchorIcon, RouteIcon, GiftIcon } from '../../components/Icons';
 import { PageHeader } from '../../components/PageHeader';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { Save, Undo, BookOpen } from 'lucide-react';
 import {
   DEFAULT_VIDEO_URL,
@@ -33,7 +33,7 @@ interface AboutViewProps {
 
 export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode = false }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'platforms' | 'benefits'>('overview');
-  const { aboutContent, updateAboutContent } = useDatabase();
+  const { aboutContent, updateAboutContent } = useCommunity();
 
   // Local draft states for raw fields
   const [draftOverview, setDraftOverview] = useState('');

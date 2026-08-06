@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
 import { BrandLogo } from '../../components/BrandLogo';
 import { ChevronRight, ShieldCheck, Sparkles } from 'lucide-react';
 import type { AdminRole } from '../../types/database';
 
-export const AdminOnboardingForm: React.FC = () => {
-  const { activeAdmin, updateAdminProfile } = useDatabase();
+interface AdminOnboardingFormProps {
+  onComplete?: () => void;
+}
+
+export const AdminOnboardingForm: React.FC<AdminOnboardingFormProps> = ({ onComplete: _onComplete }) => {
+  const { activeAdmin, updateAdminProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 

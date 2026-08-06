@@ -1,5 +1,8 @@
 import React from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCourse } from '../../context/CourseContext';
+import { useGamification } from '../../context/GamificationContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 import { Shield, TrendingUp } from 'lucide-react';
 
@@ -8,7 +11,10 @@ interface StudentDashboardProps {
 }
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange }) => {
-  const { activeUser, lessons, nauticalTransactions, users, calendarEvents } = useDatabase();
+  const { activeUser, users } = useAuth();
+  const { lessons } = useCourse();
+  const { nauticalTransactions } = useGamification();
+  const { calendarEvents } = useCommunity();
 
   const filteredLessons = lessons;
 

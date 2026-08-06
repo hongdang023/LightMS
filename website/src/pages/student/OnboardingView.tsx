@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCommunity } from '../../context/CommunityContext';
+import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
 import { ChevronLeft, Plus, ClipboardList, Target, CheckCircle2, Mail } from 'lucide-react';
 import { EditableText } from '../../components/EditableText';
-import type { OnboardingDay } from '../../context/DatabaseContext';
+import type { OnboardingDay } from '../../types/database';
 import { 
   DAY_VISUAL_STYLES,
   renderRichText
@@ -18,16 +20,9 @@ interface OnboardingViewProps {
 }
 
 export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = false, onPageChange }) => {
-  const { 
-    activeUser, 
-    addNotification, 
-    onboardingDays, 
-    updateOnboardingDay,
-    users: profiles,
-    addNauticalMiles,
-    nauticalTransactions,
-    updateProfile
-  } = useDatabase();
+  const { activeUser, users: profiles, updateProfile } = useAuth();
+  const { onboardingDays, updateOnboardingDay, addNotification } = useCommunity();
+  const { addNauticalMiles, nauticalTransactions } = useGamification();
 
   // Email template config modal states
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);

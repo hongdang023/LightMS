@@ -131,6 +131,8 @@ export interface NotificationLog {
   created_at: string;
 }
 
+export type AnnouncementCategory = 'system' | 'leaderboard' | 'content_update' | 'schedule' | 'achievement';
+
 export interface Announcement {
   id: string;
   course_id?: string;
@@ -143,6 +145,9 @@ export interface Announcement {
   media_urls?: string[];
   created_at: string;
   isNew?: boolean;
+  category?: AnnouncementCategory;
+  is_auto?: boolean;
+  target_id?: string;
 }
 
 export interface OnboardingDay {

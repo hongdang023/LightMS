@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import type { OnboardingDay } from '../../context/DatabaseContext';
+import type { OnboardingDay } from '../../types/database';
 import { DAY_VISUAL_STYLES } from '../../data/onboardingVisuals';
 
 interface DayCardProps {

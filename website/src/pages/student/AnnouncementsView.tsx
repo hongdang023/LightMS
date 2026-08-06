@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ArrowLeft, Megaphone, Clock } from 'lucide-react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useCommunity } from '../../context/CommunityContext';
 
 interface AnnouncementsViewProps {
   onPageChange: (page: string) => void;
 }
 
 export const AnnouncementsView: React.FC<AnnouncementsViewProps> = ({ onPageChange: _onPageChange }) => {
-  const { announcements } = useDatabase();
+  const { announcements } = useCommunity();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
   // Track read announcements via localStorage
@@ -43,7 +43,23 @@ export const AnnouncementsView: React.FC<AnnouncementsViewProps> = ({ onPageChan
     }
   };
 
+  const getCategoryBadge = (category?: string) => {
+    switch (category) {
+      case 'leaderboard':
+        return { label: '🏆 Leaderboard', bg: 'bg-amber-100 text-amber-800 border-amber-200' };
+      case 'content_update':
+        return { label: '📚 Học liệu mới', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+      case 'schedule':
+        return { label: '⏰ Nhắc lịch học', bg: 'bg-sky-100 text-sky-800 border-sky-200' };
+      case 'achievement':
+        return { label: '🎖️ Thành tựu', bg: 'bg-purple-100 text-purple-800 border-purple-200' };
+      default:
+        return { label: '📢 Thông báo', bg: 'bg-[#E8F3F4] text-[#214C54] border-[#214C54]/20' };
+    }
+  };
+
   if (selectedAnnouncement) {
+    const badgeConfig = getCategoryBadge(selectedAnnouncement.category);
     return (
       <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in text-left">
         <button 
@@ -57,8 +73,8 @@ export const AnnouncementsView: React.FC<AnnouncementsViewProps> = ({ onPageChan
         <article className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100">
           <header className="mb-6 pb-6 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#E8F3F4] text-[#214C54] text-xs font-bold uppercase tracking-wider">
-                Tin Tức
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${badgeConfig.bg}`}>
+                {badgeConfig.label}
               </span>
               <span className="flex items-center text-gray-500 text-xs font-semibold">
                 <Clock size={13} className="mr-1" />
@@ -118,6 +134,7 @@ export const AnnouncementsView: React.FC<AnnouncementsViewProps> = ({ onPageChan
         ) : (
           announcements.map((announcement) => {
             const isUnread = !readIds.includes(announcement.id);
+            const badgeConfig = getCategoryBadge(announcement.category);
             return (
               <div 
                 key={announcement.id}
@@ -136,6 +153,9 @@ export const AnnouncementsView: React.FC<AnnouncementsViewProps> = ({ onPageChan
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${badgeConfig.bg}`}>
+                        {badgeConfig.label}
+                      </span>
                       <h3 className={`text-base font-bold text-[#15333B] truncate group-hover:text-[#214C54] transition-colors max-w-sm sm:max-w-md ${isUnread ? 'font-extrabold' : ''}`}>
                         {announcement.title}
                       </h3>

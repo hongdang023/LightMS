@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useCourse } from '../../context/CourseContext';
 import { PageHeader } from '../../components/PageHeader';
 import { Settings as SettingsIcon, Calendar, Mail, Play, AlertCircle } from 'lucide-react';
 
@@ -7,7 +7,7 @@ export const Settings: React.FC = () => {
   const { 
     batches, 
     updateBatch
-  } = useDatabase();
+  } = useCourse();
 
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');

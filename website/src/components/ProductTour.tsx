@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useDatabase } from "../context/DatabaseContext";
+import { useAuth } from "../context/AuthContext";
 import { ChevronRight, X, Sparkles, HelpCircle } from "lucide-react";
 
 interface TourStep {
@@ -9,8 +9,13 @@ interface TourStep {
   position: "bottom" | "top" | "left" | "right" | "center";
 }
 
-export const ProductTour: React.FC = () => {
-  const { activeUser, isAuthenticated } = useDatabase();
+interface ProductTourProps {
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+export const ProductTour: React.FC<ProductTourProps> = ({ activeTab: _activeTab, onTabChange: _onTabChange }) => {
+  const { activeUser, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [coords, setCoords] = useState<{

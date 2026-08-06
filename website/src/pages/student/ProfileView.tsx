@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useAuth } from '../../context/AuthContext';
+import { useGamification } from '../../context/GamificationContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 
-export const ProfileView: React.FC = () => {
-  const { activeUser, updateProfile, badges, profileBadges, nauticalTransactions, addNotification } = useDatabase();
+interface ProfileViewProps {
+  onPageChange?: (page: string) => void;
+}
+
+export const ProfileView: React.FC<ProfileViewProps> = ({ onPageChange: _onPageChange }) => {
+  const { activeUser, updateProfile } = useAuth();
+  const { badges, profileBadges, nauticalTransactions } = useGamification();
+  const { addNotification } = useCommunity();
 
   // Helpers to parse fields that can be "Other"
   const initReferral = () => {

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu } from 'lucide-react';
-import { useDatabase } from '../context/DatabaseContext';
+import { useAuth } from '../context/AuthContext';
+import { useCourse } from '../context/CourseContext';
+import { useGamification } from '../context/GamificationContext';
+import { useCommunity } from '../context/CommunityContext';
 import { AnnouncementsIcon } from './Icons';
 
 interface GlobalHeaderProps {
@@ -30,7 +33,10 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
-  const { activeUser, switchUser, lessons, nauticalTransactions, logout, onboardingDays } = useDatabase();
+  const { activeUser, switchUser, logout } = useAuth();
+  const { lessons } = useCourse();
+  const { nauticalTransactions } = useGamification();
+  const { onboardingDays } = useCommunity();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

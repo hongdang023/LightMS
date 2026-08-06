@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { useDatabase } from '../../context/DatabaseContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
-export const CalendarView: React.FC = () => {
-  const { addNotification, calendarEvents } = useDatabase();
+interface CalendarViewProps {
+  onPageChange?: (page: string) => void;
+}
+
+export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPageChange }) => {
+  const { addNotification, calendarEvents } = useCommunity();
   // Default to July 2026 (Course starting month) or current date if desired
   const [currentDate, setCurrentDate] = useState(() => new Date(2026, 6, 1));
 
