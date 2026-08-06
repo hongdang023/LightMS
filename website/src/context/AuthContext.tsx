@@ -47,7 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           supabase.from('profiles').select('*'),
           supabase.from('admins').select('*')
         ]);
-        if (profRes.data) setProfiles(profRes.data as Profile[]);
+        if (profRes.data) {
+          setProfiles((profRes.data as Profile[]).map(p => ({ ...p, role: 'student' })));
+        }
         if (adminRes.data) setAdmins(adminRes.data as Admin[]);
       } catch (err) {
         console.error('Error fetching profiles/admins in AuthContext:', err);

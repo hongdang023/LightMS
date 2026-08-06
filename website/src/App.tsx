@@ -40,7 +40,7 @@ function MainAppShell() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && activeUser) {
       incrementVisits(activeUser.id);
       if (activeUser.role === 'admin') {
         setCurrentPage('admin-dashboard');
@@ -59,6 +59,15 @@ function MainAppShell() {
 
   if (!isAuthenticated) {
     return <Login />;
+  }
+
+  if (!activeUser) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 space-y-3">
+        <div className="w-8 h-8 border-4 border-[#214C54] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-gray-400">Đang tải cấu hình...</span>
+      </div>
+    );
   }
 
   if (activeUser.role === 'student' && !activeUser.is_profile_completed) {

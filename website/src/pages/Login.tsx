@@ -141,7 +141,7 @@ export const Login: React.FC = () => {
           Hải Trình <span className="text-[#FFD94C]">LightMS</span>
         </h1>
         <p className="text-xs text-white/60 mb-6 leading-relaxed max-w-sm">
-          Hệ thống quản lý học tập dành cho Solopreneurs và Product Builders.
+          Hệ thống quản trị học tập dành cho học viên của hệ sinh thái The1ight
         </p>
 
         {/* ── FLOW STATE 1: ROLE SELECTION ── */}
@@ -159,7 +159,6 @@ export const Login: React.FC = () => {
                   <BookOpen className="w-6 h-6 text-sky-400" />
                 </div>
                 <span className="text-white font-black text-lg">Học viên</span>
-                <span className="text-xs text-white/40 mt-1">Lên boong, làm sản phẩm số, chinh phục hải lý</span>
               </button>
 
               {/* Admin Card */}
@@ -171,7 +170,6 @@ export const Login: React.FC = () => {
                   <Shield className="w-6 h-6 text-amber-400" />
                 </div>
                 <span className="text-white font-black text-lg">Ban quản trị</span>
-                <span className="text-xs text-white/40 mt-1">Giảng dạy, chấm bài, cấu hình lộ trình hệ thống</span>
               </button>
             </div>
           </div>
