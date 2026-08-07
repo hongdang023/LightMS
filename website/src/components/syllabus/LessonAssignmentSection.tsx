@@ -344,12 +344,30 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                 </div>
               )}
 
+              {/* Facebook Group Navigation Button */}
+              <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-5 space-y-3">
+                <div>
+                  <span className="text-[10px] text-blue-800 font-black uppercase tracking-widest block">👥 Đăng bài tập lên Facebook Group lớp:</span>
+                  <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal">
+                    Hãy đăng sản phẩm bài tập của bạn lên Facebook Group để cùng thảo luận và nhận góp ý từ lớp.
+                  </span>
+                </div>
+                <a
+                  href="https://www.facebook.com/groups/27216190438021089"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs font-black rounded-xl w-full shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer text-center"
+                >
+                  <span>🚀 Đi tới Facebook Group Lớp</span>
+                </a>
+              </div>
+
               <button
                 type="submit"
                 disabled={!evidenceUrl.trim() || !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl)}
                 className={`w-full py-3 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer ${
                   (!evidenceUrl.trim() || !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl))
-                    ? 'bg-gray-305 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
+                    ? 'bg-gray-200 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
                     : 'bg-[#214C54] hover:bg-[#15333B]'
                 }`}
               >

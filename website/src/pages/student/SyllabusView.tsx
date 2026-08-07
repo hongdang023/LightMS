@@ -336,6 +336,22 @@ export const SyllabusView: React.FC<{
               evidenceUrl={evidenceUrl}
               setEvidenceUrl={setEvidenceUrl}
             />
+
+            {/* Survey Section */}
+            <div className="border-t border-gray-100 pt-6 space-y-3">
+              <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📝 Khảo sát buổi học</h4>
+              <p className="text-xs text-slate-500 leading-normal">
+                Hãy dành 1 phút để giúp chúng tôi cải thiện chất lượng giảng dạy cho các buổi học sau nhé.
+              </p>
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-xl w-full sm:w-auto shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
+              >
+                <span>📝 Điền Form Khảo Sát Buổi Học</span>
+              </a>
+            </div>
             </div>
           )}
         </div>
