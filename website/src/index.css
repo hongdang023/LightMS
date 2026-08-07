@@ -183,3 +183,19 @@ input, textarea, select {
   h2 { font-size: 1.25rem; }
   h3 { font-size: 1.125rem; }
 }
+
+/* Card Flip styles */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+

@@ -39,14 +39,92 @@ function MainAppShell() {
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
+  // Synchronize state when browser Back/Forward navigation occurs
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      const pathToPageMap: { [key: string]: string } = {
+        '/': 'dashboard',
+        '/about': 'about',
+        '/onboarding': 'onboarding',
+        '/syllabus': 'syllabus',
+        '/calendar': 'calendar',
+        '/walloffame': 'walloffame',
+        '/helpdesk': 'helpdesk',
+        '/profile': 'profile',
+        '/announcements': 'announcements',
+        '/admin': 'admin-dashboard',
+        '/admin/profile': 'admin-profile',
+        '/admin/course-builder': 'course-builder',
+        '/admin/student-mgmt': 'student-mgmt',
+        '/admin/internal-team': 'internal-team',
+        '/admin/announcements': 'announcements-management',
+        '/admin/calendar': 'admin-calendar',
+        '/admin/settings': 'admin-settings',
+      };
+      
+      if (isAuthenticated && activeUser) {
+        if (activeUser.role === 'admin') {
+          if (path.startsWith('/admin')) {
+            setCurrentPage(pathToPageMap[path] || 'admin-dashboard');
+          } else {
+            setCurrentPage('admin-dashboard');
+          }
+        } else {
+          if (path.startsWith('/admin')) {
+            setCurrentPage('dashboard');
+          } else {
+            setCurrentPage(pathToPageMap[path] || 'dashboard');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isAuthenticated, activeUser]);
+
   useEffect(() => {
     if (isAuthenticated && activeUser) {
       incrementVisits(activeUser.id);
+      
+      const path = window.location.pathname;
+      const pathToPageMap: { [key: string]: string } = {
+        '/': 'dashboard',
+        '/about': 'about',
+        '/onboarding': 'onboarding',
+        '/syllabus': 'syllabus',
+        '/calendar': 'calendar',
+        '/walloffame': 'walloffame',
+        '/helpdesk': 'helpdesk',
+        '/profile': 'profile',
+        '/announcements': 'announcements',
+        '/admin': 'admin-dashboard',
+        '/admin/profile': 'admin-profile',
+        '/admin/course-builder': 'course-builder',
+        '/admin/student-mgmt': 'student-mgmt',
+        '/admin/internal-team': 'internal-team',
+        '/admin/announcements': 'announcements-management',
+        '/admin/calendar': 'admin-calendar',
+        '/admin/settings': 'admin-settings',
+      };
+
       if (activeUser.role === 'admin') {
-        setCurrentPage('admin-dashboard');
+        if (path.startsWith('/admin')) {
+          setCurrentPage(pathToPageMap[path] || 'admin-dashboard');
+        } else {
+          setCurrentPage('admin-dashboard');
+          window.history.replaceState(null, '', '/admin');
+        }
       } else {
-        const visitCount = activeUser.visits || 0;
-        setCurrentPage(visitCount <= 2 ? 'about' : 'dashboard');
+        // Student role - block all admin paths
+        if (path.startsWith('/admin')) {
+          const visitCount = activeUser.visits || 0;
+          setCurrentPage(visitCount <= 2 ? 'about' : 'dashboard');
+          window.history.replaceState(null, '', '/');
+        } else {
+          setCurrentPage(pathToPageMap[path] || ((activeUser.visits || 0) <= 2 ? 'about' : 'dashboard'));
+        }
       }
     }
   }, [isAuthenticated, activeUser?.id, activeUser?.role]);
@@ -55,6 +133,28 @@ function MainAppShell() {
     setCurrentPage(page);
     setIsSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const pageToPathMap: { [key: string]: string } = {
+      'dashboard': '/',
+      'about': '/about',
+      'onboarding': '/onboarding',
+      'syllabus': '/syllabus',
+      'calendar': '/calendar',
+      'walloffame': '/walloffame',
+      'helpdesk': '/helpdesk',
+      'profile': '/profile',
+      'announcements': '/announcements',
+      'admin-dashboard': '/admin',
+      'admin-profile': '/admin/profile',
+      'course-builder': '/admin/course-builder',
+      'student-mgmt': '/admin/student-mgmt',
+      'internal-team': '/admin/internal-team',
+      'announcements-management': '/admin/announcements',
+      'admin-calendar': '/admin/calendar',
+      'admin-settings': '/admin/settings',
+    };
+    const targetPath = pageToPathMap[page] || '/';
+    window.history.pushState(null, '', targetPath);
   };
 
   if (!isAuthenticated) {
@@ -92,10 +192,10 @@ function MainAppShell() {
       case 'admin-dashboard': return <AdminDashboard onPageChange={handlePageChange} />;
       case 'admin-profile': return <AdminProfileView />;
       case 'course-builder': return <CourseBuilder />;
-      case 'student-management': return <StudentManagement />;
+      case 'student-mgmt': return <StudentManagement />;
       case 'internal-team': return <InternalTeam />;
       case 'announcements-management': return <AdminAnnouncements />;
-      case 'calendar-management': return <AdminCalendarManagement />;
+      case 'admin-calendar': return <AdminCalendarManagement />;
       case 'admin-settings': return <AdminSettings />;
       default: return <StudentDashboard onPageChange={handlePageChange} />;
     }

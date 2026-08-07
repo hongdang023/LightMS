@@ -21,19 +21,20 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
   discussion:     { label: 'Phòng thảo luận' },
   calendar:       { label: 'Lịch học' },
   walloffame:     { label: 'Bảng vinh danh' },
-  help:           { label: 'Hỏi đáp & Hỗ trợ' },
+  helpdesk:       { label: 'Hỏi đáp & Hỗ trợ' },
   profile:        { label: 'Hồ sơ cá nhân' },
   announcements:  { label: 'Thông báo' },
   'admin-announcements': { label: 'Thông báo' },
   'admin-dashboard': { label: 'Tổng quan hệ thống' },
   'course-builder':  { label: 'Soạn lộ trình' },
+  'admin-calendar':  { label: 'Lịch học' },
   'speedgrader':     { label: 'Chấm bài tập' },
   'student-mgmt':    { label: 'Quản lý học viên' },
   'internal-team':   { label: 'Quản lý nhân sự' },
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
-  const { activeUser, switchUser, logout } = useAuth();
+  const { activeUser, switchUser, logout, admins } = useAuth();
   const { lessons } = useCourse();
   const { nauticalTransactions } = useGamification();
   const { onboardingDays } = useCommunity();
@@ -262,7 +263,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
                   ].includes(currentPage) ? 'Góc độ Học viên' : 'Admin Portal'}
                 </button>
               )}
-              {isStudent && (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+              {isStudent && admins.some(a => a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) && (import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
                 <button
                   onClick={() => {
                     switchUser('admin');

@@ -14,14 +14,15 @@ export const SyllabusView: React.FC<{
   onPageChange?: (page: string) => void;
   isEditMode?: boolean;
 }> = ({ isEditMode = false }) => {
-  const { activeUser } = useAuth();
+  const { activeUser, setProfiles } = useAuth();
   const { lessons, isLessonsLoading, completeLesson, updateLesson } = useCourse();
-  const { nauticalTransactions } = useGamification();
+  const { nauticalTransactions, addNauticalMiles } = useGamification();
 
   const filteredLessons = lessons;
 
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
   const [rubricSelfCheck, setRubricSelfCheck] = useState<{ [key: string]: boolean }>({});
+  const [evidenceUrl, setEvidenceUrl] = useState('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   // Local drafts for editable states when in Editing Mode (allows Cancel / Save)
@@ -108,7 +109,7 @@ export const SyllabusView: React.FC<{
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeLesson.assignment_description) return;
 
@@ -126,13 +127,35 @@ export const SyllabusView: React.FC<{
       }
     }
 
-    completeLesson(activeLesson.id);
-    showToast('Đã ghi nhận hoàn thành bài tập! 🚀');
+    if (!evidenceUrl.trim()) {
+      alert('Vui lòng nhập link bài viết Facebook nộp bài làm bằng chứng!');
+      return;
+    }
+
+    // Award +50 Nautical Miles using addNauticalMiles
+    try {
+      await addNauticalMiles(
+        activeUser.id,
+        50,
+        'assignment_graded',
+        `Đã hoàn thành bài tập: ${activeLesson.title}. Link nộp bài: ${evidenceUrl.trim()}`,
+        activeLesson.id,
+        [],
+        setProfiles
+      );
+      completeLesson(activeLesson.id);
+      showToast('Đã nộp bài tập và nhận +50 Hải lý thành công! 🚀');
+    } catch (err) {
+      console.error(err);
+      alert('Có lỗi xảy ra khi nộp bài tập. Vui lòng thử lại!');
+    }
   };
 
   const isLessonCompletedByStudent = (lessonId: string): boolean => {
     return (nauticalTransactions || []).some(
-      t => t.student_id === activeUser?.id && t.action_type === 'lesson_complete' && t.reference_id === lessonId
+      t => t.student_id === activeUser?.id &&
+           (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
+           t.reference_id === lessonId
     );
   };
 
@@ -310,6 +333,8 @@ export const SyllabusView: React.FC<{
               rubricSelfCheck={rubricSelfCheck}
               handleSelfCheckToggle={handleSelfCheckToggle}
               handleSubmit={handleSubmit}
+              evidenceUrl={evidenceUrl}
+              setEvidenceUrl={setEvidenceUrl}
             />
             </div>
           )}
@@ -347,6 +372,7 @@ export const SyllabusView: React.FC<{
                   onSelectLesson={(id) => {
                     setSelectedLessonId(id);
                     setRubricSelfCheck({});
+                    setEvidenceUrl('');
                   }}
                 />
               ))

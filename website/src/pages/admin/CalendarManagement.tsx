@@ -131,7 +131,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ year, month, events, onDayC
             <div
               key={idx}
               onClick={() => cell.currentMonth && onDayClick(dateStr)}
-              className={`min-h-[100px] p-2 border-b border-r border-gray-100 transition-colors group ${
+              className={`min-h-[125px] p-2 border-b border-r border-gray-100 transition-colors group ${
                 cell.currentMonth
                   ? 'cursor-pointer hover:bg-blue-50/40'
                   : 'bg-gray-50/50 cursor-default'
@@ -158,12 +158,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ year, month, events, onDayC
               </div>
 
               {/* Events */}
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {dayEvents.slice(0, 3).map((ev, i) => (
                   <div
                     key={ev.id + i}
                     onClick={e => { e.stopPropagation(); onEventClick(ev); }}
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-white text-[10px] font-semibold truncate cursor-pointer hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-1 px-2 py-1.5 rounded text-white text-[11px] font-semibold truncate cursor-pointer hover:opacity-80 transition-opacity"
                     style={{ backgroundColor: getEventBg(ev) }}
                   >
                     {ev.allDay ? (

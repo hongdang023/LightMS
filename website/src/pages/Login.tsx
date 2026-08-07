@@ -127,7 +127,7 @@ export const Login: React.FC = () => {
       </div>
 
       {/* ── Login Card ── */}
-      <div className="relative z-10 w-full max-w-lg bg-white/10 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center text-center transition-all duration-300 hover:border-white/20">
+      <div className="relative z-10 w-full max-w-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl flex flex-col items-center text-center transition-all duration-300 hover:border-white/20">
         
         {/* Lighthouse Logo & Brand */}
         <div className="mb-5 relative">
@@ -140,7 +140,7 @@ export const Login: React.FC = () => {
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">
           Hải Trình <span className="text-[#FFD94C]">LightMS</span>
         </h1>
-        <p className="text-xs text-white/60 mb-6 leading-relaxed max-w-sm">
+        <p className="text-sm md:text-base text-white/80 mb-6 leading-relaxed max-w-none md:whitespace-nowrap">
           Hệ thống quản trị học tập dành cho học viên của hệ sinh thái The1ight
         </p>
 

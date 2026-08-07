@@ -9,8 +9,8 @@ interface CalendarViewProps {
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPageChange }) => {
   const { addNotification, calendarEvents } = useCommunity();
-  // Default to July 2026 (Course starting month) or current date if desired
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 6, 1));
+  // Default to current date/month
+  const [currentDate, setCurrentDate] = useState(() => new Date());
 
   // Helper to get days in month
   const getDaysInMonth = (year: number, month: number) => {
@@ -279,7 +279,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 auto-rows-[minmax(75px,auto)] lg:auto-rows-[minmax(82px,auto)]">
+        <div className="grid grid-cols-7 auto-rows-[minmax(90px,auto)] lg:auto-rows-[minmax(105px,auto)]">
           {gridCells.map((cell, idx) => {
             const cellMonth = cell.isCurrentMonth ? month : (cell.date > 15 ? month - 1 : month + 1);
             const cellYear = cellMonth < 0 ? year - 1 : cellMonth > 11 ? year + 1 : year;
@@ -288,12 +288,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
             const isToday = cell.isCurrentMonth && cell.date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
             const events = getEventsForDate(cellYear, normalizedMonth, cell.date, cell.dayOfWeek);
 
+            const cellDateMs = new Date(cellYear, normalizedMonth, cell.date).getTime();
+            const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            const isPast = cellDateMs < todayStart;
+
             return (
               <div 
                 key={idx} 
-                className={`border-r border-b border-gray-100 p-1 ${
+                className={`border-r border-b border-gray-100 p-1 transition-opacity ${
                   !cell.isCurrentMonth ? 'bg-gray-50/30' : 'bg-white'
-                } ${idx % 7 === 6 ? 'border-r-0' : ''}`}
+                } ${idx % 7 === 6 ? 'border-r-0' : ''} ${isPast ? 'opacity-50' : ''}`}
               >
                 <div className="flex justify-center mb-0.5">
                   <span className={`w-5.5 h-5.5 flex items-center justify-center rounded-full text-[11px] font-bold ${
@@ -304,11 +308,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
                   </span>
                 </div>
                 
-                <div className="space-y-0.5 px-0.5">
+                <div className="space-y-1 px-0.5">
                   {cell.isCurrentMonth && events.map((event, eIdx) => (
                     <div 
                       key={`${event.id}-${eIdx}`}
-                      className={`group relative text-[9.5px] font-bold px-1.5 py-0.5 rounded-md truncate cursor-pointer transition-transform hover:scale-[1.02] ${event.colorClass}`}
+                      className={`group relative text-[10.5px] font-bold px-2 py-1.5 rounded-md truncate cursor-pointer transition-transform hover:scale-[1.02] ${event.colorClass}`}
                       title={event.details}
                     >
                       {event.dotColorClass ? (

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStudentManagementData } from '../../hooks/useStudentManagementData';
 import { PageHeader } from '../../components/PageHeader';
 import { 
@@ -57,6 +58,17 @@ export const StudentManagement: React.FC = () => {
     getLiveClassCompletedCount,
     getStudentStatus
   } = useStudentManagementData();
+
+  const [hoveredTask, setHoveredTask] = useState<{
+    taskIdx: number;
+    isOptional: boolean;
+    cleanName: string;
+    checkedCount: number;
+    totalCount: number;
+    taskPercent: number;
+    x: number;
+    y: number;
+  } | null>(null);
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in select-none overflow-hidden space-y-4">
@@ -313,25 +325,22 @@ export const StudentManagement: React.FC = () => {
                                   <div
                                     key={task.key}
                                     className={`group relative w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black text-white ${colorClass} shadow-sm hover:scale-110 transition-all cursor-help shrink-0`}
+                                    onMouseEnter={(e) => {
+                                      const rect = e.currentTarget.getBoundingClientRect();
+                                      setHoveredTask({
+                                        taskIdx: task.idx,
+                                        isOptional: !!task.isOptional,
+                                        cleanName,
+                                        checkedCount,
+                                        totalCount: students.length,
+                                        taskPercent,
+                                        x: rect.left + rect.width / 2,
+                                        y: rect.top,
+                                      });
+                                    }}
+                                    onMouseLeave={() => setHoveredTask(null)}
                                   >
                                     {task.idx}
-                                    <div className="absolute bottom-full right-0 mb-2 hidden group-hover:flex flex-col items-start bg-[#15333B] text-white text-[10px] p-3 rounded-xl shadow-xl z-20 w-64 text-left pointer-events-none whitespace-normal leading-normal">
-                                      <span className="font-extrabold text-teal-400 block mb-1">
-                                        Nhiệm vụ {task.idx} {task.isOptional ? '(Tùy chọn)' : '(Bắt buộc)'}
-                                      </span>
-                                      <p className="font-semibold text-gray-250 text-[10px] mb-2 line-clamp-3">
-                                        {cleanName}
-                                      </p>
-                                      <div className="w-full flex justify-between items-center border-t border-white/10 pt-1.5 mt-0.5">
-                                        <span className="font-black text-white">
-                                          Đã tích: {checkedCount}/{students.length} HV
-                                        </span>
-                                        <span className="font-black text-emerald-400">
-                                          {taskPercent}%
-                                        </span>
-                                      </div>
-                                      <div className="absolute right-2 top-full w-2 h-2 bg-[#15333B] rotate-45 -mt-1"></div>
-                                    </div>
                                   </div>
                                 );
                               })
@@ -496,6 +505,34 @@ export const StudentManagement: React.FC = () => {
 
           </div>
         </div>
+      )}
+      {hoveredTask && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: `${hoveredTask.x}px`,
+            top: `${hoveredTask.y - 8}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
+          className="flex flex-col items-start bg-[#15333B] text-white text-[10px] p-3 rounded-xl shadow-xl z-[9999] w-64 text-left pointer-events-none whitespace-normal leading-normal"
+        >
+          <span className="font-extrabold text-teal-400 block mb-1">
+            Nhiệm vụ {hoveredTask.taskIdx} {hoveredTask.isOptional ? '(Tùy chọn)' : '(Bắt buộc)'}
+          </span>
+          <p className="font-semibold text-gray-250 text-[10px] mb-2 line-clamp-3">
+            {hoveredTask.cleanName}
+          </p>
+          <div className="w-full flex justify-between items-center border-t border-white/10 pt-1.5 mt-0.5">
+            <span className="font-black text-white">
+              Đã tích: {hoveredTask.checkedCount}/{hoveredTask.totalCount} HV
+            </span>
+            <span className="font-black text-emerald-400">
+              {hoveredTask.taskPercent}%
+            </span>
+          </div>
+          <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-[#15333B] rotate-45 -mt-1"></div>
+        </div>,
+        document.body
       )}
     </div>
   );

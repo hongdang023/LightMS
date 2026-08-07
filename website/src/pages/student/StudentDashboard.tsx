@@ -4,7 +4,41 @@ import { useCourse } from '../../context/CourseContext';
 import { useGamification } from '../../context/GamificationContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
-import { Shield, TrendingUp } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { Shield, Calendar, Video, BookOpen, Trophy } from 'lucide-react';
+
+// Helper to extract logical first sentence/step summary
+const getShortDescription = (desc: string): string => {
+  if (!desc) return '';
+  const firstLine = desc.split('\n')[0].trim();
+  const match = firstLine.match(/^([^.\-+:—]+(?:—[^.\-+:—]+)?)/);
+  if (match) {
+    const clean = match[1].trim();
+    if (clean.length > 5) {
+      return clean.endsWith('.') ? clean : `${clean}.`;
+    }
+  }
+  return firstLine.length > 60 ? `${firstLine.substring(0, 60)}...` : firstLine;
+};
+
+// Helper to format weekday names to clean short Vietnamese representations
+const getWeekdayShort = (weekday: string): string => {
+  const normalized = weekday.toLowerCase();
+  if (normalized.includes('chủ nhật')) return 'Chủ Nhật';
+  if (normalized.includes('thứ hai')) return 'Thứ 2';
+  if (normalized.includes('thứ ba')) return 'Thứ 3';
+  if (normalized.includes('thứ tư')) return 'Thứ 4';
+  if (normalized.includes('thứ năm')) return 'Thứ 5';
+  if (normalized.includes('thứ sáu')) return 'Thứ 6';
+  if (normalized.includes('thứ bảy')) return 'Thứ 7';
+  return weekday;
+};
+
+// Helper to determine badge style consistently based on due date
+const getDeadlineBadgeStyle = (_dueDateStr: string): string => {
+  // Single unified neutral style for all due dates to keep absolute visual consistency
+  return 'text-[#3E5E63] bg-gray-50 border-gray-200';
+};
 
 interface StudentDashboardProps {
   onPageChange: (page: string) => void;
@@ -142,6 +176,33 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
     return { day, month, weekday };
   }, [nearestLesson]);
 
+  // Look up lesson details from course lessons context if calendar event doesn't have details
+  const lessonDetailsFromLessons = React.useMemo(() => {
+    if (!nearestLesson || !lessons) return null;
+    const matchDigits = nearestLesson.title?.match(/\d+/);
+    if (!matchDigits) return null;
+    const lessonNum = parseInt(matchDigits[0], 10);
+    return lessons.find(l => {
+      const lMatch = l.title?.match(/\d+/);
+      return lMatch && parseInt(lMatch[0], 10) === lessonNum;
+    });
+  }, [nearestLesson, lessons]);
+
+  const lessonTopicName = React.useMemo(() => {
+    let rawTopic = '';
+    if (nearestLesson?.details) {
+      // Split by literal \n or actual newlines to get the first line
+      const firstLine = nearestLesson.details.split(/\\n|\n/)[0].trim();
+      // Remove prefixes like "Buổi 04:"
+      const parts = firstLine.split(':');
+      rawTopic = parts.length > 1 ? parts.slice(1).join(':').trim() : firstLine;
+    } else if (lessonDetailsFromLessons) {
+      const parts = lessonDetailsFromLessons.title.split(':');
+      rawTopic = parts.length > 1 ? parts.slice(1).join(':').trim() : lessonDetailsFromLessons.title;
+    }
+    return rawTopic || null;
+  }, [nearestLesson, lessonDetailsFromLessons]);
+
   // 4. Calculate Rank and Voyage progress percentage
   const leaderboard = React.useMemo(() => {
     return [...users]
@@ -159,7 +220,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
 
 
   return (
-    <div className="space-y-8 animate-fade-in select-none">
+    <div className="space-y-4 animate-fade-in select-none">
       <PageHeader 
         title={`Chào mừng, ${activeUser.full_name}!`}
         description="Trạng thái hiện tại của hải trình và các nhiệm vụ cần hoàn thành hôm nay."
@@ -171,16 +232,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
       {/* Grid Content */}
       <div className="dashboard-grid">
         {/* Left Column: Tasks & Assignments (Requirement 1) */}
-        <div className="space-y-6">
+        <div className="flex flex-col h-full">
           
           {/* Card: Bài tập chưa hoàn thành */}
-          <div className="card p-6 flex flex-col justify-between">
+          <div className="card flex flex-col justify-between flex-1" style={{ padding: '1.25rem' }}>
             <div>
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
-                <h3 className="font-extrabold text-lg text-[#15333B] flex items-center gap-2">
-                  🎯 Bài tập chưa hoàn thành
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                <h3 className="font-extrabold text-base text-[#15333B] flex items-center gap-2">
+                  <BookOpen size={18} className="text-[#214C54]" strokeWidth={1.5} />
+                  Bài tập chưa hoàn thành
                 </h3>
-                <span className={`badge-pill text-[10px] font-extrabold ${(pendingAssignments.length === 0 && onboardingProgress.isCompleted) ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'badge-warning'}`}>
+                <span className={`badge-pill text-[9px] font-extrabold ${(pendingAssignments.length === 0 && onboardingProgress.isCompleted) ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'badge-warning'}`}>
                   {pendingAssignments.length + (onboardingProgress.isCompleted ? 0 : 1)} nhiệm vụ còn lại
                 </span>
               </div>
@@ -194,50 +256,45 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                 <div className="divide-y divide-gray-100">
                   {/* Onboarding progress row (if not completed) */}
                   {!onboardingProgress.isCompleted && (
                     <div 
                       onClick={() => onPageChange('onboarding')}
-                      className="p-5 rounded-2xl border border-yellow-200 bg-yellow-50/20 hover:border-yellow-300 hover:bg-yellow-50/40 hover:shadow-md transition-all cursor-pointer group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                      className="pb-4 hover:opacity-95 transition-all cursor-pointer group flex flex-col gap-2.5"
                     >
-                      <div className="space-y-1.5 flex-1 w-full">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-5.5 h-5.5 rounded-full border-2 border-yellow-400 flex-shrink-0 flex items-center justify-center">
-                            <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full" />
-                          </span>
-                          <h4 className="font-bold text-sm text-[#15333B] group-hover:text-yellow-700 transition-colors">
-                            Thử thách tuần Onboarding
-                          </h4>
-                        </div>
-                        <p className="text-xs text-[#3E5E63] pl-8 leading-relaxed line-clamp-2">
-                          Hoàn thành các nhiệm vụ Onboarding để kích hoạt tư duy chiến binh và thiết lập môi trường.
-                        </p>
-                        
-                        {/* Mini Progress Bar */}
-                        <div className="pl-8 pt-2 max-w-md w-full">
-                          <div className="flex justify-between items-end mb-1">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tiến độ Onboarding</span>
-                            <span className="text-xs font-black text-[#214C54]">{onboardingProgress.percent}% ({onboardingProgress.completed}/{onboardingProgress.total})</span>
+                      <div className="space-y-2 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5.5 h-5.5 rounded-full border-2 border-yellow-400 flex-shrink-0 flex items-center justify-center">
+                              <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full" />
+                            </span>
+                            <h4 className="font-extrabold text-sm text-[#15333B] group-hover:text-yellow-700 transition-colors">
+                              Thử thách tuần Onboarding
+                            </h4>
                           </div>
-                          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
+                          <span className={`text-[10px] font-black border px-2 py-0.5 rounded-md flex items-center gap-1 ${getDeadlineBadgeStyle(onboardingDueDate)}`}>
+                            📅 Hạn nộp: {onboardingDueDate}
+                          </span>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 font-medium pl-[30px] leading-relaxed">
+                          Hoàn thành các nhiệm vụ khởi động và thiết lập môi trường.
+                        </p>
+                      </div>
+
+                      {/* Progress bar and Action Button Inline */}
+                      <div className="pl-[30px] flex justify-between items-center gap-4 mt-2">
+                        <div className="flex-1 max-w-sm flex items-center gap-3">
+                          <span className="text-[11px] font-extrabold text-[#3E5E63] shrink-0">Tiến độ: {onboardingProgress.percent}%</span>
+                          <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden border border-gray-300/40">
                             <div 
                               className="h-full bg-gradient-to-r from-[#214C54] to-[#EAB308] transition-all duration-500 rounded-full"
                               style={{ width: `${onboardingProgress.percent}%` }}
                             />
                           </div>
                         </div>
-                      </div>
-
-                      {/* Due Date Indicator & Action Button */}
-                      <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 shrink-0 gap-3">
-                        <div className="text-left sm:text-right">
-                          <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Hạn nộp</span>
-                          <span className="text-xs font-extrabold text-yellow-700 bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-md mt-0.5 inline-block">
-                            📅 {onboardingDueDate}
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-[#214C54] group-hover:translate-x-1 transition-transform sm:block hidden">
+                        <span className="px-3.5 py-1.5 rounded-xl bg-[#214C54]/5 text-[#214C54] group-hover:bg-[#214C54] group-hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1 shrink-0">
                           Tiếp tục làm ➔
                         </span>
                       </div>
@@ -245,35 +302,34 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                   )}
 
                   {/* Pending assignments */}
-                  {pendingAssignments.map((assignment) => (
+                  {pendingAssignments.map((assignment, index) => (
                     <div 
                       key={assignment.id} 
                       onClick={() => onPageChange(assignment.pageTarget)}
-                      className="p-5 rounded-2xl border border-gray-150 bg-white hover:border-[#214C54]/30 hover:bg-[#214C54]/5 hover:shadow-md transition-all cursor-pointer group flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                      className={`${(!onboardingProgress.isCompleted || index > 0) ? 'pt-4' : ''} pb-4 hover:opacity-95 transition-all cursor-pointer group flex flex-col gap-2`}
                     >
-                      <div className="space-y-1.5 flex-1">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-5.5 h-5.5 rounded-full border-2 border-gray-300 group-hover:border-[#214C54] transition-colors flex-shrink-0 flex items-center justify-center">
-                            <span className="w-2.5 h-2.5 bg-transparent rounded-full group-hover:bg-[#214C54] transition-colors" />
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5.5 h-5.5 rounded-full border-2 border-gray-300 group-hover:border-[#214C54] transition-colors flex-shrink-0 flex items-center justify-center">
+                              <span className="w-2.5 h-2.5 bg-transparent group-hover:bg-[#214C54] transition-colors rounded-full" />
+                            </span>
+                            <h4 className="font-extrabold text-sm text-[#15333B] group-hover:text-[#214C54] transition-colors">
+                              {assignment.title}
+                            </h4>
+                          </div>
+                          <span className={`text-[10px] font-black border px-2 py-0.5 rounded-md flex items-center gap-1 ${getDeadlineBadgeStyle(assignment.dueDate)}`}>
+                            📅 Hạn nộp: {assignment.dueDate}
                           </span>
-                          <h4 className="font-bold text-sm text-[#15333B] group-hover:text-[#214C54] transition-colors">
-                            {assignment.title}
-                          </h4>
                         </div>
-                        <p className="text-xs text-[#3E5E63] pl-8 leading-relaxed line-clamp-2">
-                          {assignment.desc}
+                        <p className="text-xs text-gray-500 font-medium pl-[30px] leading-relaxed">
+                          {getShortDescription(assignment.desc)}
                         </p>
                       </div>
 
-                      {/* Due Date Indicator & Action Button */}
-                      <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 shrink-0 gap-3">
-                        <div className="text-left sm:text-right">
-                          <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Hạn nộp</span>
-                          <span className="text-xs font-extrabold text-red-600 bg-red-50 border border-red-200/50 px-2 py-0.5 rounded-md mt-0.5 inline-block">
-                            📅 {assignment.dueDate}
-                          </span>
-                        </div>
-                        <span className="text-xs font-bold text-[#214C54] group-hover:translate-x-1 transition-transform sm:block hidden">
+                      {/* Action Button */}
+                      <div className="flex justify-end mt-2 pr-1">
+                        <span className="px-3.5 py-1.5 rounded-xl bg-[#214C54]/5 text-[#214C54] group-hover:bg-[#214C54] group-hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1">
                           Làm bài ngay ➔
                         </span>
                       </div>
@@ -283,13 +339,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
               )}
             </div>
             {pendingAssignments.length > 0 && (
-              <div className="pt-4 border-t border-gray-100 mt-6 text-center">
-                <button 
+              <div className="pt-4 border-t border-gray-100 mt-4 flex justify-center">
+                <Button 
+                  variant="secondary"
+                  size="sm"
                   onClick={() => onPageChange('syllabus')}
-                  className="text-xs text-[#214C54] hover:text-[#15333B] font-extrabold bg-transparent border-0 cursor-pointer"
+                  rightIcon={<span className="group-hover:translate-x-1 transition-transform">➔</span>}
                 >
-                  Xem toàn bộ danh sách Syllabus ➔
-                </button>
+                  Xem toàn bộ danh sách Syllabus
+                </Button>
               </div>
             )}
           </div>
@@ -299,18 +357,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
         {/* Right Column: Nearest Session & Progress Info */}
         <div className="space-y-6">
           {/* Card: Nearest Session (Requirement 2) */}
-          <div className="card bg-gradient-to-br from-[#214C54]/5 to-transparent border-[#214C54]/15">
-            <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-150 pb-3 mb-4 flex items-center gap-1.5 uppercase tracking-wider">
-              📅 Buổi học gần nhất
+          <div className="card bg-gradient-to-br from-[#214C54]/5 to-transparent border-[#214C54]/15" style={{ padding: '1.25rem' }}>
+            <h3 className="font-extrabold text-xs text-[#15333B] border-b border-gray-150 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
+              <Calendar size={14} className="text-[#214C54]" strokeWidth={1.5} />
+              Buổi học gần nhất
             </h3>
 
             {nearestLesson && lessonDateDetails ? (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div className="flex gap-4 items-start">
                   {/* Calendar Widget Graphic */}
                   <div className="flex flex-col items-center bg-white border border-[#214C54]/20 rounded-xl overflow-hidden min-w-[65px] shadow-sm shrink-0">
-                    <span className="bg-[#B91C1C] text-white w-full text-[9px] font-black text-center py-1 uppercase tracking-wider">
-                      {lessonDateDetails.weekday.split(' ')[0] || 'Lịch'}
+                    <span className="bg-[#B91C1C] text-white w-full text-[10px] font-black text-center py-1 uppercase tracking-wider">
+                      {getWeekdayShort(lessonDateDetails.weekday)}
                     </span>
                     <span className="text-2xl font-black text-[#214C54] py-1">
                       {lessonDateDetails.day}
@@ -324,7 +383,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
                     <h4 className="font-extrabold text-sm text-[#15333B] leading-snug">
                       {nearestLesson.title}
                     </h4>
-                    <p className="text-xs text-gray-500 font-semibold mt-0.5">
+                    {lessonTopicName && (
+                      <p className="text-xs text-[#214C54] font-bold leading-snug">
+                        {lessonTopicName}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">
                       Thời gian: {nearestLesson.time && nearestLesson.endTime ? `${nearestLesson.time} - ${nearestLesson.endTime}` : (nearestLesson.allDay || nearestLesson.time === '00:00' ? 'Cả ngày' : nearestLesson.time)}
                     </p>
 
@@ -333,15 +397,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
 
                 {/* Direct Action Zoom Link */}
                 {!nearestLesson.title?.toLowerCase().includes('onboarding') && (
-                  <a 
-                    href="https://daymai.vn/meet/0388148327"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full btn btn-accent text-xs font-black shadow-lg shadow-yellow-500/10 hover:shadow-yellow-500/20 transform hover:-translate-y-0.5 transition-all text-center py-3 flex items-center justify-center gap-2 group animate-pulse"
+                  <Button 
+                    variant="primary"
+                    className="w-full text-xs font-black text-center py-2 flex items-center justify-center gap-2"
+                    leftIcon={<Video size={16} strokeWidth={1.5} />}
+                    onClick={() => window.open("https://daymai.vn/meet/0388148327", "_blank", "noopener,noreferrer")}
                   >
-                    <span className="text-sm">📽️</span>
-                    <span>Tham gia Zoom Class ngay</span>
-                  </a>
+                    Tham gia Zoom Class ngay
+                  </Button>
                 )}
               </div>
             ) : (
@@ -352,67 +415,79 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
           </div>
 
           {/* Card: Giải đấu hiện tại & Bảng vinh danh */}
-          <div className="card p-0 overflow-hidden bg-white shadow-sm border border-gray-100">
+          <div className="card p-0 overflow-hidden bg-white shadow-sm border border-gray-100" style={{ padding: 0 }}>
             {/* Header / Giải đấu */}
-            <div className="bg-gradient-to-br from-[#fef9c3] to-white border-b border-[#ca8a04]/20 p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm bg-gradient-to-br from-[#ca8a04] to-[#92400e]">
-                  ⛵
+            <div className="bg-[#FDF5DA] border-b border-[#EAB308]/20 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm bg-[#EAB308]">
+                  <Trophy size={20} className="text-white" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#92400e]">
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#3E5E63]">
                     Hải Lý Tích Lũy
                   </div>
-                  <div className="text-base font-black text-[#15333B] leading-tight">
+                  <div className="text-sm font-black text-[#15333B] leading-tight">
                     {activeUser.nautical_miles.toLocaleString()} Hải lý
                   </div>
                 </div>
               </div>
-              <div className="bg-white/80 backdrop-blur rounded-xl border border-[#ca8a04]/30 px-3 py-2.5 flex items-center justify-between">
-                <div className="text-xs font-bold text-[#15333B]">
-                  Vị trí: <span className="text-[#92400e] font-black">#{userRankIndex}</span>
-                </div>
-                {userRankIndex <= 3 && (
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100 rounded-full px-2 py-0.5 shadow-sm">
-                    <TrendingUp size={10} /> Đang thăng hạng
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Mini Leaderboard */}
-            <div className="p-4">
-              <div className="flex justify-between items-center mb-3">
+            <div className="p-4 pb-6">
+              <div className="flex justify-between items-center mb-2.5">
                 <h4 className="text-xs font-extrabold text-[#15333B] flex items-center gap-1.5 uppercase tracking-wider">
                   <Shield size={14} className="text-[#3E5E63]" /> Top Thủy Thủ
                 </h4>
                 <span className="text-[10px] text-gray-400 font-semibold">⚓ Hải lý</span>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {leaderboard.slice(0, 3).map((student, idx) => (
-                  <div key={student.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${student.id === activeUser.id ? 'bg-[#fef9c3]/50' : ''}`}>
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-[#ffd700] to-[#f59e0b] text-[#78350f] border-2 border-[#d97706]' : idx === 1 ? 'bg-gradient-to-br from-[#e5e7eb] to-[#9ca3af] text-[#374151] border-2 border-gray-400' : idx === 2 ? 'bg-gradient-to-br from-[#fed7aa] to-[#f97316] text-[#7c2d12] border-2 border-orange-400' : 'bg-white border border-gray-200 text-gray-400'}`}>
+                  <div key={student.id} className={`flex items-center gap-2 px-2 py-1 rounded-lg ${student.id === activeUser.id ? 'bg-[#EAB308]/15 border border-[#EAB308]/30 shadow-sm' : ''}`}>
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-[#EAB308] text-[#15333B]' : idx === 1 ? 'bg-[#E5E7EB] text-[#374151]' : idx === 2 ? 'bg-[#fed7aa]/60 text-[#7c2d12]' : 'bg-gray-100 text-gray-400'}`}>
                       {idx + 1}
                     </span>
                     <img src={student.avatar_url} alt={student.full_name} className="w-6 h-6 rounded-full object-cover border border-gray-200" />
                     <span className="flex-1 text-xs font-bold text-[#15333B] truncate">
                       {student.full_name} {student.id === activeUser.id && <span className="text-[9px] bg-[#214C54] text-white px-1.5 py-0.5 rounded-full ml-1">BẠN</span>}
                     </span>
-                    <span className={`text-xs font-black tabular-nums ${idx === 0 ? 'text-yellow-600' : 'text-[#214C54]'}`}>
+                    <span className="text-xs font-medium text-gray-500 tabular-nums">
                       {student.nautical_miles}
                     </span>
                   </div>
                 ))}
+
+                {userRankIndex > 3 && (
+                  <>
+                    <div className="flex items-center justify-center py-1">
+                      <div className="h-[1px] w-full border-t border-dashed border-gray-200" />
+                    </div>
+                    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-[#EAB308]/15 border border-[#EAB308]/30 shadow-sm">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black bg-gray-100 text-gray-400">
+                        {userRankIndex}
+                      </span>
+                      <img src={activeUser.avatar_url} alt={activeUser.full_name} className="w-6 h-6 rounded-full object-cover border border-[#EAB308]/30" />
+                      <span className="flex-1 text-xs font-bold text-[#15333B] truncate">
+                        {activeUser.full_name} <span className="text-[9px] bg-[#214C54] text-white px-1.5 py-0.5 rounded-full ml-1">BẠN</span>
+                      </span>
+                      <span className="text-xs font-medium text-gray-500 tabular-nums">
+                        {activeUser.nautical_miles}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
               
-              <div className="pt-4 mt-4 border-t border-gray-100 text-center">
-                <button 
+              <div className="pt-3 mt-3 border-t border-gray-100 text-center">
+                <Button 
+                  variant="secondary"
+                  size="sm"
                   onClick={() => onPageChange('walloffame')}
-                  className="text-xs text-[#214C54] hover:text-[#15333B] font-extrabold"
+                  rightIcon={<span className="group-hover:translate-x-1 transition-transform">➔</span>}
                 >
-                  Xem Bảng Xếp Hạng ➔
-                </button>
+                  Xem Bảng Xếp Hạng
+                </Button>
               </div>
             </div>
           </div>

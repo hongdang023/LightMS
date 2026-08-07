@@ -35,7 +35,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   }, []);
 
   return (
-    <div className="mb-5 w-full animate-fade-in select-none">
+    <div className="mb-5 w-full animate-fade-in select-none relative z-20">
       <div className="flex items-start justify-between gap-4">
 
         {/* Title row */}

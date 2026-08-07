@@ -174,13 +174,13 @@ export const useStudentManagementData = () => {
   };
 
   const getMailtoLink = (student: any) => {
-    const emailSubject = encodeURIComponent(`[LightMS] Cảnh báo tiến độ học tập - Học viên ${student.full_name}`);
+    const emailSubject = encodeURIComponent(`[LightMS] Cảnh báo tiến độ học tập - Thủy thủ ${student.full_name}`);
     const emailBody = encodeURIComponent(
       `Chào bạn ${student.full_name},\n\n` +
-      `Thầy cô thấy bạn đang gặp chút chậm trễ về tiến độ bài tập và lượt truy cập tương tác trên hệ thống học tập.\n\n` +
-      `Đừng ngần ngại nhắn tin trên nhóm hỗ trợ hoặc liên hệ trực tiếp để được Mentor hướng dẫn vượt qua khó khăn nhé!\n\n` +
+      `Vẹt Lắm Mồm thấy bạn đang gặp chút chậm trễ về tiến độ bài tập và lượt truy cập tương tác trên hệ thống học tập.\n\n` +
+      `Đừng ngần ngại nhắn tin trên nhóm hỗ trợ hoặc liên hệ trực tiếp để được Thuyền trưởng và Mentor hướng dẫn vượt qua khó khăn nhé!\n\n` +
       `Thân ái,\n` +
-      `Ban vận hành LightMS`
+      `Đội ngũ The1ight`
     );
     return `mailto:${student.gmail}?subject=${emailSubject}&body=${emailBody}`;
   };
@@ -205,8 +205,10 @@ export const useStudentManagementData = () => {
         `Kẹt kẹt... Reng reng! 🦜\n\n` +
         `Chào các đồng chí thủy thủ,\n\n` +
         `Vẹt Lắm Mồm từ hạm đội The1ight bay qua và phát hiện ra hạm đội của chúng ta đang có một vài thành viên hơi "chìm" dưới sóng bài tập một chút nhé! (Tiến độ bài tập hoặc lượt tương tác đang hơi chậm rồi đấy nha, kẹt kẹt!).\n\n` +
-        `Thuyền trưởng Đặng Tuyết Hồng và Mentor đang lo sốt vó lên rồi đây này! Đừng sợ, có khó khăn hay rào cản gì cứ la lên để Vẹt truyền tin hoặc nhắn trực tiếp trên kênh hỗ trợ Light Support nhé. Hãy chủ động đặt lịch Office Hour ngay để Mentor kéo bạn lên thuyền đi tiếp nào!\n\n` +
-        `Giương buồm lên và lướt sóng thôi! Quyết tâm không để bị bỏ lại phía sau! 🦜⚓️`
+        `Thuyền trưởng và Mentor đang lo sốt vó lên rồi đây này! Đừng sợ, có khó khăn hay rào cản gì cứ la lên để Vẹt truyền tin hoặc nhắn trực tiếp trên kênh hỗ trợ Light Support nhé. Hãy chủ động đặt lịch Office Hour ngay để Mentor kéo bạn lên thuyền đi tiếp nào!\n\n` +
+        `Giương buồm lên và lướt sóng thôi! Quyết tâm không để bị bỏ lại phía sau! 🦜⚓️\n\n` +
+        `Thân ái,\n` +
+        `Đội ngũ The1ight`
       );
     } else if (group === 'outstanding') {
       setBulkSubject('[The1ight] Loa loa loa! Vẹt lắm mồm vinh danh Thủy thủ xuất sắc đâyyy! 🦜🏆');
@@ -214,8 +216,10 @@ export const useStudentManagementData = () => {
         `Cục ta cục tác... Kẹt kẹt! 🦜\n\n` +
         `Chào các siêu thủy thủ xuất sắc,\n\n` +
         `Vẹt Lắm Mồm từ hạm đội The1ight xin được hét thật to vinh danh các chiến thần vì đã càn quét sạch sẽ toàn bộ thử thách bài tập vừa qua! Quá xuất sắc, quá đỉnh chóp!\n\n` +
-        `Thuyền trưởng Đặng Tuyết Hồng gửi ngàn tim và Mentor đang vỗ tay bôm bốp khen ngợi tinh thần giương buồm không mệt mỏi của bạn. Hãy tiếp tục giữ vững phong độ này để giật cup quán quân Hải trình Vibe Coding nhé!\n\n` +
-        `Bay cao bay xa cùng The1ight thôi nào! 🦜✨`
+        `Thuyền trưởng gửi ngàn tim và Mentor đang vỗ tay bôm bốp khen ngợi tinh thần giương buồm không mệt mỏi của bạn. Hãy tiếp tục giữ vững phong độ này để giật cup quán quân Hải trình Vibe Coding nhé!\n\n` +
+        `Bay cao bay xa cùng The1ight thôi nào! 🦜✨\n\n` +
+        `Thân ái,\n` +
+        `Đội ngũ The1ight`
       );
     } else {
       setBulkSubject('[The1ight] Vẹt lắm mồm từ hạm đội The1ight gửi lời chào thủy thủ đoàn! 🦜');
@@ -224,7 +228,9 @@ export const useStudentManagementData = () => {
         `Chào toàn thể thủy thủ đoàn hạm đội LightMS,\n\n` +
         `Vẹt Lắm Mồm bay lượn vòng quanh hòn đảo học tập và muốn gửi lời chúc năng lượng siêu cấp đến tất cả các bạn! Dù đang đi nhanh hay đi chậm, chỉ cần chúng ta không dừng lại, đích đến chắc chắn sẽ ở ngay trước mắt.\n\n` +
         `Đừng quên check lịch học, hoàn thành bài tập và hú hét trên kênh hỗ trợ khi cần nhé!\n\n` +
-        `Chúc cả nhà một tuần học tập rực rỡ! 🦜⚓️`
+        `Chúc cả nhà một tuần học tập rực rỡ! 🦜⚓\n\n` +
+        `Thân ái,\n` +
+        `Đội ngũ The1ight`
       );
     }
   };

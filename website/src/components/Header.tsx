@@ -10,8 +10,8 @@ interface HeaderProps {
   onPageChange: (page: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => {
-  const { activeUser, switchUser } = useAuth();
+export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange: _onPageChange }) => {
+  const { activeUser } = useAuth();
   const { lessons } = useCourse();
   const { nauticalTransactions } = useGamification();
   const { onboardingDays } = useCommunity();
@@ -27,10 +27,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
 
       case 'calendar': return 'Schedule';
       case 'walloffame': return 'Leaderboard';
-      case 'help': return 'Support';
+      case 'helpdesk': return 'Support';
       case 'profile': return 'Profile';
       case 'admin-dashboard': return 'System Overview';
       case 'course-builder': return 'Course Builder';
+      case 'admin-calendar': return 'Calendar Management';
       case 'speedgrader': return 'SpeedGrader';
       case 'student-mgmt': return 'Students';
       case 'internal-team': return 'Team';
@@ -109,44 +110,6 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange }) => 
             >
               ⛵
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Role Switcher Floating Controls */}
-      {(import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500 font-bold hidden sm:inline">Phân vai thử nghiệm:</span>
-          <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
-            <button
-              onClick={() => {
-                switchUser('student');
-                onPageChange('dashboard');
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                isStudent
-                  ? 'bg-[#214C54] text-white shadow'
-                  : 'text-[#3E5E63] hover:text-[#15333B]'
-              }`}
-            >
-              <span>👤</span>
-              <span>Học viên</span>
-            </button>
-            
-            <button
-              onClick={() => {
-                switchUser('admin');
-                onPageChange('admin-dashboard');
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                activeUser.role === 'admin'
-                  ? 'bg-[#EAB308] text-[#15333B] shadow'
-                  : 'text-[#3E5E63] hover:text-[#15333B]'
-              }`}
-            >
-              <span>🛡️</span>
-              <span>Admin</span>
-            </button>
           </div>
         </div>
       )}

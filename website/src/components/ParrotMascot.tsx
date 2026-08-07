@@ -32,6 +32,9 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         case 'student-mgmt':
           script = `Danh sách thủy thủ đoàn đây rồi. Ai đang tiến bộ nhất hả Thuyền trưởng?`;
           break;
+        case 'admin-calendar':
+          script = `Lịch học của cả lớp đây rồi! Quản lý kỹ càng nhé thuyền trưởng!`;
+          break;
         case 'course-builder':
           script = `Xây dựng hải lộ kiến thức thôi! Thêm chướng ngại vật hay thêm rương kho báu nào?`;
           break;
@@ -71,7 +74,7 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         case 'profile':
           script = `Thẻ Căn Cước của ngươi đây! Trưng bày đống Huy hiệu (Badges) kiếm được ra đây xem oai phong lẫm liệt thế nào!`;
           break;
-        case 'help':
+        case 'helpdesk':
           script = `Bị mắc cẹt hay gặp bão biển à? Bấm nút chát Telegram với đội hỗ trợ Light Support ngay đi, họ có phao cứu sinh đó!`;
           break;
         default:

@@ -2,6 +2,8 @@ import React from 'react';
 import type { Lesson } from '../../types/database';
 import { EditableText } from '../EditableText';
 import { Trash2, Plus } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useGamification } from '../../context/GamificationContext';
 
 interface LessonAssignmentSectionProps {
   activeLesson: Lesson;
@@ -14,6 +16,8 @@ interface LessonAssignmentSectionProps {
   rubricSelfCheck: { [key: string]: boolean };
   handleSelfCheckToggle: (itemIdx: number) => void;
   handleSubmit: (e: React.FormEvent) => void;
+  evidenceUrl: string;
+  setEvidenceUrl: (url: string) => void;
 }
 
 export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = ({
@@ -27,7 +31,18 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
   rubricSelfCheck,
   handleSelfCheckToggle,
   handleSubmit,
+  evidenceUrl,
+  setEvidenceUrl,
 }) => {
+  const { activeUser } = useAuth();
+  const { nauticalTransactions } = useGamification();
+
+  const completedTx = (nauticalTransactions || []).find(
+    t => t.student_id === activeUser?.id && t.action_type === 'assignment_graded' && t.reference_id === activeLesson.id
+  );
+
+  const match = completedTx?.description.match(/Link nộp bài:\s*(https?:\/\/\S+)/);
+  const submittedUrl = match ? match[1] : '';
   return (
     <div className="border-t border-gray-100 pt-6 space-y-4">
       <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">
@@ -238,20 +253,58 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                   <p className="text-sm text-emerald-600 font-bold">
                     Đã hoàn thành bài học và bài tập
                   </p>
+                  {submittedUrl && (
+                    <div className="mt-2 text-xs font-semibold">
+                      <span className="text-[#3E5E63]">Bằng chứng nộp bài: </span>
+                      <a
+                        href={submittedUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary-teal hover:underline break-all font-black"
+                      >
+                        {submittedUrl}
+                      </a>
+                    </div>
+                  )}
                 </div>
                 <a
-                  href="https://www.facebook.com/groups/27216190438021089"
+                  href={submittedUrl || "https://www.facebook.com/groups/27216190438021089"}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
                 >
-                  <span>Xem Facebook Group ↗</span>
+                  <span>Xem bài đăng Facebook ↗</span>
                 </a>
               </div>
             </div>
           ) : (
             // New completion form
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Facebook Post URL Input */}
+              <div className="bg-white border border-gray-250 rounded-2xl p-5 space-y-3 shadow-sm">
+                <div>
+                  <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block">
+                    🔗 Link Facebook nộp bài (Bắt buộc):
+                  </span>
+                  <span className="text-[10px] text-slate-505 block mt-0.5 leading-normal font-medium">
+                    Để đảm bảo công bằng và ghi nhận điểm, vui lòng dán link bài đăng bằng chứng nộp bài trên Facebook Group của bạn.
+                  </span>
+                </div>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://www.facebook.com/groups/.../posts/..."
+                  value={evidenceUrl}
+                  onChange={(e) => setEvidenceUrl(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#214C54] font-semibold text-gray-700 bg-white shadow-sm"
+                />
+                {evidenceUrl && !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl) && (
+                  <p className="text-[10px] text-red-500 font-bold animate-fade-in">
+                    ⚠️ Vui lòng nhập đúng đường dẫn bài viết trên Facebook (bắt đầu bằng https://facebook.com hoặc https://www.facebook.com)
+                  </p>
+                )}
+              </div>
+
               {/* Rubrics self-checklist */}
               {(activeLesson.assignment_rubric_checklist || []).length > 0 && (
                 <div className="bg-amber-50/30 border border-amber-200/50 rounded-2xl p-5 space-y-3.5">
@@ -293,7 +346,12 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#214C54] hover:bg-[#15333B] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer"
+                disabled={!evidenceUrl.trim() || !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl)}
+                className={`w-full py-3 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer ${
+                  (!evidenceUrl.trim() || !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl))
+                    ? 'bg-gray-305 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
+                    : 'bg-[#214C54] hover:bg-[#15333B]'
+                }`}
               >
                 🚀 Hoàn thành bài tập & nhận Hải lý
               </button>

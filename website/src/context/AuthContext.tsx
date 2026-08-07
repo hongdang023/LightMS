@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeUserId, setActiveUserId] = useState<string>(() => {
-    return localStorage.getItem('lms_active_user_id') || 'f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e';
+    return localStorage.getItem('lms_active_user_id') || '';
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [admins, setAdmins] = useState<Admin[]>([]);
 
   const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
-  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) || admins[0] || null;
+  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) || null;
 
   // Load profiles and admins from Supabase on startup
   useEffect(() => {
@@ -47,8 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           supabase.from('profiles').select('*'),
           supabase.from('admins').select('*')
         ]);
+        const loadedAdmins = adminRes.data || [];
         if (profRes.data) {
-          setProfiles((profRes.data as Profile[]).map(p => ({ ...p, role: 'student' })));
+          setProfiles((profRes.data as Profile[]).map(p => {
+            const isAdmin = loadedAdmins.some((a: any) => a.gmail?.toLowerCase() === p.gmail?.toLowerCase());
+            return {
+              ...p,
+              role: isAdmin ? 'admin' : 'student'
+            };
+          }));
         }
         if (adminRes.data) setAdmins(adminRes.data as Admin[]);
       } catch (err) {
@@ -84,11 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let currentProfile: Profile;
 
         if (existingProfile) {
-          if (existingProfile.role !== role) {
-            await supabase.from('profiles').update({ role }).eq('id', existingProfile.id);
-            existingProfile.role = role;
-          }
-          currentProfile = existingProfile as Profile;
+          currentProfile = {
+            ...existingProfile,
+            role
+          } as Profile;
         } else {
           const newProfile: Profile = {
             id: session.user.id || crypto.randomUUID(),
@@ -146,59 +152,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [activeUserId]);
 
   const switchUser = (role: UserRole) => {
-    if (role === 'admin') {
-      setActiveUserId('c6b8a8b1-321a-4d2a-89a1-5d9f0f9b6b8a');
-    } else {
-      setActiveUserId('f28c5a4d-7a6c-4b5b-86d7-e23a6b8c9d0e');
-    }
+    setProfiles(prev => prev.map(p => p.id === activeUserId ? { ...p, role } : p));
   };
 
   const loginWithGmail = (email: string, requestedRole: UserRole = 'student'): Profile | null => {
-    const cleanEmail = email.trim().toLowerCase();
+    const emailLower = email.toLowerCase().trim();
+    let user = profiles.find(p => p.gmail?.toLowerCase().trim() === emailLower);
     
-    // Check dynamic admin status against loaded admins array or requestedRole
-    const isAdminEmail = admins.some(a => a.gmail.toLowerCase() === cleanEmail) || requestedRole === 'admin';
-    const finalRole: UserRole = isAdminEmail ? 'admin' : 'student';
-
-    const existingUser = profiles.find(p => p.gmail.toLowerCase() === cleanEmail);
-
-    if (existingUser) {
-      if (existingUser.role !== finalRole) {
-        existingUser.role = finalRole;
-        setProfiles(prev => prev.map(p => p.id === existingUser.id ? { ...p, role: finalRole } : p));
-      }
-      setActiveUserId(existingUser.id);
-      setIsAuthenticated(true);
-      localStorage.setItem('lms_active_user_id', existingUser.id);
-      localStorage.setItem('lms_is_authenticated', 'true');
-      return existingUser;
+    if (!user) {
+      user = {
+        id: crypto.randomUUID(),
+        full_name: email.split('@')[0],
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailLower)}`,
+        role: requestedRole,
+        gmail: emailLower,
+        phone_number: '',
+        facebook_url: '',
+        is_profile_completed: false,
+        nautical_miles: 0,
+        visits: 1,
+        created_at: new Date().toISOString()
+      };
+      setProfiles(prev => [user!, ...prev]);
+    } else {
+      user = { ...user, role: requestedRole };
+      setProfiles(prev => prev.map(p => p.id === user!.id ? user! : p));
     }
 
-    const newUser: Profile = {
-      id: crypto.randomUUID ? crypto.randomUUID() : `usr-${Date.now()}`,
-      full_name: email.split('@')[0],
-      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
-      role: finalRole,
-      gmail: cleanEmail,
-      phone_number: '',
-      facebook_url: '',
-      is_profile_completed: false,
-      nautical_miles: 0,
-      visits: 1,
-      created_at: new Date().toISOString()
-    };
-
-    setProfiles(prev => [newUser, ...prev]);
-    setActiveUserId(newUser.id);
+    setActiveUserId(user.id);
     setIsAuthenticated(true);
-    localStorage.setItem('lms_active_user_id', newUser.id);
+    localStorage.setItem('lms_active_user_id', user.id);
     localStorage.setItem('lms_is_authenticated', 'true');
-
-    supabase.from('profiles').insert([newUser]).then(({ error }) => {
-      if (error) console.error('Lỗi khi lưu profile mới lên Supabase:', error);
-    });
-
-    return newUser;
+    return user;
   };
 
   const loginWithSupabaseGoogle = async (_role: UserRole = 'student') => {

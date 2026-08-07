@@ -308,6 +308,14 @@ background: linear-gradient(to right, var(--light-gold), var(--deep-gold));
 - Header: H3 + icon, `pb-4 border-b border-gray-200`
 - Footer: `flex flex-row-reverse gap-2` — Primary bên phải, Secondary/Ghost bên trái
 
+### 8.6. Tooltips & Popovers
+
+Khi hiển thị Tooltip hoặc Popover trên các phần tử nằm trong container giới hạn không gian hoặc có thanh cuộn (chứa thuộc tính `overflow-x-auto`, `overflow-hidden`, `overflow-scroll`, `overflow-auto`), tuân thủ nghiêm ngặt quy tắc sau:
+- **Enforced Pattern**: Bắt buộc sử dụng **React Portal** (`createPortal` từ `react-dom`) để render nội dung tooltip ở cấp ngoài cùng (`document.body`).
+- **Định vị (Positioning)**: Sử dụng tọa độ `fixed` được tính toán thông qua `getBoundingClientRect()` của phần tử kích hoạt khi hover/focus.
+- **Z-Index**: Đặt `z-[9999]` (hoặc tối thiểu lớp z-index cao nhất) cùng với `pointer-events-none` để tránh chặn chuột của người dùng.
+- **Mục tiêu**: Tránh tooltip bị cắt mất (clipped) bởi biên giới hạn của container cha.
+
 ---
 
 ## 9. Anti-Patterns (Không làm)
@@ -322,6 +330,7 @@ background: linear-gradient(to right, var(--light-gold), var(--deep-gold));
 | Hardcode hex brand trực tiếp trong JSX | CSS variable hoặc `bg-[#214C54]` |
 | Nhiều hơn 1 Primary button / màn hình | Chỉ 1 Primary, còn lại Secondary/Ghost |
 | `variant="amber"` trong `<Button>` | `variant="gamification"` |
+| Đặt tooltip/popover tuyệt đối (`absolute`) trực tiếp bên trong container chứa `overflow` | Sử dụng React Portal (`createPortal`) đưa ra ngoài `document.body` và dùng `fixed` positioning |
 
 ---
 

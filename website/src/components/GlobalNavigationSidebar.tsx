@@ -46,7 +46,7 @@ export const GlobalNavigationSidebar: React.FC<GlobalNavigationSidebarProps> = (
     { id: 'syllabus', label: 'Lộ trình học', icon: SyllabusIcon },
     { id: 'calendar', label: 'Lịch học', icon: ScheduleIcon },
     { id: 'walloffame', label: 'Bảng vinh danh', icon: LeaderboardIcon },
-    { id: 'help', label: 'Hỏi đáp & Hỗ trợ', icon: SupportIcon },
+    { id: 'helpdesk', label: 'Hỏi đáp & Hỗ trợ', icon: SupportIcon },
   ];
 
   // Navigation Items for Admin Portal (using premium SVG icons)

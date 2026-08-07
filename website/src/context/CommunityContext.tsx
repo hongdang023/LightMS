@@ -48,11 +48,11 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     const loadCommunityData = async () => {
       const [
-        { data: announcementsData },
-        { data: calendarData },
-        { data: onboardingData },
-        { data: aboutData },
-        { data: faqsData },
+        { data: announcementsData, error: annErr },
+        { data: calendarData, error: calErr },
+        { data: onboardingData, error: onbErr },
+        { data: aboutData, error: abtErr },
+        { data: faqsData, error: faqErr },
       ] = await Promise.all([
         supabase.from('announcements').select('*').order('created_at', { ascending: false }),
         supabase.from('calendar_events').select('*'),
@@ -61,8 +61,34 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         supabase.from('help_desk_faqs').select('*').order('order_index', { ascending: true }),
       ]);
 
+      if (annErr) console.error('Lỗi announcements:', annErr);
+      if (calErr) console.error('Lỗi calendar_events:', calErr);
+      if (onbErr) console.error('Lỗi onboarding_days:', onbErr);
+      if (abtErr) console.error('Lỗi about_content:', abtErr);
+      if (faqErr) console.error('Lỗi help_desk_faqs:', faqErr);
+
       if (announcementsData) setAnnouncements(announcementsData);
-      if (calendarData) setCalendarEvents(calendarData);
+      if (calendarData) {
+        const mapped = calendarData.map((e: any) => ({
+          id: e.id,
+          title: e.title,
+          time: e.time,
+          endTime: e.end_time,
+          allDay: e.all_day,
+          date: e.date,
+          month: e.month,
+          year: e.year,
+          dayOfWeek: e.day_of_week,
+          startRecur: e.start_recur ? Number(e.start_recur) : undefined,
+          endRecur: e.end_recur ? Number(e.end_recur) : undefined,
+          colorClass: e.color_class,
+          dotColorClass: e.dot_color_class,
+          type: e.type,
+          eventType: e.event_type,
+          details: e.details
+        }));
+        setCalendarEvents(mapped);
+      }
       if (onboardingData) setOnboardingDays(onboardingData);
       if (faqsData) setHelpDeskFaqs(faqsData);
       if (aboutData) {
@@ -148,7 +174,27 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     setCalendarEvents(prev => [...prev, newEvent]);
     addNotification('Lịch học mới', `Đã thêm sự kiện "${event.title}" vào lịch`, 'system');
-    supabase.from('calendar_events').insert([newEvent]).then(({ error }) => {
+    
+    const dbEvent = {
+      id: newEvent.id,
+      title: newEvent.title,
+      time: newEvent.time,
+      end_time: newEvent.endTime,
+      all_day: newEvent.allDay,
+      date: newEvent.date,
+      month: newEvent.month,
+      year: newEvent.year,
+      day_of_week: newEvent.dayOfWeek,
+      start_recur: newEvent.startRecur,
+      end_recur: newEvent.endRecur,
+      color_class: newEvent.colorClass,
+      dot_color_class: newEvent.dotColorClass,
+      type: newEvent.type,
+      event_type: newEvent.eventType,
+      details: newEvent.details
+    };
+
+    supabase.from('calendar_events').insert([dbEvent]).then(({ error }) => {
       if (error) console.error('Lỗi khi lưu calendar event lên Supabase:', error);
     });
   };
@@ -156,7 +202,25 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateCalendarEvent = (id: string, updates: Partial<CalendarEvent>) => {
     setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
     addNotification('Cập nhật lịch học', 'Thông tin sự kiện lịch đã được cập nhật', 'system');
-    supabase.from('calendar_events').update(updates).eq('id', id).then(({ error }) => {
+    
+    const dbUpdates: any = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.time !== undefined) dbUpdates.time = updates.time;
+    if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime;
+    if (updates.allDay !== undefined) dbUpdates.all_day = updates.allDay;
+    if (updates.date !== undefined) dbUpdates.date = updates.date;
+    if (updates.month !== undefined) dbUpdates.month = updates.month;
+    if (updates.year !== undefined) dbUpdates.year = updates.year;
+    if (updates.dayOfWeek !== undefined) dbUpdates.day_of_week = updates.dayOfWeek;
+    if (updates.startRecur !== undefined) dbUpdates.start_recur = updates.startRecur;
+    if (updates.endRecur !== undefined) dbUpdates.end_recur = updates.endRecur;
+    if (updates.colorClass !== undefined) dbUpdates.color_class = updates.colorClass;
+    if (updates.dotColorClass !== undefined) dbUpdates.dot_color_class = updates.dotColorClass;
+    if (updates.type !== undefined) dbUpdates.type = updates.type;
+    if (updates.eventType !== undefined) dbUpdates.event_type = updates.eventType;
+    if (updates.details !== undefined) dbUpdates.details = updates.details;
+
+    supabase.from('calendar_events').update(dbUpdates).eq('id', id).then(({ error }) => {
       if (error) console.error('Lỗi khi cập nhật calendar event trên Supabase:', error);
     });
   };

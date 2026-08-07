@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export const getDemographics = (student: any) => {
   return {
@@ -119,16 +120,32 @@ export const VerticalProgressBarList: React.FC<{
   data: { label: string; count: number; percentage: number }[];
   colorClass?: string;
 }> = ({ data, colorClass = 'bg-amber-500' }) => {
+  const [hoveredBar, setHoveredBar] = useState<{
+    label: string;
+    count: number;
+    percentage: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
   return (
-    <div className="flex items-end justify-around h-36 w-full pt-4 border-b border-gray-150 pb-1">
+    <div className="flex items-end justify-around h-36 w-full pt-4 border-b border-gray-150 pb-1 relative">
       {data.map((item, idx) => (
-        <div key={idx} className="group relative flex flex-col items-center flex-1 min-w-0 mx-1 h-full justify-end">
-          <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#15333B] text-white text-[9px] px-2 py-1 rounded-lg shadow-lg z-10 w-24 text-center pointer-events-none transition-all">
-            <span className="font-extrabold truncate w-full">{item.label}</span>
-            <span className="font-bold text-emerald-400">{item.count} HV ({item.percentage}%)</span>
-            <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
-          </div>
-          
+        <div
+          key={idx}
+          className="group relative flex flex-col items-center flex-1 min-w-0 mx-1 h-full justify-end cursor-pointer"
+          onMouseEnter={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setHoveredBar({
+              label: item.label,
+              count: item.count,
+              percentage: item.percentage,
+              x: rect.left + rect.width / 2,
+              y: rect.top,
+            });
+          }}
+          onMouseLeave={() => setHoveredBar(null)}
+        >
           <span className="text-[9px] font-black text-gray-500 mb-1">{item.percentage}%</span>
           
           <div
@@ -141,6 +158,24 @@ export const VerticalProgressBarList: React.FC<{
           </span>
         </div>
       ))}
+
+      {/* Tooltip portal */}
+      {hoveredBar && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: `${hoveredBar.x}px`,
+            top: `${hoveredBar.y - 8}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
+          className="flex flex-col items-center bg-[#15333B] text-white text-[9px] px-2 py-1 rounded-lg shadow-lg z-[9999] w-24 text-center pointer-events-none"
+        >
+          <span className="font-extrabold truncate w-full">{hoveredBar.label}</span>
+          <span className="font-bold text-emerald-400">{hoveredBar.count} HV ({hoveredBar.percentage}%)</span>
+          <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DonutChartProps {
   completed: number;
@@ -76,32 +77,38 @@ interface BarChartProps {
 }
 
 export const BarChart: React.FC<BarChartProps> = ({ data, colorClass }) => {
+  const [hoveredItem, setHoveredItem] = useState<{
+    title: string;
+    completed: number;
+    total: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
   return (
     <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
       <div
-        className="flex items-end justify-between h-36 pt-6 pb-2 px-1 border-b border-gray-150 relative"
+        className="flex items-end justify-between h-44 pt-14 pb-2 px-1 border-b border-gray-150 relative"
         style={{ minWidth: data.length > 8 ? `${data.length * 36}px` : '100%' }}
       >
         {data.map((item, index) => {
           const percentage = item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0;
-          const uncompleted = item.total - item.completed;
           return (
             <div
               key={index}
-              className="group relative flex flex-col items-center flex-1 mx-1 h-full justify-end"
+              className="group relative flex flex-col items-center flex-1 mx-1 h-full justify-end cursor-pointer"
+              onMouseEnter={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setHoveredItem({
+                  title: item.title,
+                  completed: item.completed,
+                  total: item.total,
+                  x: rect.left + rect.width / 2,
+                  y: rect.top,
+                });
+              }}
+              onMouseLeave={() => setHoveredItem(null)}
             >
-              {/* Tooltip on hover */}
-              <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center bg-[#15333B] text-white text-[10px] p-2 rounded-lg shadow-lg z-10 w-36 text-center pointer-events-none transition-all left-1/2 transform -translate-x-1/2">
-                <span className="font-extrabold mb-1">{item.title}</span>
-                <span className="font-bold text-emerald-400">
-                  {item.completed} HV hoàn thành
-                </span>
-                <span className="font-bold text-rose-400">
-                  {uncompleted} HV chưa hoàn thành
-                </span>
-                <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
-              </div>
-
               {/* Percentage indicator */}
               <span className="text-[9px] font-black text-gray-500 mb-1">{percentage}%</span>
 
@@ -119,6 +126,29 @@ export const BarChart: React.FC<BarChartProps> = ({ data, colorClass }) => {
           );
         })}
       </div>
+
+      {/* Tooltip portal */}
+      {hoveredItem && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: `${hoveredItem.x}px`,
+            top: `${hoveredItem.y - 8}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
+          className="flex flex-col items-center bg-[#15333B] text-white text-[10px] p-2 rounded-lg shadow-lg z-[9999] w-36 text-center pointer-events-none"
+        >
+          <span className="font-extrabold mb-1">{hoveredItem.title}</span>
+          <span className="font-bold text-emerald-400">
+            {hoveredItem.completed} HV hoàn thành
+          </span>
+          <span className="font-bold text-rose-400">
+            {hoveredItem.total - hoveredItem.completed} HV chưa hoàn thành
+          </span>
+          <div className="w-1.5 h-1.5 bg-[#15333B] rotate-45 mt-1 -mb-2"></div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

@@ -5,8 +5,8 @@ import { useGamification } from '../../context/GamificationContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
 import { 
-  LayoutDashboard, Users, FileText, CheckSquare, 
-  Mail, X, ChevronDown, ChevronRight, Trophy, Sparkles
+  LayoutDashboard, Users, CheckSquare, 
+  Mail, X, ChevronDown, ChevronRight, Trophy, Sparkles, ShieldAlert
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -14,13 +14,12 @@ interface AdminDashboardProps {
 }
 
 import { DonutChart, BarChart } from '../../components/admin/dashboard/AdminStatGrid';
-import { RecentSubmissionsWidget } from '../../components/admin/dashboard/RecentSubmissionsWidget';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) => {
   const { users } = useAuth();
   const { lessons } = useCourse();
   const { nauticalTransactions } = useGamification();
-  const { onboardingDays } = useCommunity();
+  const { onboardingDays, addNotification } = useCommunity();
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
@@ -39,8 +38,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
          lessonsWithAssignments.some(l => l.id === t.reference_id)
   ).length;
 
-  const pendingGradesCount = 0;
-  const gradedCount = totalCompletedAssignments;
+
 
   // Calculate Assignment Completion Rate
   const totalAssignmentsCount = lessonsWithAssignments.length;
@@ -49,11 +47,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   // Selected student object
   const selectedStudent = users.find(u => u.id === selectedStudentId);
 
-  const isStudentOnboardingDayCompleted = (studentId: string, day: number) => {
+  const isStudentOnboardingDayCompleted = (studentId: string, dayNum: number) => {
     const student = users.find(u => u.id === studentId);
     if (!student) return false;
-    const completedCount = Math.min(7, Math.floor(student.nautical_miles / 50));
-    return day <= completedCount;
+    const dayData = onboardingDays.find(d => d.day === dayNum);
+    if (!dayData) return false;
+
+    const lines = dayData.checklist.split('\n');
+    const requiredKeys: string[] = [];
+    let taskIdx = 0;
+    lines.forEach((line: string) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('- [ ]')) {
+        taskIdx++;
+        const rawLabel = trimmed.replace('- [ ]', '').trim();
+        const isOptional = /\(optional[^)]*\)/i.test(rawLabel);
+        if (!isOptional) {
+          requiredKeys.push(`day-${dayNum}-task-${taskIdx}`);
+        }
+      }
+    });
+
+    if (requiredKeys.length === 0) return true;
+    return requiredKeys.every(key => !!student.onboarding_tasks?.[key]);
   };
 
   // Helper: Check if a student completed a specific lesson assignment
@@ -69,6 +85,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
       if (!l.assignment_description) return false;
       return !isStudentLessonCompleted(studentId, l.id);
     });
+  };
+
+  // Helper: Determine student status (risk, outstanding, normal)
+  const getStudentStatus = (student: any) => {
+    let onboardingDone = 0;
+    for (let d = 1; d <= 7; d++) {
+      if (isStudentOnboardingDayCompleted(student.id, d)) onboardingDone++;
+    }
+    
+    const visits = student.visits || 1;
+    const now = new Date().getTime();
+    const studentStart = student.created_at ? new Date(student.created_at).getTime() : now;
+    const daysActive = Math.max(1, Math.floor((now - studentStart) / (24 * 60 * 60 * 1000)));
+
+    const onboardingDeadline = studentStart + 7 * 24 * 60 * 60 * 1000;
+    const onboardingOverdue = now > onboardingDeadline && onboardingDone < 7;
+
+    const startedLiveClassAssignments = lessonsWithAssignments.filter(l => {
+      if (!l.start_date) return false;
+      return now >= new Date(l.start_date).getTime();
+    });
+
+    const dueLiveClassAssignments = lessonsWithAssignments.filter(l => {
+      if (!l.start_date) return false;
+      const start = new Date(l.start_date).getTime();
+      const deadline = start + 3 * 24 * 60 * 60 * 1000;
+      return now >= deadline;
+    });
+
+    const liveClassDoneForStarted = (nauticalTransactions || []).filter(
+      t => t.student_id === student.id && 
+      t.action_type === 'lesson_complete' &&
+      startedLiveClassAssignments.some(la => la.id === t.reference_id)
+    ).length;
+
+    const liveClassDoneForDue = (nauticalTransactions || []).filter(
+      t => t.student_id === student.id && 
+      t.action_type === 'lesson_complete' &&
+      dueLiveClassAssignments.some(la => la.id === t.reference_id)
+    ).length;
+
+    const expectedVisits = Math.min(4, daysActive);
+    const visitsAtRisk = visits < expectedVisits;
+
+    const liveClassAtRisk = dueLiveClassAssignments.length > 0 && 
+      (liveClassDoneForDue / dueLiveClassAssignments.length) < 0.5;
+
+    const isAtRisk = onboardingOverdue || liveClassAtRisk || visitsAtRisk;
+
+    const expectedOutstandingVisits = Math.min(8, Math.max(2, daysActive));
+    const visitsOutstanding = visits >= expectedOutstandingVisits;
+
+    const liveClassOutstanding = startedLiveClassAssignments.length === 0 || 
+      (liveClassDoneForStarted === startedLiveClassAssignments.length);
+
+    const isOutstanding = onboardingDone === 7 && liveClassOutstanding && visitsOutstanding;
+
+    if (isAtRisk) return 'risk';
+    if (isOutstanding) return 'outstanding';
+    return 'normal';
+  };
+
+  const riskStudents = students.filter(s => getStudentStatus(s) === 'risk');
+  const outstandingStudents = students.filter(s => getStudentStatus(s) === 'outstanding');
+  const countNeedingSupport = riskStudents.length;
+  const countNeedingReward = outstandingStudents.length;
+
+  const triggerCommendation = (name: string) => {
+    setToastMessage(`Đã gửi thư khen ngợi và tuyên dương học viên **${name}** xuất sắc! 🎉`);
+    addNotification('Tuyên dương học viên', `Học viên ${name} được vinh danh vì thành tích xuất sắc!`, 'system');
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   // --- STATS CALCULATIONS ---
@@ -109,7 +196,100 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
       };
     });
 
+  // Mailto link builder
+  const getMailtoLink = (student: typeof students[0], missingCount: number) => {
+    const emailSubject = encodeURIComponent(`[LightMS] Hỗ trợ học tập Hải trình Vibe Coding - Thủy thủ ${student.full_name}`);
+    const emailBody = encodeURIComponent(
+      `Chào thủy thủ ${student.full_name},\n\n` +
+      `Vẹt Lắm Mồm thấy bạn đang có chút chậm tiến độ so với lớp (Bạn hiện đang còn ${missingCount} bài tập chưa nộp hoặc cần hỗ trợ gỡ rối).\n\n` +
+      `Thuyền trưởng muốn hỏi thăm xem bạn có đang gặp rào cản hay khó khăn gì không? Hãy nhắn tin trực tiếp trên chat nhóm hỗ trợ Light Support hoặc đặt lịch hẹn Office Hour để Mentor hỗ trợ bạn gỡ rối nhanh nhất nhé.\n\n` +
+      `Quyết tâm giương buồm vượt đại dương nào!\n\n` +
+      `Thân ái,\n` +
+      `Đội ngũ The1ight`
+    );
+    return `mailto:${student.gmail}?subject=${emailSubject}&body=${emailBody}`;
+  };
 
+  const getRecommendedAction = () => {
+    const studentsWithBottlenecks = students
+      .map((s) => {
+        const unsubmitted = getStudentUnsubmittedLessons(s.id);
+        return {
+          student: s,
+          unsubmitted,
+          missingCount: unsubmitted.length,
+        };
+      })
+      .filter((item) => item.missingCount > 0)
+      .sort((a, b) => b.missingCount - a.missingCount);
+
+    if (studentsWithBottlenecks.length > 0) {
+      const target = studentsWithBottlenecks[0];
+      return {
+        type: 'support',
+        title: 'Hỗ trợ học viên chậm tiến độ',
+        description: `Thủy thủ **${target.student.full_name}** đang bị chậm ${target.missingCount} bài tập (nghẽn tại: ${target.unsubmitted[0]?.title || 'bài học'}).`,
+        actionLabel: 'Gửi email hỗ trợ',
+        actionLink: getMailtoLink(target.student, target.missingCount),
+        isEmail: true
+      };
+    }
+
+    if (outstandingStudents.length > 0) {
+      const target = outstandingStudents[0];
+      return {
+        type: 'commend',
+        title: 'Khen thưởng học viên xuất sắc',
+        description: `Thủy thủ **${target.full_name}** đã hoàn thành xuất sắc tất cả ngày Onboarding và có tương tác tích cực.`,
+        actionLabel: 'Tuyên dương ngay',
+        onClick: () => triggerCommendation(target.full_name),
+        isEmail: false
+      };
+    }
+
+    const liveClassStats = liveClassBarData.filter(d => d.total > 0);
+    if (liveClassStats.length > 0) {
+      const sortedLiveClass = [...liveClassStats].sort((a, b) => (a.completed / a.total) - (b.completed / b.total));
+      const worstLesson = sortedLiveClass[0];
+      const rate = Math.round((worstLesson.completed / worstLesson.total) * 100);
+      if (rate < 70) {
+        return {
+          type: 'improve_liveclass',
+          title: 'Cải thiện tỷ lệ nộp bài tập',
+          description: `Buổi học **${worstLesson.title}** đang có tỷ lệ hoàn thành thấp (${rate}% với ${worstLesson.completed}/${worstLesson.total} học viên).`,
+          actionLabel: 'Xem lộ trình',
+          onClick: () => onPageChange('curriculum'),
+          isEmail: false
+        };
+      }
+    }
+
+    const onboardingStats = onboardingBarData.filter(d => d.total > 0);
+    if (onboardingStats.length > 0) {
+      const sortedOnboarding = [...onboardingStats].sort((a, b) => (a.completed / a.total) - (b.completed / b.total));
+      const worstDay = sortedOnboarding[0];
+      const rate = Math.round((worstDay.completed / worstDay.total) * 100);
+      return {
+        type: 'improve_onboarding',
+        title: 'Tối ưu tài liệu Onboarding',
+        description: `Ngày **${worstDay.label}** (${worstDay.title}) có tỷ lệ hoàn thành thấp nhất (${rate}%). Cần cải thiện tài liệu hướng dẫn hoặc task checklist.`,
+        actionLabel: 'Quản lý học viên',
+        onClick: () => onPageChange('students'),
+        isEmail: false
+      };
+    }
+
+    return {
+      type: 'generic',
+      title: 'Tổ chức Office Hour',
+      description: 'Lên lịch một buổi Q&A trực tuyến tuần này để giải đáp thắc mắc và thúc đẩy động lực học tập cho cả lớp.',
+      actionLabel: 'Quản lý lịch học',
+      onClick: () => onPageChange('calendar'),
+      isEmail: false
+    };
+  };
+
+  const recommendation = getRecommendedAction();
 
   // Generate detailed progress helper for modal
   const getStudentProgress = (studentId: string) => {
@@ -155,19 +335,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     };
   };
 
-  // Mailto link builder
-  const getMailtoLink = (student: typeof students[0], missingCount: number) => {
-    const emailSubject = encodeURIComponent(`[LightMS] Hỗ trợ học tập Hải trình Vibe Coding - Thủy thủ ${student.full_name}`);
-    const emailBody = encodeURIComponent(
-      `Chào thủy thủ ${student.full_name},\n\n` +
-      `Thầy/Cô và ban vận hành lớp học thấy bạn đang có chút chậm tiến độ so với lớp (Bạn hiện đang còn ${missingCount} bài tập chưa nộp hoặc cần hỗ trợ gỡ rối).\n\n` +
-      `Thuyền trưởng Đặng Tuyết Hồng muốn hỏi thăm xem bạn có đang gặp rào cản hay khó khăn gì không? Hãy nhắn tin trực tiếp trên chat nhóm hỗ trợ Light Support hoặc đặt lịch hẹn Office Hour để Mentor hỗ trợ bạn gỡ rối nhanh nhất nhé.\n\n` +
-      `Quyết tâm giương buồm vượt đại dương nào!\n\n` +
-      `Thân ái,\n` +
-      `Đặng Tuyết Hồng - LightMS`
-    );
-    return `mailto:${student.gmail}?subject=${emailSubject}&body=${emailBody}`;
-  };
+
 
 
 
@@ -192,6 +360,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
 
       {/* Admin Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Card 1: Thủy Thủ Đoàn */}
         <div className="group relative overflow-hidden flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="absolute inset-y-0 left-0 w-1.5 bg-teal-500 rounded-l-2xl"></div>
           <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
@@ -203,27 +372,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
           </div>
         </div>
 
-        <div className="group relative overflow-hidden flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-300" onClick={() => onPageChange('speedgrader')}>
-          <div className="absolute inset-y-0 left-0 w-1.5 bg-amber-500 rounded-l-2xl"></div>
-          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
-            <FileText size={22} />
+        {/* Card 2: Cần Hỗ Trợ */}
+        <div className="group relative overflow-hidden flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute inset-y-0 left-0 w-1.5 bg-red-550 rounded-l-2xl"></div>
+          <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-650 shrink-0">
+            <ShieldAlert size={22} />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 font-extrabold uppercase block tracking-wider">Chờ Chấm Điểm</span>
-            <span className="text-base font-black text-[#15333B] mt-0.5 block">{pendingGradesCount} bài nộp</span>
+            <span className="text-[10px] text-gray-400 font-extrabold uppercase block tracking-wider">Cần Hỗ Trợ</span>
+            <span className="text-base font-black text-[#15333B] mt-0.5 block">{countNeedingSupport} học viên</span>
           </div>
         </div>
 
-        <div className="group relative overflow-hidden flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
-          <div className="absolute inset-y-0 left-0 w-1.5 bg-green-500 rounded-l-2xl"></div>
-          <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 shrink-0">
-            <CheckSquare size={22} />
+        {/* Card 3: Cần Khen Thưởng */}
+        <div className="group relative overflow-hidden flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-150 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="absolute inset-y-0 left-0 w-1.5 bg-amber-500 rounded-l-2xl"></div>
+          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-650 shrink-0">
+            <Trophy size={22} />
           </div>
           <div>
-            <span className="text-[10px] text-gray-400 font-extrabold uppercase block tracking-wider">Đã Chấm Điểm</span>
-            <span className="text-base font-black text-[#15333B] mt-0.5 block">{gradedCount} bài nộp</span>
+            <span className="text-[10px] text-gray-400 font-extrabold uppercase block tracking-wider">Cần Khen Thưởng</span>
+            <span className="text-base font-black text-[#15333B] mt-0.5 block">{countNeedingReward} học viên</span>
           </div>
         </div>
+      </div>
+
+      {/* Recommended Action Card */}
+      <div className="bg-gradient-to-r from-[#1E3E45]/90 to-[#2A5C66]/90 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-lg text-white space-y-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#FFD94C] text-[#15333B] text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">GỢI Ý TỪ HỆ THỐNG</span>
+            <span className="text-xs text-white/60 font-semibold">• Phân tích thời gian thực</span>
+          </div>
+          <h4 className="text-base font-black text-[#FFD94C] flex items-center gap-1.5 mt-1">
+            {recommendation.title}
+          </h4>
+          <p className="text-xs text-white/80 font-medium max-w-2xl leading-relaxed">
+            {recommendation.description}
+          </p>
+        </div>
+
+        {recommendation.isEmail ? (
+          <a
+            href={recommendation.actionLink}
+            className="btn bg-[#FFD94C] hover:bg-[#FFE375] text-[#15333B] text-xs font-black px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto"
+          >
+            <Mail size={14} /> {recommendation.actionLabel}
+          </a>
+        ) : (
+          <button
+            onClick={recommendation.onClick}
+            className="btn bg-[#FFD94C] hover:bg-[#FFE375] text-[#15333B] text-xs font-black px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto cursor-pointer"
+          >
+            {recommendation.type === 'commend' && <Trophy size={14} />}
+            {recommendation.actionLabel}
+          </button>
+        )}
       </div>
 
       {/* --- STATS SECTIONS --- */}
@@ -276,16 +480,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
           </div>
         </div>
       </div>
-
-      {/* Bottleneck Students / Recent Submissions Widget */}
-      <RecentSubmissionsWidget
-        students={students}
-        lessons={lessons}
-        isStudentLessonCompleted={isStudentLessonCompleted}
-        getStudentUnsubmittedLessons={getStudentUnsubmittedLessons}
-        onSelectStudent={setSelectedStudentId}
-        getMailtoLink={getMailtoLink}
-      />
 
       {/* Interactive Student Progress Detail Modal */}
       {selectedStudent && (

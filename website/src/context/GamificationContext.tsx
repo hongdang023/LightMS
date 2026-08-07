@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Badge, ProfileBadge, NauticalMilesTransaction, Profile } from '../types/database';
+import { useAuth } from './AuthContext';
 
 export interface GamificationContextType {
   badges: Badge[];
@@ -31,11 +32,26 @@ export interface GamificationContextType {
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
 export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { users } = useAuth();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [nauticalTransactions, setNauticalTransactions] = useState<NauticalMilesTransaction[]>([]);
 
-  // Dummy profileBadges state placeholder if needed by context
-  const profileBadges: ProfileBadge[] = useMemo(() => [], []);
+  // Dynamically derive profileBadges from the real student profiles loaded from Supabase
+  const profileBadges: ProfileBadge[] = useMemo(() => {
+    const list: ProfileBadge[] = [];
+    users.forEach(u => {
+      if (u.badges && Array.isArray(u.badges)) {
+        u.badges.forEach(b => {
+          list.push({
+            student_id: u.id,
+            badge_id: b.badge_id,
+            unlocked_at: b.unlocked_at
+          });
+        });
+      }
+    });
+    return list;
+  }, [users]);
 
   // ── Initial data fetch from Supabase ──────────────────────────────────────
   useEffect(() => {
