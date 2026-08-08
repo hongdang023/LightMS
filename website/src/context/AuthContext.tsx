@@ -22,6 +22,15 @@ export interface AuthContextType {
   incrementVisits: (userId: string) => void;
 }
 
+export const ALLOWED_ADMIN_EMAILS = [
+  'dangtuyethong2324@gmail.com',
+  'linhblt.20@gmail.com',
+  'khuevu.thucj4fun@gmail.com',
+  'ngavtq2@gmail.com',
+  'chinn2006@gmail.com',
+  'quangnhatnguyen2403@gmail.com'
+];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,10 +48,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
   const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) || null;
 
-  // Load profiles and admins from Supabase on startup
+  // Load active user profile immediately on startup if activeUserId is saved, then load full profiles/admins asynchronously
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const storedId = localStorage.getItem('lms_active_user_id');
+        if (storedId) {
+          // Fast path: Fetch active user profile specifically first
+          const { data: activeProf } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', storedId)
+            .maybeSingle();
+
+          if (activeProf) {
+            const emailLower = activeProf.gmail?.toLowerCase().trim() || '';
+            const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower);
+            const { data: adminCheck } = await supabase
+              .from('admins')
+              .select('*')
+              .eq('gmail', emailLower)
+              .maybeSingle();
+
+            const isAdmin = isAllowedAdmin || !!adminCheck;
+            const userWithRole = {
+              ...activeProf,
+              role: isAdmin ? ('admin' as UserRole) : ('student' as UserRole)
+            };
+
+            setProfiles(prev => {
+              if (prev.some(p => p.id === activeProf.id)) return prev;
+              return [userWithRole, ...prev];
+            });
+
+            if (isAdmin && adminCheck) {
+              setAdmins(prev => {
+                if (prev.some(a => a.id === adminCheck.id)) return prev;
+                return [adminCheck, ...prev];
+              });
+            }
+          }
+        }
+
+        // Background path: Fetch all profiles and admins asynchronously without blocking UI render
         const [profRes, adminRes] = await Promise.all([
           supabase.from('profiles').select('*'),
           supabase.from('admins').select('*')
@@ -50,7 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const loadedAdmins = adminRes.data || [];
         if (profRes.data) {
           setProfiles((profRes.data as Profile[]).map(p => {
-            const isAdmin = loadedAdmins.some((a: any) => a.gmail?.toLowerCase() === p.gmail?.toLowerCase());
+            const emailLower = p.gmail?.toLowerCase().trim() || '';
+            const isAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower) || loadedAdmins.some((a: any) => a.gmail?.toLowerCase().trim() === emailLower);
             return {
               ...p,
               role: isAdmin ? 'admin' : 'student'
@@ -71,14 +120,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         const userEmail = session.user.email?.toLowerCase().trim() || '';
         
-        // Check if user is in admins table dynamically from Supabase
+        const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(userEmail);
         const { data: adminData } = await supabase
           .from('admins')
           .select('*')
           .eq('gmail', userEmail)
           .maybeSingle();
 
-        const isAdmin = !!adminData;
+        const isAdmin = isAllowedAdmin || !!adminData;
         const role: UserRole = isAdmin ? 'admin' : 'student';
 
         // Check if profile exists
@@ -157,6 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGmail = (email: string, requestedRole: UserRole = 'student'): Profile | null => {
     const emailLower = email.toLowerCase().trim();
+    const effectiveRole: UserRole = ALLOWED_ADMIN_EMAILS.includes(emailLower) ? 'admin' : (requestedRole === 'admin' && !ALLOWED_ADMIN_EMAILS.includes(emailLower) ? 'student' : requestedRole);
     let user = profiles.find(p => p.gmail?.toLowerCase().trim() === emailLower);
     
     if (!user) {
@@ -164,18 +214,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: crypto.randomUUID(),
         full_name: email.split('@')[0],
         avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailLower)}`,
-        role: requestedRole,
+        role: effectiveRole,
         gmail: emailLower,
         phone_number: '',
         facebook_url: '',
-        is_profile_completed: false,
+        is_profile_completed: true,
         nautical_miles: 0,
         visits: 1,
         created_at: new Date().toISOString()
       };
       setProfiles(prev => [user!, ...prev]);
     } else {
-      user = { ...user, role: requestedRole };
+      user = { ...user, role: effectiveRole };
       setProfiles(prev => prev.map(p => p.id === user!.id ? user! : p));
     }
 

@@ -54,7 +54,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         { data: aboutData, error: abtErr },
         { data: faqsData, error: faqErr },
       ] = await Promise.all([
-        supabase.from('announcements').select('*').order('created_at', { ascending: false }),
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(20),
         supabase.from('calendar_events').select('*'),
         supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
         supabase.from('about_content').select('*').eq('id', 'default').single(),

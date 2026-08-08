@@ -11,7 +11,10 @@ interface TeamMember {
 }
 
 const DEFAULT_TEAM: TeamMember[] = [
-  { name: 'Đặng Tuyết Hồng', email: 'dangtuyethong2324@gmail.com', role: 'Admin / Owner', permission: 'Toàn quyền hệ thống, quản lý khóa học, chấm bài tập, cấu hình RLS.', status: 'Active' }
+  { name: 'Đặng Tuyết Hồng', email: 'dangtuyethong2324@gmail.com', role: 'Admin / Owner', permission: 'Toàn quyền hệ thống, quản lý khóa học, chấm bài tập, cấu hình RLS.', status: 'Active' },
+  { name: 'Linh BTL', email: 'linhblt.20@gmail.com', role: 'Admin', permission: 'Quản trị viên hệ thống.', status: 'Active' },
+  { name: 'Khuê Vũ', email: 'khuevu.thucj4fun@gmail.com', role: 'Admin', permission: 'Quản trị viên hệ thống.', status: 'Active' },
+  { name: 'Nga VTQ', email: 'ngavtq2@gmail.com', role: 'Admin', permission: 'Quản trị viên hệ thống.', status: 'Active' }
 ];
 
 export const InternalTeam: React.FC = () => {

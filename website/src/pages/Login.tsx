@@ -31,11 +31,32 @@ export const Login: React.FC = () => {
       desc: 'Founder & Giảng viên'
     },
     {
+      name: 'Linh BTL',
+      email: 'linhblt.20@gmail.com',
+      role: 'Admin',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=linhblt.20',
+      desc: 'Quản trị viên'
+    },
+    {
+      name: 'Khuê Vũ',
+      email: 'khuevu.thucj4fun@gmail.com',
+      role: 'Admin',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuevu',
+      desc: 'Quản trị viên'
+    },
+    {
+      name: 'Nga VTQ',
+      email: 'ngavtq2@gmail.com',
+      role: 'Admin',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ngavtq2',
+      desc: 'Quản trị viên'
+    },
+    {
       name: 'thongdang.upyouth',
       email: 'thongdang.upyouth@gmail.com',
       role: 'Học viên',
       avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=thongdang.upyouth',
-      desc: 'Tài khoản học viên chính thức'
+      desc: 'Tài khoản học viên test chính thức'
     }
   ];
 

@@ -63,7 +63,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         supabase.from('badges').select('*'),
         supabase.from('nautical_miles_transactions')
           .select('*')
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(100),
       ]);
 
       if (badgesData) setBadges(badgesData);
