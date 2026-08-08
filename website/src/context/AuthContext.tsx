@@ -158,7 +158,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             visits: 1,
             created_at: new Date().toISOString()
           };
-          await supabase.from('profiles').insert([newProfile]);
+          const { role: _r, ...dbProfile } = newProfile as any;
+          const { error: insErr } = await supabase.from('profiles').insert([dbProfile]);
+          if (insErr) {
+            console.error('Lỗi khi insert profile mới lên Supabase:', insErr.message);
+          }
           currentProfile = newProfile;
         }
 
@@ -258,18 +262,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (profileId: string, updates: Partial<Profile>): Promise<boolean> => {
     setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, ...updates } : p));
+    
+    // Strip out non-database property 'role'
+    const { role: _r, ...dbUpdates } = updates as any;
+
     try {
-      const { error } = await supabase
+      // 1. Try update by ID first with select() for explicit validation
+      const { data, error } = await supabase
         .from('profiles')
-        .update(updates)
-        .eq('id', profileId);
-      if (error) {
-        console.error('Lỗi khi cập nhật profile lên Supabase:', error);
-        return false;
+        .update(dbUpdates)
+        .eq('id', profileId)
+        .select();
+
+      if (!error && data && data.length > 0) {
+        return true;
       }
-      return true;
+
+      // 2. Fallback to matching by gmail
+      const targetGmail = (updates.gmail || activeUser?.gmail)?.toLowerCase().trim();
+      if (targetGmail) {
+        const { data: gData, error: gError } = await supabase
+          .from('profiles')
+          .update(dbUpdates)
+          .eq('gmail', targetGmail)
+          .select();
+
+        if (!gError && gData && gData.length > 0) {
+          return true;
+        }
+
+        // 3. If no row exists in Supabase at all, attempt inserting a new profile row
+        const { data: insData, error: insError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: profileId,
+            gmail: targetGmail,
+            full_name: updates.full_name || targetGmail.split('@')[0],
+            ...dbUpdates
+          }])
+          .select();
+
+        if (!insError && insData && insData.length > 0) {
+          return true;
+        }
+
+        if (insError) {
+          console.error('Lỗi khi khởi tạo profile mới trên Supabase:', insError.message);
+        }
+      }
+
+      if (error) {
+        console.error('Lỗi khi cập nhật profile trên Supabase:', error.message);
+      } else {
+        console.warn('Lưu ý: Dữ liệu đã lưu trên trình duyệt (Local State). Cập nhật Supabase Server không khả thi nếu tài khoản test/mock không có Supabase Auth Session.');
+      }
+      return false;
     } catch (e) {
-      console.error(e);
+      console.error('Lỗi không xác định khi updateProfile:', e);
       return false;
     }
   };
