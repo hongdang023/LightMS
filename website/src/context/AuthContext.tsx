@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isAdmin = isAllowedAdmin || !!adminData;
         const role: UserRole = isAdmin ? 'admin' : 'student';
 
-        // Check if profile exists
+        // Sync profile with Supabase
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('*')
@@ -142,11 +142,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (existingProfile) {
           currentProfile = {
             ...existingProfile,
+            id: session.user.id, // Always enforce real auth UUID
             role
           } as Profile;
+
+          // If ID in DB doesn't match session user ID, sync it on Supabase
+          if (existingProfile.id !== session.user.id) {
+            await supabase.from('profiles').update({ id: session.user.id }).eq('gmail', userEmail);
+          }
         } else {
           const newProfile: Profile = {
-            id: session.user.id || crypto.randomUUID(),
+            id: session.user.id,
             full_name: session.user.user_metadata?.full_name || userEmail.split('@')[0],
             avatar_url: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userEmail)}`,
             role,
@@ -166,8 +172,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           currentProfile = newProfile;
         }
 
+        // Auto-provision admin record in Supabase if allowed admin
+        if (isAdmin) {
+          const newAdminRecord: Admin = {
+            id: session.user.id,
+            full_name: currentProfile.full_name || userEmail.split('@')[0],
+            avatar_url: currentProfile.avatar_url,
+            gmail: userEmail,
+            admin_role: 'Operations',
+            is_onboarded: true,
+            created_at: new Date().toISOString()
+          };
+
+          if (!adminData) {
+            await supabase.from('admins').insert([newAdminRecord]);
+          }
+
+          setAdmins(prev => {
+            const idx = prev.findIndex(a => a.gmail?.toLowerCase() === userEmail);
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = { ...copy[idx], id: session.user.id };
+              return copy;
+            }
+            return [newAdminRecord, ...prev];
+          });
+        }
+
         setProfiles(prev => {
-          const idx = prev.findIndex(p => p.id === currentProfile.id);
+          const idx = prev.findIndex(p => p.id === currentProfile.id || p.gmail?.toLowerCase() === userEmail);
           if (idx >= 0) {
             const copy = [...prev];
             copy[idx] = currentProfile;
@@ -175,18 +208,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           return [currentProfile, ...prev];
         });
-
-        if (adminData) {
-          setAdmins(prev => {
-            const idx = prev.findIndex(a => a.id === adminData.id);
-            if (idx >= 0) {
-              const copy = [...prev];
-              copy[idx] = adminData as Admin;
-              return copy;
-            }
-            return [adminData as Admin, ...prev];
-          });
-        }
 
         setActiveUserId(currentProfile.id);
         setIsAuthenticated(true);
