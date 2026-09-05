@@ -128,7 +128,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addAnnouncement = (title: string, content: string, sendEmail: boolean, mediaUrls?: string[]) => {
     const newAnn: Announcement = {
-      id: `ann-${Math.random().toString(36).substr(2, 9)}`,
+      id: crypto.randomUUID(),
       title,
       content,
       created_by: 'Admin',
@@ -170,7 +170,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const addCalendarEvent = (event: Omit<CalendarEvent, 'id'>) => {
     const newEvent: CalendarEvent = {
       ...event,
-      id: `cal-${Math.random().toString(36).substr(2, 9)}`
+      id: crypto.randomUUID()
     };
     setCalendarEvents(prev => [...prev, newEvent]);
     addNotification('Lịch học mới', `Đã thêm sự kiện "${event.title}" vào lịch`, 'system');

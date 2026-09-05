@@ -23,7 +23,7 @@ export function checkLeaderboardAutoAnnouncements(
   if (exists) return [];
 
   const newAnnouncement: Announcement = {
-    id: `auto-lb-${Date.now()}`,
+    id: crypto.randomUUID(),
     title: `🏆 ${top1.full_name} xuất sắc vươn lên Dẫn Đầu Leaderboard!`,
     content: `Chúc mừng ${top1.full_name} đã đạt vị trí Hạng 1 trên Bảng Vàng Leaderboard với tổng cộng ${top1.nautical_miles} Hải Lý! 🚀\nCùng tiếp tục giữ vững phong độ và lan tỏa tinh thần học tập nhiệt huyết đến cả lớp nhé!`,
     created_by: 'Hệ thống LightMS',
@@ -46,7 +46,7 @@ export function createContentUpdateAnnouncement(
   batchName?: string
 ): Announcement {
   return {
-    id: `auto-content-${Date.now()}`,
+    id: crypto.randomUUID(),
     title: `📚 Tài liệu & Bài giảng mới: ${lesson.title}`,
     content: `Đội ngũ Giảng dạy vừa cập nhật đầy đủ slide, tài liệu tham khảo và nội dung cho bài học "${lesson.title}"${batchName ? ` (Lớp ${batchName})` : ''}.\nHọc viên hãy truy cập mục Bài học để xem chi tiết và chuẩn bị cho buổi học nhé! ⚓`,
     created_by: 'Ban Quản Lý Lớp Học',
@@ -89,7 +89,7 @@ export function checkScheduleAutoAnnouncements(
 
     if (!exists) {
       newAnnouncements.push({
-        id: `auto-sched-${Date.now()}-${ev.id}`,
+        id: crypto.randomUUID(),
         title: `⏰ Nhắc lịch: ${ev.title} (${ev.time || 'Hôm nay'})`,
         content: `Sự kiện "${ev.title}" sẽ diễn ra vào hôm nay (${ev.time || 'giờ học quy định'}).\n${ev.details ? `Chi tiết: ${ev.details}\n` : ''}Hãy sắp xếp thời gian vào lớp đúng giờ để không bỏ lỡ kiến thức quan trọng!`,
         created_by: 'Hệ Thống Lịch Học',

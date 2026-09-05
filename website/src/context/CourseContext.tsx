@@ -12,7 +12,7 @@ export interface CourseContextType {
   setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>;
   setIsLessonsLoading: (loading: boolean) => void;
   completeLesson: (lessonId: string) => void;
-  updateLesson: (id: string, updates: Partial<Lesson>) => void;
+  updateLesson: (id: string, updates: Partial<Lesson>) => Promise<{ error: any }>;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
 }
 
@@ -50,7 +50,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.log('Complete lesson triggered:', lessonId);
   };
 
-  const updateLesson = (id: string, updates: Partial<Lesson>) => {
+  const updateLesson = async (id: string, updates: Partial<Lesson>) => {
     const existingLesson = lessons.find(l => l.id === id);
     setLessons(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
 
@@ -65,9 +65,11 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     const { target, ...dbUpdates } = updates as any;
-    supabase.from('lessons').update(dbUpdates).eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi cập nhật bài học trên Supabase:', error);
-    });
+    const { error } = await supabase.from('lessons').update(dbUpdates).eq('id', id);
+    if (error) {
+      console.error('Lỗi khi cập nhật bài học trên Supabase:', error);
+    }
+    return { error };
   };
 
   const updateBatch = (id: string, updates: Partial<Batch>) => {

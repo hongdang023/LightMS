@@ -112,7 +112,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
 
       // Check if student has completed
       const hasCompleted = (nauticalTransactions || []).some(
-        t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
+        t => t.student_id === activeUser.id && 
+             (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && 
+             t.reference_id === lesson.id
       );
 
       if (!hasCompleted) {

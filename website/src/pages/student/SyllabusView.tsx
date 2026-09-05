@@ -14,9 +14,9 @@ export const SyllabusView: React.FC<{
   onPageChange?: (page: string) => void;
   isEditMode?: boolean;
 }> = ({ isEditMode = false }) => {
-  const { activeUser, setProfiles } = useAuth();
+  const { activeUser, users: profiles, setProfiles, updateProfile } = useAuth();
   const { lessons, isLessonsLoading, completeLesson, updateLesson } = useCourse();
-  const { nauticalTransactions, addNauticalMiles } = useGamification();
+  const { nauticalTransactions, addNauticalMiles, unlockBadge } = useGamification();
 
   const filteredLessons = lessons;
 
@@ -49,7 +49,7 @@ export const SyllabusView: React.FC<{
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (draftLesson) {
       const updates: Partial<Lesson> = {
         title: draftLesson.title,
@@ -66,9 +66,13 @@ export const SyllabusView: React.FC<{
         updates.assignment_description = '';
         updates.assignment_rubric_checklist = [];
       }
-      updateLesson(draftLesson.id, updates);
+      const { error } = await updateLesson(draftLesson.id, updates);
+      if (error) {
+        showToast(`❌ Lỗi khi lưu vào Supabase: ${error.message || 'Vui lòng kiểm tra RLS policy!'}`);
+      } else {
+        showToast('✨ Đã lưu mọi thay đổi vào Supabase thành công!');
+      }
     }
-    showToast('Đã lưu mọi thay đổi thành công!');
   };
 
   const handleCancel = () => {
@@ -132,20 +136,55 @@ export const SyllabusView: React.FC<{
       return;
     }
 
-    // Award +50 Nautical Miles using addNauticalMiles
+    // Award +50 Nautical Miles using addNauticalMiles & persist liveclass_tasks
     try {
-      await addNauticalMiles(
+      const res = await addNauticalMiles(
         activeUser.id,
         50,
         'assignment_graded',
         `Đã hoàn thành bài tập: ${activeLesson.title}. Link nộp bài: ${evidenceUrl.trim()}`,
         activeLesson.id,
-        [],
+        profiles,
         setProfiles
       );
+      if (res && res.error) {
+        alert(`Lỗi khi nộp bài vào cơ sở dữ liệu: ${res.error.message || 'Vui lòng kiểm tra quyền RLS'}`);
+        return;
+      }
+
+      // Update liveclass_tasks in student profile on Supabase
+      const updatedLiveTasks = {
+        ...(activeUser.liveclass_tasks || {}),
+        [activeLesson.id]: true,
+        [`${activeLesson.id}_evidence_url`]: evidenceUrl.trim(),
+        [`${activeLesson.id}_rubrics`]: rubricSelfCheck,
+        [`${activeLesson.id}_completed_at`]: new Date().toISOString()
+      };
+      await updateProfile(activeUser.id, { liveclass_tasks: updatedLiveTasks });
+
+      // Gamification badge checks
+      if (unlockBadge) {
+        // 1. Badge "Bài Tập Đầu Tay"
+        unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000005', false, profiles, setProfiles);
+
+        // Count total completed assignments
+        const hwLessons = lessons.filter(l => !!l.assignment_description);
+        const completedHwCount = hwLessons.filter(l => l.id === activeLesson.id || !!updatedLiveTasks[l.id]).length;
+
+        // 2. Badge "Thủy Thủ Chăm Chỉ" (>= 3 homeworks)
+        if (completedHwCount >= 3) {
+          unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000006', false, profiles, setProfiles);
+        }
+
+        // 3. Badge "Thuyền Trưởng Gương Mẫu" (100% homeworks)
+        if (hwLessons.length > 0 && completedHwCount >= hwLessons.length) {
+          unlockBadge(activeUser.id, 'bada0000-0000-0000-0000-000000000007', false, profiles, setProfiles);
+        }
+      }
+
       completeLesson(activeLesson.id);
       showToast('Đã nộp bài tập và nhận +50 Hải lý thành công! 🚀');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       alert('Có lỗi xảy ra khi nộp bài tập. Vui lòng thử lại!');
     }
@@ -162,9 +201,15 @@ export const SyllabusView: React.FC<{
   // Split description into bullet points for the Agenda list
   const agendaItems = activeLesson?.content
     ? activeLesson.content
-        .split(/[.\n]+/)
-        .map(item => item.trim())
-        .filter(item => item.length > 0 && !item.toLowerCase().includes('buổi') && !item.toLowerCase().includes('tìm hiểu về'))
+        .split(/\r?\n+/)
+        .flatMap(line => {
+          const trimmed = line.replace(/^[\s•*-]+/, '').trim();
+          if (!trimmed) return [];
+          // Split by sentence boundary (period + space + capital letter), avoiding file extensions like .md, .json, etc.
+          return trimmed.split(/(?<=\b\w{2,}\.)\s+(?=[A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ])/);
+        })
+        .map(item => item.replace(/^[\s•*-]+/, '').trim())
+        .filter(item => item.length > 0 && !/^Buổi\s+\d+/i.test(item))
     : [];
 
   const defaultKeyConcepts = agendaItems.slice(0, 3).map(item => 

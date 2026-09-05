@@ -96,7 +96,7 @@ export const useStudentManagementData = () => {
   const getLiveClassCompletedCount = (studentId: string) => {
     return (nauticalTransactions || []).filter(
       t => t.student_id === studentId && 
-      t.action_type === 'lesson_complete' &&
+      (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
       liveClassAssignments.some(la => la.id === t.reference_id)
     ).length;
   };
@@ -126,13 +126,13 @@ export const useStudentManagementData = () => {
 
     const liveClassDoneForStarted = (nauticalTransactions || []).filter(
       t => t.student_id === student.id && 
-      t.action_type === 'lesson_complete' &&
+      (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
       startedLiveClassAssignments.some(la => la.id === t.reference_id)
     ).length;
 
     const liveClassDoneForDue = (nauticalTransactions || []).filter(
       t => t.student_id === student.id && 
-      t.action_type === 'lesson_complete' &&
+      (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
       dueLiveClassAssignments.some(la => la.id === t.reference_id)
     ).length;
 

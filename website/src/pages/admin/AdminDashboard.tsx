@@ -34,7 +34,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
 
   // Total completions of lessons that have assignments
   const totalCompletedAssignments = (nauticalTransactions || []).filter(
-    t => t.action_type === 'lesson_complete' && 
+    t => (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && 
          lessonsWithAssignments.some(l => l.id === t.reference_id)
   ).length;
 
@@ -75,7 +75,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   // Helper: Check if a student completed a specific lesson assignment
   const isStudentLessonCompleted = (studentId: string, lessonId: string) => {
     return (nauticalTransactions || []).some(
-      t => t.student_id === studentId && t.action_type === 'lesson_complete' && t.reference_id === lessonId
+      t => t.student_id === studentId && (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && t.reference_id === lessonId
     );
   };
 
@@ -116,13 +116,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
 
     const liveClassDoneForStarted = (nauticalTransactions || []).filter(
       t => t.student_id === student.id && 
-      t.action_type === 'lesson_complete' &&
+      (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
       startedLiveClassAssignments.some(la => la.id === t.reference_id)
     ).length;
 
     const liveClassDoneForDue = (nauticalTransactions || []).filter(
       t => t.student_id === student.id && 
-      t.action_type === 'lesson_complete' &&
+      (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
       dueLiveClassAssignments.some(la => la.id === t.reference_id)
     ).length;
 
@@ -315,7 +315,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     });
 
     const lessonsDetail = lessons.map(l => {
-      const lessonCompleted = (nauticalTransactions || []).some(t => t.student_id === studentId && t.action_type === 'lesson_complete' && t.reference_id === l.id);
+      const lessonCompleted = (nauticalTransactions || []).some(t => t.student_id === studentId && (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && t.reference_id === l.id);
       let assignmentStatus: 'none' | 'not_submitted' | 'submitted' | 'graded' | 'draft' = 'none';
       if (l.assignment_description) {
         assignmentStatus = lessonCompleted ? 'graded' : 'not_submitted';

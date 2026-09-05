@@ -43,7 +43,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange: _onPa
   const totalItems = (lessons || []).length + 7;
   const completedMainLessons = (lessons || []).filter(lesson => {
     return (nauticalTransactions || []).some(
-      t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
+      t => t.student_id === activeUser.id && 
+           (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && 
+           t.reference_id === lesson.id
     );
   }).length;
 

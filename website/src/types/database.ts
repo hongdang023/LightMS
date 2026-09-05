@@ -37,7 +37,7 @@ export interface Profile {
   gender?: string;
   age_group?: string;
   onboarding_tasks?: Record<string, boolean>;
-  liveclass_tasks?: Record<string, boolean>;
+  liveclass_tasks?: Record<string, any>;
   badges?: { badge_id: string; unlocked_at: string }[];
   created_at: string;
 }

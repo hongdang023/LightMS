@@ -274,7 +274,7 @@ export const StudentDossierPanel: React.FC<StudentDossierPanelProps> = ({
               const isCompleted = (nauticalTransactions || []).some(
                 (t) =>
                   t.student_id === activeStudent.id &&
-                  t.action_type === 'lesson_complete' &&
+                  (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') &&
                   t.reference_id === lesson.id
               );
               return (

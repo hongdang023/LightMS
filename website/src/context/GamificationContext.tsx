@@ -18,7 +18,7 @@ export interface GamificationContextType {
     profiles?: Profile[],
     setProfiles?: React.Dispatch<React.SetStateAction<Profile[]>>,
     addNotification?: (title: string, message: string, type?: 'telegram' | 'system') => void
-  ) => Promise<void>;
+  ) => Promise<{ error: any }>;
   unlockBadge: (
     studentId: string,
     badgeId: string,
@@ -133,37 +133,96 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setProfiles?: React.Dispatch<React.SetStateAction<Profile[]>>,
     _addNotification?: (title: string, message: string, type?: 'telegram' | 'system') => void
   ) => {
-    const newTx: NauticalMilesTransaction = {
-      id: `tx-${Math.random().toString(36).substr(2, 9)}`,
-      student_id: studentId,
-      amount,
-      action_type: actionType,
-      reference_id: referenceId,
-      description,
-      created_at: new Date().toISOString()
-    };
-    setNauticalTransactions(prev => [newTx, ...prev]);
-
-    if (setProfiles) {
-      setProfiles(prev => prev.map(p => {
-        if (p.id === studentId) {
-          const newMiles = p.nautical_miles + amount;
-          supabase.from('profiles').update({ nautical_miles: newMiles }).eq('id', studentId).then(({ error }) => {
-            if (error) console.error('Lỗi khi cập nhật nautical_miles của profile:', error);
-          });
-          return { ...p, nautical_miles: newMiles };
-        }
-        return p;
-      }));
-    }
+    let effectiveStudentId = studentId;
 
     try {
-      const { error } = await supabase
+      // 0. Ensure student profile exists in Supabase to prevent FK constraint failure
+      const { data: existingProf } = await supabase
+        .from('profiles')
+        .select('id, nautical_miles')
+        .eq('id', studentId)
+        .maybeSingle();
+
+      if (!existingProf) {
+        // Attempt fallback lookup in local profiles list or create placeholder in Supabase
+        const localProfile = _profiles.find(p => p.id === studentId);
+        if (localProfile) {
+          const { data: profByGmail } = await supabase
+            .from('profiles')
+            .select('id, nautical_miles')
+            .eq('gmail', localProfile.gmail)
+            .maybeSingle();
+
+          if (profByGmail) {
+            effectiveStudentId = profByGmail.id;
+          } else {
+            const { role: _r, ...dbProfile } = localProfile as any;
+            const { data: createdProf, error: cErr } = await supabase
+              .from('profiles')
+              .insert([dbProfile])
+              .select('id')
+              .maybeSingle();
+            if (cErr) console.error('Lỗi khởi tạo profile trước transaction:', cErr);
+            if (createdProf) effectiveStudentId = createdProf.id;
+          }
+        }
+      }
+
+      const newTx: NauticalMilesTransaction = {
+        id: crypto.randomUUID(),
+        student_id: effectiveStudentId,
+        amount,
+        action_type: actionType,
+        reference_id: referenceId,
+        description,
+        created_at: new Date().toISOString()
+      };
+
+      // 1. Insert transaction into Supabase
+      const { error: txError } = await supabase
         .from('nautical_miles_transactions')
         .insert([newTx]);
-      if (error) console.error('Lỗi khi lưu nautical miles transaction lên Supabase:', error);
-    } catch (e) {
-      console.error(e);
+
+      if (txError) {
+        console.error('Lỗi khi lưu nautical miles transaction lên Supabase:', txError);
+        return { error: txError };
+      }
+
+      // 2. Fetch current profile from Supabase to get latest nautical_miles
+      const { data: currentProf } = await supabase
+        .from('profiles')
+        .select('nautical_miles')
+        .eq('id', effectiveStudentId)
+        .maybeSingle();
+
+      const newMiles = ((currentProf?.nautical_miles || 0) + amount);
+
+      // 3. Update profile's nautical_miles in Supabase
+      const { error: profError } = await supabase
+        .from('profiles')
+        .update({ nautical_miles: newMiles })
+        .eq('id', effectiveStudentId);
+
+      if (profError) {
+        console.error('Lỗi khi cập nhật nautical_miles của profile trên Supabase:', profError);
+      }
+
+      // 4. Update local React states
+      setNauticalTransactions(prev => [newTx, ...prev]);
+
+      if (setProfiles) {
+        setProfiles(prev => prev.map(p => {
+          if (p.id === studentId || p.id === effectiveStudentId) {
+            return { ...p, nautical_miles: newMiles };
+          }
+          return p;
+        }));
+      }
+
+      return { error: null };
+    } catch (e: any) {
+      console.error('Lỗi không xác định khi addNauticalMiles:', e);
+      return { error: e };
     }
   };
 

@@ -39,18 +39,21 @@ export const EditableText: React.FC<EditableTextProps> = ({
     }
   }, [localValue, isFocused]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    onSave(newValue);
+  };
+
   const handleBlur = () => {
     setIsFocused(false);
-    if (localValue !== value) {
-      onSave(localValue);
-    }
   };
 
   return (
     <textarea
       ref={taRef}
       value={localValue}
-      onChange={e => setLocalValue(e.target.value)}
+      onChange={handleChange}
       onFocus={() => setIsFocused(true)}
       onBlur={handleBlur}
       rows={minRows}

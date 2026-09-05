@@ -42,60 +42,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return localStorage.getItem('lms_is_authenticated') === 'true';
   });
 
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>(() => {
+    try {
+      const cached = localStorage.getItem('lms_cached_active_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.id) {
+          return [parsed];
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi đọc cached active user:', e);
+    }
+    return [];
+  });
   const [admins, setAdmins] = useState<Admin[]>([]);
 
   const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
   const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) || null;
+
+  // Sync active user to localStorage cache whenever activeUser changes
+  useEffect(() => {
+    if (activeUser) {
+      try {
+        localStorage.setItem('lms_cached_active_user', JSON.stringify(activeUser));
+      } catch (e) {
+        console.warn('Lỗi lưu active user vào cache:', e);
+      }
+    }
+  }, [activeUser]);
 
   // Load active user profile immediately on startup if activeUserId is saved, then load full profiles/admins asynchronously
   useEffect(() => {
     const fetchData = async () => {
       try {
         const storedId = localStorage.getItem('lms_active_user_id');
-        if (storedId) {
-          // Fast path: Fetch active user profile specifically first
-          const { data: activeProf } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', storedId)
-            .maybeSingle();
 
-          if (activeProf) {
-            const emailLower = activeProf.gmail?.toLowerCase().trim() || '';
-            const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower);
-            const { data: adminCheck } = await supabase
-              .from('admins')
-              .select('*')
-              .eq('gmail', emailLower)
-              .maybeSingle();
-
-            const isAdmin = isAllowedAdmin || !!adminCheck;
-            const userWithRole = {
-              ...activeProf,
-              role: isAdmin ? ('admin' as UserRole) : ('student' as UserRole)
-            };
-
-            setProfiles(prev => {
-              if (prev.some(p => p.id === activeProf.id)) return prev;
-              return [userWithRole, ...prev];
-            });
-
-            if (isAdmin && adminCheck) {
-              setAdmins(prev => {
-                if (prev.some(a => a.id === adminCheck.id)) return prev;
-                return [adminCheck, ...prev];
-              });
-            }
-          }
-        }
-
-        // Background path: Fetch all profiles and admins asynchronously without blocking UI render
-        const [profRes, adminRes] = await Promise.all([
+        // Parallel execution: fetch stored active user, admins list, and profiles list concurrently
+        const [activeProfRes, profRes, adminRes] = await Promise.all([
+          storedId ? supabase.from('profiles').select('*').eq('id', storedId).maybeSingle() : Promise.resolve({ data: null }),
           supabase.from('profiles').select('*'),
           supabase.from('admins').select('*')
         ]);
+
         const loadedAdmins = adminRes.data || [];
+
+        if (activeProfRes.data) {
+          const activeProf = activeProfRes.data;
+          const emailLower = activeProf.gmail?.toLowerCase().trim() || '';
+          const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower);
+          const isAdmin = isAllowedAdmin || loadedAdmins.some((a: any) => a.gmail?.toLowerCase().trim() === emailLower);
+          const userWithRole = {
+            ...activeProf,
+            role: isAdmin ? ('admin' as UserRole) : ('student' as UserRole)
+          };
+
+          setProfiles(prev => {
+            const existsIndex = prev.findIndex(p => p.id === userWithRole.id);
+            if (existsIndex >= 0) {
+              const copy = [...prev];
+              copy[existsIndex] = userWithRole;
+              return copy;
+            }
+            return [userWithRole, ...prev];
+          });
+        }
+
         if (profRes.data) {
           setProfiles((profRes.data as Profile[]).map(p => {
             const emailLower = p.gmail?.toLowerCase().trim() || '';
@@ -106,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
           }));
         }
+
         if (adminRes.data) setAdmins(adminRes.data as Admin[]);
       } catch (err) {
         console.error('Error fetching profiles/admins in AuthContext:', err);
@@ -248,6 +261,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         visits: 1,
         created_at: new Date().toISOString()
       };
+      const { role: _r, ...dbProfile } = user as any;
+      supabase.from('profiles').insert([dbProfile]).then(({ error }) => {
+        if (error) console.error('Lỗi khi lưu profile mới lên Supabase:', error.message);
+      });
       setProfiles(prev => [user!, ...prev]);
     } else {
       user = { ...user, role: effectiveRole };
@@ -278,6 +295,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('lms_is_authenticated');
+    localStorage.removeItem('lms_active_user_id');
+    localStorage.removeItem('lms_cached_active_user');
+    setProfiles([]);
     supabase.auth.signOut();
   };
 
