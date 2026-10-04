@@ -3,12 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
-import { ChevronLeft, ClipboardList, Target, CheckCircle2, Mail } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Target, CheckCircle2, Mail, Trophy, Sparkles, ArrowRight } from 'lucide-react';
 import { EditableText } from '../../components/EditableText';
 import type { OnboardingDay } from '../../types/database';
 import { 
   DAY_VISUAL_STYLES,
-  renderRichText
+  renderRichText,
+  normalizeHtmlToMarkdown
 } from '../../data/onboardingVisuals';
 import { DayCard } from '../../components/onboarding/DayCard';
 import { EmailTemplateModal } from '../../components/onboarding/EmailTemplateModal';
@@ -133,7 +134,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
   const handleToggleTask = (day: number, taskIdx: number, label: string) => {
     const key = `day-${day}-task-${taskIdx}`;
     
-    if (day === 1 && label.includes('giới thiệu bản thân') && !activeUser.is_profile_completed) {
+    // Only enforce profile completion requirement when student is attempting to check the task
+    if (!checkedTasks[key] && day === 1 && label.includes('giới thiệu bản thân') && !activeUser.is_profile_completed && activeUser.role !== 'admin') {
       addNotification(
         'Cần cập nhật hồ sơ cá nhân', 
         'Hãy truy cập tab Hồ Sơ Cá Nhân (Avatar) để cập nhật thông tin giới thiệu bản thân trước!', 
@@ -210,7 +212,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
           const rawLabel = trimmed.replace('- [ ]', '').trim();
           const isOptional = rawLabel.toLowerCase().includes('(optional)');
           parsed.push({
-            id: `task-${index}-${activeDayData.day}-${Date.now()}-${Math.random()}`,
+            id: `task-${index}-${activeDayData.day}`,
             label: rawLabel,
             isOptional: isOptional
           });
@@ -218,7 +220,11 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
           parsed[parsed.length - 1].label += '\n' + line;
         }
       });
-      setEditingTasks(parsed);
+      const normalizedParsed = parsed.map(t => ({
+        ...t,
+        label: normalizeHtmlToMarkdown(t.label)
+      }));
+      setEditingTasks(normalizedParsed);
     }
   }, [activeDayData.day, isEditMode]);
 
@@ -449,7 +455,11 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
 
             {!isEditMode && isDayCompleted(selectedDay) && (
               <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/20 text-center space-y-4 animate-scale-up">
-                <div className="text-4xl">🎉</div>
+                <div className="flex justify-center">
+                  <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full">
+                    <Sparkles size={28} />
+                  </div>
+                </div>
                 <h4 className="text-lg font-black text-emerald-800 uppercase tracking-wider">
                   Hoàn Thành Thử Thách Ngày {selectedDay}!
                 </h4>
@@ -467,13 +477,15 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
                         }}
                         className="px-6 py-3 bg-[#214C54] hover:bg-[#15333B] text-white font-black text-xs rounded-xl shadow-md hover:shadow-lg transition-all uppercase tracking-wider flex items-center gap-2 border-0 cursor-pointer"
                       >
-                        Tiến tới Ngày {selectedDay + 1} ➔
+                        <span>Tiến tới Ngày {selectedDay + 1}</span>
+                        <ArrowRight size={14} />
                       </button>
                       <button
                         onClick={() => onPageChange?.('walloffame')}
                         className="px-6 py-3 bg-white border border-[#214C54] text-[#214C54] hover:bg-[#214C54]/5 font-black text-xs rounded-xl shadow-sm hover:shadow-md transition-all uppercase tracking-wider flex items-center gap-2 border-0 cursor-pointer"
                       >
-                        🏆 Xem Bảng xếp hạng
+                        <Trophy size={14} />
+                        <span>Xem Bảng xếp hạng</span>
                       </button>
                     </>
                   ) : (
@@ -481,7 +493,8 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
                       onClick={() => onPageChange?.('walloffame')}
                       className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs rounded-xl shadow-md hover:shadow-lg transition-all uppercase tracking-wider flex items-center gap-2 border-0 cursor-pointer"
                     >
-                      🏆 Đi tới Bảng vinh danh
+                      <Trophy size={14} />
+                      <span>Đi tới Bảng vinh danh</span>
                     </button>
                   )}
                 </div>

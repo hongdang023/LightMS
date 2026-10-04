@@ -1,0 +1,44 @@
+[
+  {
+    "id": "bada0000-0000-0000-0000-000000000001",
+    "name": "Thẻ Căn Cước Thủy Thủ",
+    "icon": "Contact",
+    "description": "Khai báo thông tin cá nhân đầy đủ 100% trên Hồ sơ."
+  },
+  {
+    "id": "bada0000-0000-0000-0000-000000000002",
+    "name": "Cánh Buồm Khởi Hành",
+    "icon": "Compass",
+    "description": "Đặt chân lên tàu và hoàn thành ngày học Onboarding đầu tiên."
+  },
+  {
+    "id": "bada0000-0000-0000-0000-000000000003",
+    "name": "Vượt Sóng Băng Băng",
+    "icon": "Waves",
+    "description": "Giữ vững phong độ, hoàn thành mốc 3 ngày Onboarding đầu tiên."
+  },
+  {
+    "id": "bada0000-0000-0000-0000-000000000004",
+    "name": "Thủy Thủ Lão Luyện",
+    "icon": "Anchor",
+    "description": "Xuất sắc chinh phục trọn vẹn hành trình 7 ngày Onboarding."
+  },
+  {
+    "id": "bada0000-0000-0000-0000-000000000005",
+    "name": "Bài Tập Đầu Tay",
+    "icon": "FileText",
+    "description": "Khởi đầu hành trình rèn luyện với bài tập về nhà đầu tiên được hoàn thành."
+  },
+  {
+    "id": "bada0000-0000-0000-0000-000000000006",
+    "name": "Thủy Thủ Chăm Chỉ",
+    "icon": "BookOpen",
+    "description": "Tinh thần kiên trì rèn luyện, hoàn thành mốc 3 bài tập về nhà."
+  },
+  {
+    "id": "bada0000-0000-0000-0000-000000000007",
+    "name": "Thuyền Trưởng Gương Mẫu",
+    "icon": "Award",
+    "description": "Tinh thần kỷ luật thép. Hoàn thành đầy đủ 100% bài tập về nhà của khóa học."
+  }
+]

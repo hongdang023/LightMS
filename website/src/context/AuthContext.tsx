@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Profile, Admin, UserRole } from '../types/database';
+import { localDataService } from '../services/localDataService';
+import { d1ApiService } from '../services/d1ApiService';
 
 export interface AuthContextType {
   activeUser: Profile;
@@ -17,7 +18,7 @@ export interface AuthContextType {
   updateProfile: (profileId: string, updates: Partial<Profile>) => Promise<boolean>;
   updateAdminProfile: (adminId: string, updates: Partial<Admin>) => Promise<boolean>;
   loginWithGmail: (email: string, role?: UserRole) => Profile | null;
-  loginWithSupabaseGoogle: (role?: UserRole) => Promise<void>;
+  loginWithGoogle: (role?: UserRole) => Promise<void>;
   logout: () => void;
   incrementVisits: (userId: string) => void;
 }
@@ -58,12 +59,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [admins, setAdmins] = useState<Admin[]>([]);
 
-  const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0];
-  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser?.gmail?.toLowerCase()) || null;
+  // Derived current user
+  const activeUser = profiles.find(p => p.id === activeUserId) || profiles[0] || {
+    id: 'user-default',
+    full_name: 'Thủy Thủ Mới',
+    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
+    role: 'student' as UserRole,
+    gmail: 'guest@lightms.io',
+    phone_number: '',
+    facebook_url: '',
+    is_profile_completed: false,
+    nautical_miles: 0,
+    visits: 1,
+    created_at: new Date().toISOString()
+  };
 
-  // Sync active user to localStorage cache whenever activeUser changes
+  const activeAdmin = admins.find(a => a.id === activeUserId || a.gmail?.toLowerCase() === activeUser.gmail?.toLowerCase()) || null;
+
+  // Persist active user cache
   useEffect(() => {
-    if (activeUser) {
+    if (activeUser && activeUser.id && activeUser.id !== 'user-default') {
       try {
         localStorage.setItem('lms_cached_active_user', JSON.stringify(activeUser));
       } catch (e) {
@@ -72,54 +87,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeUser]);
 
-  // Load active user profile immediately on startup if activeUserId is saved, then load full profiles/admins asynchronously
+  // Load profiles and admins from localDataService
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const storedId = localStorage.getItem('lms_active_user_id');
+        await localDataService.init();
+        const loadedUsers = localDataService.getUsers();
+        const loadedAdmins = localDataService.getAdmins();
 
-        // Parallel execution: fetch stored active user, admins list, and profiles list concurrently
-        const [activeProfRes, profRes, adminRes] = await Promise.all([
-          storedId ? supabase.from('profiles').select('*').eq('id', storedId).maybeSingle() : Promise.resolve({ data: null }),
-          supabase.from('profiles').select('*'),
-          supabase.from('admins').select('*')
-        ]);
-
-        const loadedAdmins = adminRes.data || [];
-
-        if (activeProfRes.data) {
-          const activeProf = activeProfRes.data;
-          const emailLower = activeProf.gmail?.toLowerCase().trim() || '';
-          const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower);
-          const isAdmin = isAllowedAdmin || loadedAdmins.some((a: any) => a.gmail?.toLowerCase().trim() === emailLower);
-          const userWithRole = {
-            ...activeProf,
-            role: isAdmin ? ('admin' as UserRole) : ('student' as UserRole)
+        setAdmins(loadedAdmins);
+        setProfiles(loadedUsers.map(p => {
+          const emailLower = (p.gmail || '').toLowerCase().trim();
+          const isAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower) || loadedAdmins.some(a => (a.gmail || '').toLowerCase().trim() === emailLower);
+          return {
+            ...p,
+            role: isAdmin ? 'admin' : 'student'
           };
-
-          setProfiles(prev => {
-            const existsIndex = prev.findIndex(p => p.id === userWithRole.id);
-            if (existsIndex >= 0) {
-              const copy = [...prev];
-              copy[existsIndex] = userWithRole;
-              return copy;
-            }
-            return [userWithRole, ...prev];
-          });
-        }
-
-        if (profRes.data) {
-          setProfiles((profRes.data as Profile[]).map(p => {
-            const emailLower = p.gmail?.toLowerCase().trim() || '';
-            const isAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower) || loadedAdmins.some((a: any) => a.gmail?.toLowerCase().trim() === emailLower);
-            return {
-              ...p,
-              role: isAdmin ? 'admin' : 'student'
-            };
-          }));
-        }
-
-        if (adminRes.data) setAdmins(adminRes.data as Admin[]);
+        }));
       } catch (err) {
         console.error('Error fetching profiles/admins in AuthContext:', err);
       }
@@ -127,148 +111,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchData();
   }, []);
 
-  // Listen to Supabase Auth state changes (e.g. Google OAuth redirect)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const userEmail = session.user.email?.toLowerCase().trim() || '';
-        
-        const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(userEmail);
-        const { data: adminData } = await supabase
-          .from('admins')
-          .select('*')
-          .eq('gmail', userEmail)
-          .maybeSingle();
-
-        const isAdmin = isAllowedAdmin || !!adminData;
-        const role: UserRole = isAdmin ? 'admin' : 'student';
-
-        // Sync profile with Supabase
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('gmail', userEmail)
-          .maybeSingle();
-
-        let currentProfile: Profile;
-
-        if (existingProfile) {
-          currentProfile = {
-            ...existingProfile,
-            id: session.user.id, // Always enforce real auth UUID
-            role
-          } as Profile;
-
-          // If ID in DB doesn't match session user ID, sync it on Supabase
-          if (existingProfile.id !== session.user.id) {
-            await supabase.from('profiles').update({ id: session.user.id }).eq('gmail', userEmail);
-          }
-        } else {
-          const newProfile: Profile = {
-            id: session.user.id,
-            full_name: session.user.user_metadata?.full_name || userEmail.split('@')[0],
-            avatar_url: session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userEmail)}`,
-            role,
-            gmail: userEmail,
-            phone_number: '',
-            facebook_url: '',
-            is_profile_completed: false,
-            nautical_miles: 0,
-            visits: 1,
-            created_at: new Date().toISOString()
-          };
-          const { role: _r, ...dbProfile } = newProfile as any;
-          const { error: insErr } = await supabase.from('profiles').insert([dbProfile]);
-          if (insErr) {
-            console.error('Lỗi khi insert profile mới lên Supabase:', insErr.message);
-          }
-          currentProfile = newProfile;
-        }
-
-        // Auto-provision admin record in Supabase if allowed admin
-        if (isAdmin) {
-          const newAdminRecord: Admin = {
-            id: session.user.id,
-            full_name: currentProfile.full_name || userEmail.split('@')[0],
-            avatar_url: currentProfile.avatar_url,
-            gmail: userEmail,
-            admin_role: 'Operations',
-            is_onboarded: true,
-            created_at: new Date().toISOString()
-          };
-
-          if (!adminData) {
-            await supabase.from('admins').insert([newAdminRecord]);
-          }
-
-          setAdmins(prev => {
-            const idx = prev.findIndex(a => a.gmail?.toLowerCase() === userEmail);
-            if (idx >= 0) {
-              const copy = [...prev];
-              copy[idx] = { ...copy[idx], id: session.user.id };
-              return copy;
-            }
-            return [newAdminRecord, ...prev];
-          });
-        }
-
-        setProfiles(prev => {
-          const idx = prev.findIndex(p => p.id === currentProfile.id || p.gmail?.toLowerCase() === userEmail);
-          if (idx >= 0) {
-            const copy = [...prev];
-            copy[idx] = currentProfile;
-            return copy;
-          }
-          return [currentProfile, ...prev];
-        });
-
-        setActiveUserId(currentProfile.id);
-        setIsAuthenticated(true);
-        localStorage.setItem('lms_active_user_id', currentProfile.id);
-        localStorage.setItem('lms_is_authenticated', 'true');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('lms_active_user_id', activeUserId);
-  }, [activeUserId]);
-
   const switchUser = (role: UserRole) => {
-    setProfiles(prev => prev.map(p => p.id === activeUserId ? { ...p, role } : p));
+    const target = profiles.find(p => p.role === role);
+    if (target) {
+      setActiveUserId(target.id);
+      setIsAuthenticated(true);
+      localStorage.setItem('lms_active_user_id', target.id);
+      localStorage.setItem('lms_is_authenticated', 'true');
+    }
   };
 
-  const loginWithGmail = (email: string, requestedRole: UserRole = 'student'): Profile | null => {
-    const emailLower = email.toLowerCase().trim();
-    const effectiveRole: UserRole = ALLOWED_ADMIN_EMAILS.includes(emailLower) ? 'admin' : (requestedRole === 'admin' && !ALLOWED_ADMIN_EMAILS.includes(emailLower) ? 'student' : requestedRole);
-    let user = profiles.find(p => p.gmail?.toLowerCase().trim() === emailLower);
-    
+  const loginWithGmail = (email: string, role?: UserRole): Profile | null => {
+    const normalizedEmail = email.toLowerCase().trim();
+    if (!normalizedEmail) return null;
+
+    const isAllowedAdmin = ALLOWED_ADMIN_EMAILS.includes(normalizedEmail);
+    const effectiveRole: UserRole = role || (isAllowedAdmin ? 'admin' : 'student');
+
+    let user = profiles.find(p => (p.gmail || '').toLowerCase().trim() === normalizedEmail);
+
     if (!user) {
-      user = {
-        id: crypto.randomUUID(),
-        full_name: email.split('@')[0],
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(emailLower)}`,
+      const newUser: Profile = {
+        id: `user-${Date.now()}`,
+        full_name: normalizedEmail.split('@')[0],
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(normalizedEmail)}`,
         role: effectiveRole,
-        gmail: emailLower,
+        gmail: normalizedEmail,
         phone_number: '',
         facebook_url: '',
-        is_profile_completed: true,
+        is_profile_completed: false,
         nautical_miles: 0,
         visits: 1,
         created_at: new Date().toISOString()
       };
-      const { role: _r, ...dbProfile } = user as any;
-      supabase.from('profiles').insert([dbProfile]).then(({ error }) => {
-        if (error) console.error('Lỗi khi lưu profile mới lên Supabase:', error.message);
-      });
-      setProfiles(prev => [user!, ...prev]);
+
+      setProfiles(prev => [newUser, ...prev]);
+      localDataService.upsertUser(newUser);
+
+      if (effectiveRole === 'admin') {
+        const newAdmin: Admin = {
+          id: newUser.id,
+          full_name: newUser.full_name,
+          avatar_url: newUser.avatar_url,
+          gmail: normalizedEmail,
+          admin_role: 'Operations',
+          is_onboarded: true,
+          created_at: new Date().toISOString()
+        };
+        setAdmins(prev => [newAdmin, ...prev]);
+        localDataService.upsertAdmin(newAdmin);
+      }
+
+      user = newUser;
     } else {
       user = { ...user, role: effectiveRole };
       setProfiles(prev => prev.map(p => p.id === user!.id ? user! : p));
+      localDataService.upsertUser(user);
     }
 
     setActiveUserId(user.id);
@@ -278,17 +176,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user;
   };
 
-  const loginWithSupabaseGoogle = async (_role: UserRole = 'student') => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
-    } catch (e) {
-      console.error('Lỗi khi đăng nhập bằng Google Supabase:', e);
+  const loginWithGoogle = async (role: UserRole = 'student') => {
+    const promptEmail = window.prompt('Nhập Gmail Google của bạn để đăng nhập nhanh:', 'hocvien@gmail.com');
+    if (promptEmail) {
+      loginWithGmail(promptEmail, role);
     }
   };
 
@@ -297,98 +188,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('lms_is_authenticated');
     localStorage.removeItem('lms_active_user_id');
     localStorage.removeItem('lms_cached_active_user');
-    setProfiles([]);
-    supabase.auth.signOut();
   };
 
   const updateProfile = async (profileId: string, updates: Partial<Profile>): Promise<boolean> => {
     setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, ...updates } : p));
-    
-    // Strip out non-database property 'role'
-    const { role: _r, ...dbUpdates } = updates as any;
-
-    try {
-      // 1. Try update by ID first with select() for explicit validation
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(dbUpdates)
-        .eq('id', profileId)
-        .select();
-
-      if (!error && data && data.length > 0) {
-        return true;
-      }
-
-      // 2. Fallback to matching by gmail
-      const targetGmail = (updates.gmail || activeUser?.gmail)?.toLowerCase().trim();
-      if (targetGmail) {
-        const { data: gData, error: gError } = await supabase
-          .from('profiles')
-          .update(dbUpdates)
-          .eq('gmail', targetGmail)
-          .select();
-
-        if (!gError && gData && gData.length > 0) {
-          return true;
-        }
-
-        // 3. If no row exists in Supabase at all, attempt inserting a new profile row
-        const { data: insData, error: insError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: profileId,
-            gmail: targetGmail,
-            full_name: updates.full_name || targetGmail.split('@')[0],
-            ...dbUpdates
-          }])
-          .select();
-
-        if (!insError && insData && insData.length > 0) {
-          return true;
-        }
-
-        if (insError) {
-          console.error('Lỗi khi khởi tạo profile mới trên Supabase:', insError.message);
-        }
-      }
-
-      if (error) {
-        console.error('Lỗi khi cập nhật profile trên Supabase:', error.message);
-      } else {
-        console.warn('Lưu ý: Dữ liệu đã lưu trên trình duyệt (Local State). Cập nhật Supabase Server không khả thi nếu tài khoản test/mock không có Supabase Auth Session.');
-      }
-      return false;
-    } catch (e) {
-      console.error('Lỗi không xác định khi updateProfile:', e);
-      return false;
-    }
+    localDataService.updateUser(profileId, updates);
+    d1ApiService.updateUserProfile(profileId, updates).catch(err => {
+      console.warn('[AuthContext] D1 updateUserProfile error:', err);
+    });
+    return true;
   };
 
   const updateAdminProfile = async (adminId: string, updates: Partial<Admin>): Promise<boolean> => {
     setAdmins(prev => prev.map(a => a.id === adminId ? { ...a, ...updates } : a));
-    try {
-      const { error } = await supabase
-        .from('admins')
-        .update(updates)
-        .eq('id', adminId);
-      if (error) {
-        console.error('Lỗi khi cập nhật admin profile lên Supabase:', error);
-        return false;
-      }
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
+    const target = admins.find(a => a.id === adminId);
+    if (target) {
+      localDataService.upsertAdmin({ ...target, ...updates });
     }
+    return true;
   };
 
-  const incrementVisits = (userId: string) => {
+  const incrementVisits = async (userId: string) => {
     setProfiles(prev => prev.map(p => {
       if (p.id === userId) {
-        const newVisits = (p.visits || 0) + 1;
-        supabase.from('profiles').update({ visits: newVisits }).eq('id', userId).then(({ error }) => {
-          if (error) console.error('Lỗi khi cập nhật visits:', error);
-        });
+        const currentVisits = p.visits || 0;
+        const newVisits = currentVisits + 1;
+        localDataService.updateUser(userId, { visits: newVisits });
         return { ...p, visits: newVisits };
       }
       return p;
@@ -396,25 +221,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{
-      activeUser,
-      activeAdmin,
-      activeUserId,
-      isAuthenticated,
-      users: profiles,
-      admins,
-      setProfiles,
-      setAdmins,
-      setActiveUserId,
-      setIsAuthenticated,
-      switchUser,
-      updateProfile,
-      updateAdminProfile,
-      loginWithGmail,
-      loginWithSupabaseGoogle,
-      logout,
-      incrementVisits
-    }}>
+    <AuthContext.Provider
+      value={{
+        activeUser,
+        activeAdmin,
+        activeUserId,
+        isAuthenticated,
+        users: profiles,
+        admins,
+        setProfiles,
+        setAdmins,
+        setActiveUserId,
+        setIsAuthenticated,
+        switchUser,
+        updateProfile,
+        updateAdminProfile,
+        loginWithGmail,
+        loginWithGoogle,
+        logout,
+        incrementVisits
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -422,6 +249,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };

@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStudentManagementData } from '../../hooks/useStudentManagementData';
+import { useCourse } from '../../context/CourseContext';
 import { PageHeader } from '../../components/PageHeader';
 import { 
   Users, 
   Mail, 
   Trophy, 
   BarChart3, 
-  Sparkles} from 'lucide-react';
+  Sparkles,
+  ClipboardList,
+  ExternalLink,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 import { 
   DemographicsChartCard, 
   HorizontalProgressBarList, 
@@ -17,7 +23,145 @@ import {
 import { StudentTable } from '../../components/admin/StudentTable';
 import { StudentDossierPanel } from '../../components/admin/StudentDossierPanel';
 
+// ── Submissions Desk Tab ───────────────────────────────────────────────────────
+interface SubmissionsDeskTabProps {
+  students: any[];
+  activeBatch: any;
+}
+
+const SubmissionsDeskTab: React.FC<SubmissionsDeskTabProps> = ({ students }) => {
+  const { lessons } = useCourse();
+  const lessonsWithAssignment = lessons.filter(l => !!l.assignment_description);
+  const [selectedLesson, setSelectedLesson] = useState(lessonsWithAssignment[0]?.id || '');
+
+  const currentLesson = lessons.find(l => l.id === selectedLesson);
+
+  const getSubmissionLink = (student: any) => {
+    if (!selectedLesson) return null;
+    return student.liveclass_tasks?.[selectedLesson]?.submission_link || null;
+  };
+
+  const getSubmissionStatus = (student: any): 'submitted' | 'pending' => {
+    const link = getSubmissionLink(student);
+    if (!link) return 'pending';
+    return 'submitted';
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 pr-1 space-y-4 animate-fade-in">
+      {/* Lesson Selector */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <ClipboardList className="w-4 h-4 text-[#214C54]" />
+            <span className="text-xs font-black text-[#15333B] uppercase tracking-wider">Buổi học:</span>
+          </div>
+          <select
+            value={selectedLesson}
+            onChange={e => setSelectedLesson(e.target.value)}
+            className="flex-1 sm:max-w-md border border-gray-300 rounded-xl px-3 py-2 text-xs font-extrabold bg-white text-[#15333B] shadow-xs focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54]/20 cursor-pointer"
+          >
+            {lessonsWithAssignment.length === 0 ? (
+              <option value="" className="text-gray-500">Không có buổi học có bài tập</option>
+            ) : (
+              lessonsWithAssignment.map(l => {
+                const label = l.title.toLowerCase().startsWith('buổi') 
+                  ? l.title 
+                  : `Buổi ${l.order_index}: ${l.title}`;
+                return (
+                  <option key={l.id} value={l.id} className="text-[#15333B] font-bold">
+                    {label}
+                  </option>
+                );
+              })
+            )}
+          </select>
+          {currentLesson && (
+            <div className="flex items-center gap-4 text-xs font-bold text-gray-600 ml-auto">
+              <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                {students.filter(s => !!getSubmissionLink(s)).length} đã nộp
+              </span>
+              <span className="flex items-center gap-1.5 text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/60">
+                <Clock className="w-3.5 h-3.5 text-amber-600" />
+                {students.filter(s => !getSubmissionLink(s)).length} chưa nộp
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Submissions Table */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-black uppercase text-[9px] tracking-wider">
+              <th className="p-4">Học viên</th>
+              <th className="p-4">Link bài nộp</th>
+              <th className="p-4 text-center">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {students.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="p-8 text-center text-gray-400 text-xs font-medium">
+                  Không có học viên trong lớp này.
+                </td>
+              </tr>
+            ) : (
+              students.map(student => {
+                const link = getSubmissionLink(student);
+                const status = getSubmissionStatus(student);
+
+                return (
+                  <tr key={student.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-[#214C54]/10 border border-[#214C54]/20 flex items-center justify-center text-[10px] font-black text-[#214C54]">
+                          {student.full_name?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#15333B] block leading-tight">{student.full_name || 'N/A'}</span>
+                          <span className="text-[10px] text-gray-400">{student.gmail || ''}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      {link ? (
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-bold text-[11px] hover:underline transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Xem bài nộp
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-[11px] italic">Chưa nộp</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                        status === 'submitted' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        'bg-amber-50 text-amber-700 border border-amber-200'
+                      }`}>
+                        {status === 'submitted' ? '📬 Đã nộp bài' : '⏳ Chưa nộp'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 export const StudentManagement: React.FC = () => {
+  const { activeBatch } = useCourse();
   const {
     students,
     activeStudent,
@@ -71,39 +215,55 @@ export const StudentManagement: React.FC = () => {
   } | null>(null);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in select-none overflow-hidden space-y-4">
+    <div className="space-y-6 animate-fade-in select-none">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <PageHeader
-          title="Quản lý Học viên"
-          description="Theo dõi hoạt động, tiến độ bài tập, khen thưởng học viên xuất sắc hoặc cảnh báo học viên cần hỗ trợ."
+          title={`Quản lý Học viên ${activeBatch ? `— ${activeBatch.name}` : ''}`}
+          description={`Theo dõi hoạt động, tiến độ bài tập và hồ sơ năng lực học viên ${activeBatch ? `lớp ${activeBatch.name}` : 'toàn hệ thống'}.`}
           icon={<Users size={32} strokeWidth={1.5} />}
         />
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-1.5 bg-gray-150 p-1 rounded-xl border border-gray-200 w-fit self-start sm:self-auto shadow-sm">
+        <div className="flex items-center gap-1.5 bg-gray-100 p-1.5 rounded-xl border border-gray-200 w-fit self-start sm:self-auto shadow-xs shrink-0">
           <button
             onClick={() => setViewMode('list')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === 'list' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-655 hover:text-gray-900 hover:bg-gray-200/50'
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'list' 
+                ? 'bg-[#214C54] text-white shadow-sm' 
+                : 'text-[#3E5E63] hover:text-[#15333B] hover:bg-gray-200/60'
             }`}
           >
             <Users size={14} /> Danh sách chi tiết
           </button>
           <button
             onClick={() => setViewMode('overview')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === 'overview' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-655 hover:text-gray-900 hover:bg-gray-200/50'
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'overview' 
+                ? 'bg-[#214C54] text-white shadow-sm' 
+                : 'text-[#3E5E63] hover:text-[#15333B] hover:bg-gray-200/60'
             }`}
           >
             <BarChart3 size={14} /> Tổng quan học viên
           </button>
           <button
             onClick={() => setViewMode('onboarding')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === 'onboarding' ? 'bg-[#214C54] text-white shadow-sm' : 'text-gray-655 hover:text-gray-900 hover:bg-gray-200/50'
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'onboarding' 
+                ? 'bg-[#214C54] text-white shadow-sm' 
+                : 'text-[#3E5E63] hover:text-[#15333B] hover:bg-gray-200/60'
             }`}
           >
             <Sparkles size={14} /> Thống kê Onboarding
+          </button>
+          <button
+            onClick={() => setViewMode('submissions')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'submissions' 
+                ? 'bg-[#214C54] text-white shadow-sm' 
+                : 'text-[#3E5E63] hover:text-[#15333B] hover:bg-gray-200/60'
+            }`}
+          >
+            <ClipboardList size={14} /> Theo dõi bài nộp
           </button>
         </div>
       </div>
@@ -117,10 +277,10 @@ export const StudentManagement: React.FC = () => {
       )}
       
       {viewMode === 'list' && (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Column: Students directory (8 cols) */}
-        <div className="lg:col-span-8 h-full">
+        <div className="lg:col-span-8">
           <StudentTable
             students={students}
             filteredStudents={filteredStudents}
@@ -141,7 +301,7 @@ export const StudentManagement: React.FC = () => {
         </div>
 
         {/* Right Column: Active Student Detailed Dossier (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="lg:col-span-4 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden sticky top-6 max-h-[calc(100vh-6rem)] flex flex-col">
           <StudentDossierPanel
             activeStudent={activeStudent || null}
             totalLiveClassCount={totalLiveClassCount}
@@ -159,29 +319,29 @@ export const StudentManagement: React.FC = () => {
       )}
 
       {viewMode === 'overview' && (
-        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 pr-1">
+        <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DemographicsChartCard title="Giới tính (Gender)">
+            <DemographicsChartCard title="Giới tính">
               <DemographicsDonutChart data={stats.genders} />
             </DemographicsChartCard>
             
-            <DemographicsChartCard title="Độ tuổi (Age Group)">
+            <DemographicsChartCard title="Độ tuổi">
               <VerticalProgressBarList data={stats.ageGroups} />
             </DemographicsChartCard>
 
-            <DemographicsChartCard title="Khu vực sinh sống (Living Region)">
+            <DemographicsChartCard title="Khu vực sinh sống">
               <HorizontalProgressBarList data={stats.regions} />
             </DemographicsChartCard>
 
-            <DemographicsChartCard title="Vai trò hiện tại (Current Role)">
+            <DemographicsChartCard title="Vai trò hiện tại">
               <HorizontalProgressBarList data={stats.roles} />
             </DemographicsChartCard>
 
-            <DemographicsChartCard title="Lĩnh vực hoạt động (Work Field)">
+            <DemographicsChartCard title="Lĩnh vực hoạt động">
               <VerticalProgressBarList data={stats.fields} />
             </DemographicsChartCard>
 
-            <DemographicsChartCard title="Nguồn giới thiệu (Referral Source)">
+            <DemographicsChartCard title="Nguồn giới thiệu">
               <HorizontalProgressBarList data={stats.referrals} />
             </DemographicsChartCard>
           </div>
@@ -189,7 +349,7 @@ export const StudentManagement: React.FC = () => {
       )}
 
       {viewMode === 'onboarding' && (
-        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 pr-1 space-y-6 animate-fade-in text-xs">
+        <div className="space-y-6 animate-fade-in text-xs">
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm">
@@ -357,6 +517,10 @@ export const StudentManagement: React.FC = () => {
         </div>
       )}
 
+      {viewMode === 'submissions' && (
+        <SubmissionsDeskTab students={students} activeBatch={activeBatch} />
+      )}
+
       {/* Bulk Email Modal */}
       {isBulkEmailModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in text-xs">
@@ -422,7 +586,7 @@ export const StudentManagement: React.FC = () => {
 
                 {/* Subject Input */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-[#15333B] block">Tiêu đề Email (Subject):</label>
+                  <label className="text-[11px] font-bold text-[#15333B] block">Tiêu đề Email:</label>
                   <input 
                     type="text"
                     required
@@ -435,7 +599,7 @@ export const StudentManagement: React.FC = () => {
 
                 {/* Body Textarea */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-[#15333B] block">Nội dung Email (Body):</label>
+                  <label className="text-[11px] font-bold text-[#15333B] block">Nội dung Email:</label>
                   <textarea 
                     required
                     rows={8}

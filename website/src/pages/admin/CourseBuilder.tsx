@@ -11,11 +11,12 @@ export const CourseBuilder: React.FC<{ onPageChange?: (page: string) => void }> 
   const tabs = [
     { id: 'about' as const, label: '01. Giới thiệu khoá học', icon: <Anchor className="w-4 h-4" /> },
     { id: 'onboarding' as const, label: '02. Tuần Onboarding (7 Ngày)', icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'syllabus' as const, label: '03. Lộ trình Học (Syllabus)', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'syllabus' as const, label: '03. Lộ trình học', icon: <BookOpen className="w-4 h-4" /> },
   ];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
+
       {/* ── Tab Bar & Mode Toggle ────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 gap-4 pb-2">
         <div className="flex gap-1 overflow-x-auto">
@@ -35,7 +36,7 @@ export const CourseBuilder: React.FC<{ onPageChange?: (page: string) => void }> 
           ))}
         </div>
 
-        {/* Mode Toggle */}
+        {/* Mode Toggle — Tiếng Việt */}
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 self-end sm:self-auto mb-2 sm:mb-0">
           <button
             onClick={() => setIsEditMode(false)}
@@ -46,7 +47,7 @@ export const CourseBuilder: React.FC<{ onPageChange?: (page: string) => void }> 
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Reading Mode</span>
+            <span>Chế độ xem</span>
           </button>
           <button
             onClick={() => setIsEditMode(true)}
@@ -57,13 +58,12 @@ export const CourseBuilder: React.FC<{ onPageChange?: (page: string) => void }> 
             }`}
           >
             <Edit2 className="w-3.5 h-3.5" />
-            <span>Editing Mode</span>
+            <span>Chế độ chỉnh sửa</span>
           </button>
         </div>
       </div>
 
       {/* ── Tab Content ────────────────────────────────────────────────────── */}
-      {/* ALWAYS renders the actual student component, passing down isEditMode */}
       <div className="min-h-[500px]">
 
         {/* ABOUT TAB */}

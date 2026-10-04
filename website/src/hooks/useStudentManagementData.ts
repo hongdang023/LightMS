@@ -1,20 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCourse } from '../context/CourseContext';
 import { useGamification } from '../context/GamificationContext';
 import { useCommunity } from '../context/CommunityContext';
+import { enrollmentService } from '../services/enrollmentService';
 import { getDemographics } from '../components/admin/StudentDemographics';
 
 export const useStudentManagementData = () => {
   const { users } = useAuth();
-  const { lessons } = useCourse();
+  const { lessons, activeBatch } = useCourse();
   const { nauticalTransactions } = useGamification();
   const { onboardingDays, addNotification } = useCommunity();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding' | 'guest'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'overview' | 'onboarding'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'overview' | 'onboarding' | 'submissions'>('list');
   const [expandedDays, setExpandedDays] = useState<{[key: number]: boolean}>({});
 
   // Bulk email states
@@ -24,7 +25,15 @@ export const useStudentManagementData = () => {
   const [bulkBody, setBulkBody] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const students = users.filter(u => u.role === 'student');
+  // Filter students enrolled in activeBatch
+  const enrolledStudentIds = useMemo(() => {
+    if (!activeBatch) return new Set(users.filter(u => u.role === 'student').map(u => u.id));
+    return new Set(enrollmentService.getEnrollmentsForBatch(activeBatch.id).map(e => e.user_id));
+  }, [activeBatch, users]);
+
+  const students = useMemo(() => {
+    return users.filter(u => u.role === 'student' && enrolledStudentIds.has(u.id));
+  }, [users, enrolledStudentIds]);
   const activeStudent = users.find(s => s.id === selectedStudentId);
 
   const liveClassAssignments = lessons.filter(l => !!l.assignment_description);
@@ -168,7 +177,7 @@ export const useStudentManagementData = () => {
   })();
 
   const triggerCommendation = (name: string) => {
-    setToastMessage(`Đã gửi thư khen ngợi và tuyên dương học viên **${name}** xuất sắc! 🎉`);
+    setToastMessage(`Đã gửi thư khen ngợi và tuyên dương học viên **${name}** xuất sắc!`);
     addNotification('Tuyên dương học viên', `Học viên ${name} được vinh danh vì thành tích xuất sắc!`, 'system');
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -200,35 +209,35 @@ export const useStudentManagementData = () => {
   const updateEmailTemplate = (group: 'all' | 'risk' | 'outstanding') => {
     setBulkRecipientGroup(group);
     if (group === 'risk') {
-      setBulkSubject('[The1ight] Alo alo! Vẹt lắm mồm báo động đỏ hỗ trợ học tập đâyyy! 🦜🚨');
+      setBulkSubject('[The1ight] Alo alo! Vẹt lắm mồm báo động đỏ hỗ trợ học tập đâyyy!');
       setBulkBody(
-        `Kẹt kẹt... Reng reng! 🦜\n\n` +
+        `Kẹt kẹt... Reng reng!\n\n` +
         `Chào các đồng chí thủy thủ,\n\n` +
         `Vẹt Lắm Mồm từ hạm đội The1ight bay qua và phát hiện ra hạm đội của chúng ta đang có một vài thành viên hơi "chìm" dưới sóng bài tập một chút nhé! (Tiến độ bài tập hoặc lượt tương tác đang hơi chậm rồi đấy nha, kẹt kẹt!).\n\n` +
         `Thuyền trưởng và Mentor đang lo sốt vó lên rồi đây này! Đừng sợ, có khó khăn hay rào cản gì cứ la lên để Vẹt truyền tin hoặc nhắn trực tiếp trên kênh hỗ trợ Light Support nhé. Hãy chủ động đặt lịch Office Hour ngay để Mentor kéo bạn lên thuyền đi tiếp nào!\n\n` +
-        `Giương buồm lên và lướt sóng thôi! Quyết tâm không để bị bỏ lại phía sau! 🦜⚓️\n\n` +
+        `Giương buồm lên và lướt sóng thôi! Quyết tâm không để bị bỏ lại phía sau!\n\n` +
         `Thân ái,\n` +
         `Đội ngũ The1ight`
       );
     } else if (group === 'outstanding') {
-      setBulkSubject('[The1ight] Loa loa loa! Vẹt lắm mồm vinh danh Thủy thủ xuất sắc đâyyy! 🦜🏆');
+      setBulkSubject('[The1ight] Loa loa loa! Vẹt lắm mồm vinh danh Thủy thủ xuất sắc đâyyy!');
       setBulkBody(
-        `Cục ta cục tác... Kẹt kẹt! 🦜\n\n` +
+        `Cục ta cục tác... Kẹt kẹt!\n\n` +
         `Chào các siêu thủy thủ xuất sắc,\n\n` +
         `Vẹt Lắm Mồm từ hạm đội The1ight xin được hét thật to vinh danh các chiến thần vì đã càn quét sạch sẽ toàn bộ thử thách bài tập vừa qua! Quá xuất sắc, quá đỉnh chóp!\n\n` +
         `Thuyền trưởng gửi ngàn tim và Mentor đang vỗ tay bôm bốp khen ngợi tinh thần giương buồm không mệt mỏi của bạn. Hãy tiếp tục giữ vững phong độ này để giật cup quán quân Hải trình Vibe Coding nhé!\n\n` +
-        `Bay cao bay xa cùng The1ight thôi nào! 🦜✨\n\n` +
+        `Bay cao bay xa cùng The1ight thôi nào!\n\n` +
         `Thân ái,\n` +
         `Đội ngũ The1ight`
       );
     } else {
-      setBulkSubject('[The1ight] Vẹt lắm mồm từ hạm đội The1ight gửi lời chào thủy thủ đoàn! 🦜');
+      setBulkSubject('[The1ight] Vẹt lắm mồm từ hạm đội The1ight gửi lời chào thủy thủ đoàn!');
       setBulkBody(
-        `Kẹt kẹt... Alo alo! 🦜\n\n` +
+        `Kẹt kẹt... Alo alo!\n\n` +
         `Chào toàn thể thủy thủ đoàn hạm đội LightMS,\n\n` +
         `Vẹt Lắm Mồm bay lượn vòng quanh hòn đảo học tập và muốn gửi lời chúc năng lượng siêu cấp đến tất cả các bạn! Dù đang đi nhanh hay đi chậm, chỉ cần chúng ta không dừng lại, đích đến chắc chắn sẽ ở ngay trước mắt.\n\n` +
         `Đừng quên check lịch học, hoàn thành bài tập và hú hét trên kênh hỗ trợ khi cần nhé!\n\n` +
-        `Chúc cả nhà một tuần học tập rực rỡ! 🦜⚓\n\n` +
+        `Chúc cả nhà một tuần học tập rực rỡ!\n\n` +
         `Thân ái,\n` +
         `Đội ngũ The1ight`
       );
@@ -245,7 +254,7 @@ export const useStudentManagementData = () => {
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FDF5DA; padding: 25px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1.5px solid #ffd94c;">
   <div style="background-color: #15333B; padding: 15px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid #ffd94c;">
     <h1 style="color: #ffd94c; margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
-      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
+      VẸT LẮM MỒM - THE1IGHT
     </h1>
   </div>
   <div style="background-color: #ffffff; padding: 25px; border-radius: 0 0 12px 12px; border-top: none; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -255,7 +264,7 @@ export const useStudentManagementData = () => {
     ${formattedBody}
     <div style="margin-top: 25px; padding-top: 15px; border-top: 2px solid #F0F0F0; text-align: center;">
       <a href="${window.location.origin}" style="display: inline-block; background-color: #214C54; color: #ffffff; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 11px; box-shadow: 0 2px 4px rgba(33,76,84,0.2);">
-        VÀO HỆ THỐNG LIGHTMS 🚀
+        VÀO HỆ THỐNG LIGHTMS
       </a>
     </div>
   </div>

@@ -24,7 +24,7 @@ export const DayBonusResources: React.FC<DayBonusResourcesProps> = ({
           </span>
           <div className="text-sm text-[#3E5E63] leading-relaxed font-semibold">
             {activeDayData.companionHint
-              ? renderRichText(activeDayData.companionHint)
+              ? renderRichText(activeDayData.companionHint.replace(/^>\s*/gm, ''))
               : '"Thực hiện xong nhiệm vụ nào thì check ngay vào ô trống bên cạnh để nhận điểm thưởng nhé! Tích tiểu thành đại, hải trình còn dài! Nhớ hoàn thành 100% để mở khóa ngày mai nhé!"'}
           </div>
         </div>

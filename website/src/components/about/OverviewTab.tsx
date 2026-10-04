@@ -294,9 +294,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 }
 
                 return (
-                  <p key={pIdx} className="leading-relaxed">
+                  <div key={pIdx} className="leading-relaxed">
                     {renderRichText(paragraph)}
-                  </p>
+                  </div>
                 );
               })}
             </div>

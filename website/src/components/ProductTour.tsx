@@ -47,13 +47,6 @@ export const ProductTour: React.FC<ProductTourProps> = ({ activeTab: _activeTab,
       position: "right",
     },
     {
-      targetId: "nav-item-announcements",
-      title: "Thông báo lớp học 📢",
-      content:
-        "Nơi cập nhật nhanh những thông tin, sự kiện và nhắc nhở quan trọng nhất từ Ban quản lý lớp học và Mentor.",
-      position: "right",
-    },
-    {
       targetId: "nav-item-onboarding",
       title: "Tuần Onboarding 🚀",
       content:

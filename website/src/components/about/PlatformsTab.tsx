@@ -131,6 +131,15 @@ export const PlatformsTab: React.FC<PlatformsTabProps> = ({
                         >
                           Tham gia Telegram ➔
                         </a>
+                      ) : btn.title.toLowerCase().includes('zalo') ? (
+                        <a
+                          href={btn.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                        >
+                          Tham gia Zalo ➔
+                        </a>
                       ) : (
                         <a
                           href={btn.url}
@@ -247,12 +256,12 @@ export const PlatformsTab: React.FC<PlatformsTabProps> = ({
               <p className="text-xs text-gray-500 mt-1">{draftOfficeHourDesc}</p>
             )}
             <a 
-              href="https://t.me/+C8OUa6qqgNsyYjQ9" 
+              href="https://zalo.me/g/zcsfkw4u0vzlna8jq5pi" 
               target="_blank" 
               rel="noreferrer"
               className="inline-block text-xs font-bold text-[#FFD94C] bg-[#15333B] px-3 py-1.5 rounded-md mt-3 hover:bg-[#214C54] transition-colors"
             >
-              👉 Đăng ký Office Hour tại Light Support
+              👉 Đăng ký Office Hour tại Zalo lớp
             </a>
           </div>
         </div>

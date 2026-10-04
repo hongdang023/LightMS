@@ -3,20 +3,6 @@ import { AnchorIcon, RouteIcon, GiftIcon } from '../../components/Icons';
 import { PageHeader } from '../../components/PageHeader';
 import { useCommunity } from '../../context/CommunityContext';
 import { Save, Undo, BookOpen } from 'lucide-react';
-import {
-  DEFAULT_VIDEO_URL,
-  DEFAULT_PLATFORM_BUTTONS,
-  DEFAULT_BENEFIT_CLUBS,
-  DEFAULT_QUOTE,
-  DEFAULT_GACH_DAU_DONG,
-  DEFAULT_TRU_COT_1,
-  DEFAULT_TRU_COT_2,
-  DEFAULT_TRU_COT_3,
-  DEFAULT_OUTRO,
-  DEFAULT_SDT_NOTE,
-  DEFAULT_OFFICE_HOUR_DESC,
-  DEFAULT_LUU_Y_GOLD
-} from '../../data/aboutViewData';
 import type { 
   PlatformButton, 
   BenefitClub 
@@ -60,25 +46,10 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
 
   const [activeEditorId, setActiveEditorId] = useState<string | null>(null);
 
-  // Helper to load state from localStorage or fallback to default (kept for backward compat)
-  const getStoredItem = (key: string, fallback: string) => {
-    return localStorage.getItem(key) || fallback;
-  };
-
-  const getStoredArray = (key: string, fallback: string[]) => {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  };
-
-  const getStoredObject = <T,>(key: string, fallback: T): T => {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  };
-
-  // Sync draft states from Supabase context (primary source of truth)
+  // Sync draft states from context (primary source of truth)
   useEffect(() => {
     // Overview main text
-    let initialOverview = aboutContent.overviewText || '';
+    let initialOverview = aboutContent?.overviewText || '';
     if (initialOverview.trim().startsWith('[') && initialOverview.trim().endsWith(']')) {
       try {
         const parsed = JSON.parse(initialOverview);
@@ -90,22 +61,21 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
       }
     }
     setDraftOverview(initialOverview);
-    setDraftSchedule(aboutContent.scheduleText || '');
-    setDraftBenefits(aboutContent.benefitsText || '');
+    setDraftSchedule(aboutContent?.scheduleText || '');
+    setDraftBenefits(aboutContent?.benefitsText || '');
 
-    // Use Supabase data first, then fall back to localStorage, then hardcoded defaults
-    setDraftVideoUrl(aboutContent.videoUrl || getStoredItem('about_draft_video_url', DEFAULT_VIDEO_URL));
-    setDraftPlatformButtons(aboutContent.platformButtons || getStoredObject<PlatformButton[]>('about_draft_platform_buttons', DEFAULT_PLATFORM_BUTTONS));
-    setDraftBenefitClubs(aboutContent.benefitClubs || getStoredObject<BenefitClub[]>('about_draft_benefit_clubs', DEFAULT_BENEFIT_CLUBS));
-    setDraftQuote(aboutContent.quote || getStoredItem('about_draft_quote', DEFAULT_QUOTE));
-    setDraftGachDauDong(aboutContent.gachDauDong || getStoredArray('about_draft_gach_dau_dong', DEFAULT_GACH_DAU_DONG));
-    setDraftTruCot1(aboutContent.truCot1 || getStoredObject('about_draft_tru_cot_1', DEFAULT_TRU_COT_1));
-    setDraftTruCot2(aboutContent.truCot2 || getStoredObject('about_draft_tru_cot_2', DEFAULT_TRU_COT_2));
-    setDraftTruCot3(aboutContent.truCot3 || getStoredObject('about_draft_tru_cot_3', DEFAULT_TRU_COT_3));
-    setDraftOutro(aboutContent.outro || getStoredItem('about_draft_outro', DEFAULT_OUTRO));
-    setDraftSdtNote(aboutContent.sdtNote || getStoredItem('about_draft_sdt_note', DEFAULT_SDT_NOTE));
-    setDraftOfficeHourDesc(aboutContent.officeHourDesc || getStoredItem('about_draft_office_hour_desc', DEFAULT_OFFICE_HOUR_DESC));
-    setDraftLuuYGold(aboutContent.luuYGold || getStoredItem('about_draft_luu_y_gold', DEFAULT_LUU_Y_GOLD));
+    setDraftVideoUrl(aboutContent?.videoUrl || '');
+    setDraftPlatformButtons(aboutContent?.platformButtons || []);
+    setDraftBenefitClubs(aboutContent?.benefitClubs || []);
+    setDraftQuote(aboutContent?.quote || '');
+    setDraftGachDauDong(aboutContent?.gachDauDong || []);
+    setDraftTruCot1(aboutContent?.truCot1 || { title: '', subtitle: '', desc: '' });
+    setDraftTruCot2(aboutContent?.truCot2 || { title: '', subtitle: '', desc: '' });
+    setDraftTruCot3(aboutContent?.truCot3 || { title: '', subtitle: '', desc: '' });
+    setDraftOutro(aboutContent?.outro || '');
+    setDraftSdtNote(aboutContent?.sdtNote || '');
+    setDraftOfficeHourDesc(aboutContent?.officeHourDesc || '');
+    setDraftLuuYGold(aboutContent?.luuYGold || '');
   }, [aboutContent]);
 
 
@@ -137,7 +107,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
       'about_draft_video_url', 'about_draft_platform_buttons', 'about_draft_benefit_clubs'
     ].forEach(k => localStorage.removeItem(k));
 
-    alert('Đã lưu tất cả thay đổi lên Supabase thành công! 🎉');
+    alert('Đã lưu tất cả thay đổi thành công!');
   };
 
   const handleCancel = () => {

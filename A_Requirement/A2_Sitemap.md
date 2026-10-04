@@ -1,79 +1,87 @@
 # The1ight LMS - Sitemap & Official Nav Items
 
-> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+> **Last Updated:** 2026-10-01 | **Status:** ✅ Multi-Course Ecosystem & Access Code Activation Sync
 
-Sitemap này quy định tên chính thức của các thanh điều hướng (Nav Items) hiển thị trên giao diện của Học viên (Student Portal) và Ban vận hành (Admin Portal). Cấu trúc được tối ưu dựa trên triết lý Outcome-based và thiết kế Zero Friction.
+Sitemap này quy định tên chính thức của các thanh điều hướng (Nav Items) hiển thị trên giao diện của Học viên (Student Portal) và Ban vận hành (Admin Portal). Cấu trúc được tối ưu dựa trên triết lý Outcome-based và thiết kế Zero Friction, hỗ trợ hệ sinh thái Đa khóa học & Đa lớp.
+
+---
 
 ## 1. Phân hệ Học viên (Student Portal)
 
-Danh sách các Nav Items chính thức trên thanh điều hướng bên (Sidebar) - sử dụng bộ icon phẳng 2D Line-art tối giản (duotone Teal/Gold):
+### 1.0. Trang Hub Khóa học & Kích hoạt (Course Hub)
+- **Trang chủ Khóa học (Course Catalog / Hub):**
+  - Hiển thị danh sách toàn bộ các khóa học trong hệ sinh thái (Vibe Coding 101, Vibe Coding 201, Obsidian 101, Mobile Agents...).
+  - Thẻ khóa học hiển thị trạng thái:
+    - 🟢 **Đã kích hoạt / Vào lớp**: Chuyển đến không gian học tập của Batch tương ứng.
+    - 🔒 **Chưa kích hoạt / Nhập mã**: Nút bấm mở **Modal Nhập Mã Kích Hoạt (Access Code Activation Modal)** để học viên điền mã gia nhập lớp.
+
+---
+
+### 1.1. Không gian Học tập theo Course/Batch (Course Workspace)
+
+Sau khi nhấp "Vào lớp", Sidebar sẽ hiển thị danh mục học tập của Course/Batch đó:
 
 - **Giới thiệu** (Icon: Logbook / Nhật ký hải trình)
   - Phần thông tin giới thiệu cơ bản về khóa học (Read Me First).
 
 - **Dashboard học tập** (Icon: Compass / La bàn)
   - Daily Tasks: Hiển thị ngay các công việc/bài học cần làm hôm nay. _(US-STU-04)_
-  - Learning Progress: Thanh tiến độ tổng quan lộ trình học. _(US-STU-01)_
+  - Learning Progress: Thanh tiến độ tổng quan lộ trình học của Batch. _(US-STU-01)_
 
 - **Onboarding** (Icon: Set Sail / Cánh buồm khởi hành)
   - Hướng dẫn làm quen hệ thống, lộ trình và phương pháp học trong tuần đầu tiên.
 
 - **Lộ trình học** (Icon: Scroll Map / Bản đồ cuộn)
-  - Danh sách các bài học cốt lõi. Bên trong mỗi bài học sẽ tích hợp (All-in-one):
-    - _Nội dung & Tài liệu:_ Link xem video ngoài, study notes, slide. _(US-STU-03)_
-    - _Bài tập (Assignments):_ Yêu cầu bài tập, nút chuyển hướng Facebook Group của lớp để đăng bài và nút xác nhận hoàn thành. _(US-STU-02)_
+  - Danh sách các bài học cốt lõi (dùng chung cho Course).
+  - Tích hợp video, tài liệu, đề bài bài tập và nút xác nhận hoàn thành. _(US-STU-02, US-STU-03)_
 
 - **Lịch học** (Icon: Astrolabe / Dụng cụ đo tinh tú)
-  - Xem tổng quan lịch trình khóa học kèm nút tự động đồng bộ (Add to Calendar) vào lịch cá nhân.
+  - Lịch học riêng của Batch (Kick-off, Live Class, Office Hour) kèm nút đồng bộ Add to Calendar.
 
 - **Bảng vinh danh** (Icon: Nautical Star / Sao hàng hải 8 cánh)
-  - Khu vực ghi nhận kết quả tốt và thành tựu xuất sắc của học viên. _(US-STU-09)_
-  - **Huy hiệu của tôi (My Achievements)**: Hiển thị bộ sưu tập 7 Huy hiệu Hành động mà học viên đã mở khóa.
+  - Leaderboard xếp hạng Hải lý riêng của Batch + Bộ sưu tập Huy hiệu cá nhân.
 
 - **Hỏi đáp & Hỗ trợ** (Icon: Lifebuoy / Phao cứu sinh)
-  - Cung cấp danh sách FAQ. Kèm theo button dẫn link trực tiếp vào phòng Light Support trên Telegram. _(US-STU-05)_
+  - FAQ khóa học & Link trực tiếp nhóm Telegram hỗ trợ.
 
-- **Profile** (Icon: Captain / Thuyền trưởng) _(Thường nằm góc màn hình ở Avatar)_
-  - Thông tin cá nhân cơ bản và khảo sát ban đầu. _(US-STU-06)_
-  - _Lưu ý:_ Icon Thông báo (Bell) nằm bên trái Profile hiển thị các tin mới nhất của lớp. Lúc ấn vào từng thông báo thì sẽ được điều hướng để đọc cả bài.
-
-- **Thông báo** _(Trang full-page, mở từ Bell icon)_
-  - Danh sách toàn bộ thông báo từ Ban tổ chức, phân loại theo category. _(FR-STU-16)_
-  - File: `AnnouncementsView.tsx`
-
-- **Khai báo Thông tin** _(Modal/Page, hiển thị lần đầu sau khi đăng ký)_
-  - Form khai báo thông tin cá nhân (nhân khẩu học, lĩnh vực, ý tưởng sản phẩm...) để hoàn thiện Profile và nhận thưởng Huy hiệu "Định danh".
-  - File: `OnboardingForm.tsx`
+- **Hồ sơ cá nhân** (Icon: User Circle)
+  - Quản lý thông tin cá nhân và tài khoản học viên.
 
 ---
 
-## 2. Phân hệ Admin (Admin Portal)
+## 2. Phân hệ Ban vận hành (Admin Portal)
 
-Danh sách các Nav Items chính thức dành cho Ban vận hành và Đội ngũ học thuật:
+Cấu trúc điều hướng của Ban vận hành tuân thủ triết lý tối giản (Apple-like Minimalism), ngôn ngữ 100% thuần Tiếng Việt theo đúng tiêu chuẩn [B5_Tone_of_Voices.md](file:///Users/danghong/Documents/The1ight/LightMS/B_Architecture/B5_Tone_of_Voices.md), phân định rõ ràng giữa **Quản trị Tổng thể** và **Không gian Lớp học**:
 
-- **Tổng quan hệ thống** (Icon: Grid Dashboard)
-  - **Tổng quan hệ thống:** Hiển thị các hoạt động đang diễn ra cùng lúc để kiểm soát tránh quá tải. _(US-AD-06)_
+### 2.1. Cấp Toàn cục
+Thanh điều hướng chính của Quản trị viên gồm 4 mục tinh gọn:
+- **Tổng quan** (Icon: Layout Dashboard)
+  - Số liệu trọng yếu toàn hệ thống: Học viên đang học, số lớp đang mở.
+- **Khóa học & Lớp** (Icon: Layers)
+  - Danh mục các khóa học (Vibe Coding 201, 101, Obsidian...) và danh sách các lớp theo từng khóa.
+  - Nút bấm tinh gọn: **[+ Mở lớp mới]** (Hỗ trợ sao chép nhanh 1 chạm từ lớp trước).
+  - Chọn một lớp để tiến vào **Không gian Lớp học**.
+- **Người dùng** (Icon: Users)
+  - Quản lý danh sách toàn bộ học viên, giảng viên và trợ giảng trên toàn hệ thống.
+- **Cài đặt** (Icon: Settings)
 
-- **Soạn lộ trình** (Icon: Plan Rules / Thước kẻ)
-  - Cấu hình nội dung cho các trang Giới thiệu, Onboarding, Lộ trình học (bài học/bài tập). Tích hợp chế độ **Reading Mode / Editing Mode với giao diện y hệt Student Mode** để Admin có thể xem trước và điều chỉnh các chi tiết nhỏ dễ dàng hơn. _(US-AD-13)_
-  - Thiết lập lịch (ngày/giờ) mở khoá tự động (Unlock Scheduling) cho từng ngày của Onboarding. Mỗi lần mở khóa sẽ gửi email tự động đến học viên. _(US-AD-15)_
-  - Quản lý tài nguyên lưu trữ tập trung. _(US-AD-03)_
+---
 
-- **Lịch học** (Icon: Astrolabe / Dụng cụ đo tinh tú)
-  - Chỉnh sửa lịch trình khóa học cho các sự kiện/cụm hoạt động (Kick-off, Live Class, Office Hour, Onboarding). _(US-AD-14)_
+### 2.2. Không gian Lớp học
+> Xuất hiện khi Quản trị viên bấm chọn một lớp cụ thể (Ví dụ: `Vibe Coding 201 - Lớp 3`). Thanh điều hướng phía trên (Header) hiển thị đường dẫn kèm bộ chọn nhanh: `Quản trị > Vibe Coding 201 > [Lớp 3 ▾]`.
 
-- **Quản lý học viên** (Icon: Crew Silhouette)
-  - Quản lý thông tin cá nhân, liên hệ và lịch sử học tập.
-  - Theo dõi tiến độ học tập và mức độ đạt chuẩn đầu ra (Mastery Levels) của từng cá nhân.
-  - **Risk Alerts (Cảnh báo rủi ro):** Tích hợp bộ lọc riêng "Cần hỗ trợ" (Risk filter) để phát hiện và hiển thị các học viên học chậm, có nguy cơ bỏ học để can thiệp kịp thời. _(US-AD-01)_
-  - **Group Bulk Email:** Tích hợp bộ tạo mẫu và gửi email hàng loạt theo nhóm học viên (Tất cả, Cần hỗ trợ, Xuất sắc).
+Thanh điều hướng bên trái (Sidebar) của lớp học gồm 5 mục tối giản:
+- **1. Tổng quan lớp** (Icon: Key)
+  - Mã kích hoạt lớp học kèm nút sao chép 1 chạm. Sĩ số và thời gian đào tạo.
+- **2. Lộ trình học** (Icon: Book Open)
+  - Danh sách các buổi học của lớp.
+  - Quản lý trực tiếp các liên kết học liệu: Đường dẫn video xem lại, đường dẫn bài giảng, đường dẫn ghi chú Notion, đường dẫn trợ lý AI.
+  - Chỉnh sửa trực tiếp (Dán liên kết là lưu ngay) và nút xem thử dưới góc nhìn học viên.
+- **3. Lịch học** (Icon: Calendar)
+  - Thiết lập lịch các buổi học trực tuyến và đường dẫn phòng học riêng cho lớp này.
+- **4. Bài nộp** (Icon: Clipboard Check)
+  - Theo dõi danh sách học viên nộp bài: Xem liên kết bài làm trên Facebook Group, kiểm tra trạng thái hoàn thành và gửi phản hồi hỗ trợ.
+- **5. Thành viên** (Icon: User Check)
+  - Danh sách học viên trong lớp và chỉ định giảng viên, trợ giảng phụ trách.
 
-- **Quản lý nhân sự** (Icon: Shield / Cờ hiệu)
-  - Quản lý danh sách nhân sự tham gia vận hành: thêm/sửa/xóa thành viên Ban vận hành.
-  - Phân quyền (Roles) cho hệ thống: `Founder`, `Trainer`, `Teaching Assistant (TA)`, `Operations`.
-  - File: `InternalTeam.tsx`
 
-- **Cài đặt hệ thống** (Icon: Gear / Răng cưa)
-  - Cấu hình chung của Batch (đặt tên lớp, ngày khai giảng, bế giảng).
-  - Các cài đặt vận hành khác của hệ thống.
-  - File: `Settings.tsx`

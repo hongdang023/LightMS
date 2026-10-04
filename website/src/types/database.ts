@@ -44,18 +44,37 @@ export interface Profile {
 
 export interface Course {
   id: string;
+  slug: string;
   title: string;
   description: string;
   cover_image: string;
+  tagline?: string;
+  level?: 'Beginner' | 'Intermediate' | 'Advanced';
+  category?: string;
+  is_active?: boolean;
 }
 
 export interface Batch {
   id: string;
   course_id: string;
+  batch_code: string; // e.g. 'K1', 'K2', 'K3'
   name: string;
+  access_code: string; // Mã kích hoạt độc bản
   start_date: string;
   end_date: string;
-  mentor_id: string;
+  mentor_id?: string;
+  max_students?: number;
+  is_active?: boolean;
+}
+
+export interface BatchEnrollment {
+  id: string;
+  user_id: string;
+  batch_id: string;
+  course_id: string;
+  access_code_used: string;
+  enrolled_at: string;
+  status: 'active' | 'suspended' | 'completed';
 }
 
 export interface Lesson {
@@ -80,6 +99,8 @@ export interface Lesson {
 export interface NauticalMilesTransaction {
   id: string;
   student_id: string;
+  batch_id?: string;
+  course_id?: string;
   amount: number;
   action_type: 'profile_completion' | 'lesson_complete' | 'assignment_submitted' | 'assignment_graded' | 'submission_kudos' | 'onboarding_day_complete';
   reference_id?: string;
@@ -114,27 +135,10 @@ export interface NotificationLog {
   created_at: string;
 }
 
-export type AnnouncementCategory = 'system' | 'leaderboard' | 'content_update' | 'schedule' | 'achievement';
-
-export interface Announcement {
-  id: string;
-  course_id?: string;
-  batch_id?: string;
-  title: string;
-  content: string;
-  created_by: string;
-  send_email: boolean;
-  sent_email_at?: string;
-  media_urls?: string[];
-  created_at: string;
-  isNew?: boolean;
-  category?: AnnouncementCategory;
-  is_auto?: boolean;
-  target_id?: string;
-}
-
 export interface OnboardingDay {
   day: number;
+  course_id?: string;
+  batch_id?: string;
   title: string;
   intro: string;
   objective: string;
@@ -146,7 +150,7 @@ export interface OnboardingDay {
   bonusResources?: string;
 }
 
-export type EventType = 'kick-off' | 'office-hour' | 'live-class' | 'onboarding' | 'capstone' | 'class-bonding';
+export type EventType = 'kick-off' | 'office-hour' | 'live-class' | 'onboarding' | 'capstone' | 'class-bonding' | 'other';
 
 export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string; bg: string; textColor: string }> = {
   'kick-off':     { label: 'Kick-off Meeting', color: '#DC2626', bg: 'bg-red-600',    textColor: 'text-white' },
@@ -155,10 +159,13 @@ export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string
   'onboarding':   { label: 'Onboarding',        color: '#7C3AED', bg: 'bg-violet-600', textColor: 'text-white' },
   'capstone':     { label: 'Capstone',           color: '#B45309', bg: 'bg-amber-700',  textColor: 'text-white' },
   'class-bonding':{ label: 'Class Bonding',     color: '#16A34A', bg: 'bg-green-600',  textColor: 'text-white' },
+  'other':        { label: 'Sự kiện khác',      color: '#6B7280', bg: 'bg-gray-600',   textColor: 'text-white' },
 };
 
 export interface CalendarEvent {
   id: string;
+  batch_id?: string;
+  course_id?: string;
   title: string;
   time: string;
   endTime?: string;

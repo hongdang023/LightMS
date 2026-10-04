@@ -1,18 +1,19 @@
 # The1ight LMS - B3: Entity Relationship Diagram (ERD)
 
-> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+> **Last Updated:** 2026-10-01 | **Status:** ✅ Synced với Cloudflare D1 SQLite & Drizzle ORM Schema (Multi-Course & Access Code)
 
-Dưới đây là sơ đồ thực thể liên kết (ERD) trực quan hóa cấu trúc dữ liệu của The1ight LMS. Sơ đồ này thể hiện rõ mối quan hệ giữa hệ thống Khóa học, Học viên, và Tiến trình học tập (Outcome-based).
+Dưới đây là sơ đồ thực thể liên kết (ERD) trực quan hóa cấu trúc dữ liệu trên **Cloudflare D1**. Sơ đồ thể hiện rõ mối quan hệ giữa Hệ sinh thái Khóa học, Các lớp học (Batches), Mã kích hoạt ghi danh (Access Codes), Bài học, và Bài nộp của học viên.
 
 ```mermaid
 erDiagram
-    %% Core Entities
-    PROFILES {
-        uuid id PK "FK to auth.users"
+    USERS {
+        text id PK "UUID v4"
+        text email UK
+        text password_hash
         text full_name
         text avatar_url
-        enum role "student/admin"
-        text gmail
+        text role "student / admin"
+        text admin_role "Founder / Trainer / TA / Operations"
         text phone_number
         text facebook_url
         text industry
@@ -20,175 +21,113 @@ erDiagram
         text product_idea
         boolean is_profile_completed
         int nautical_miles
-        int visits
-        text referral_source
-        text current_role
-        text work_field
-        text living_region
-        text gender
-        text age_group
-        jsonb onboarding_tasks
-        jsonb liveclass_tasks
-        jsonb badges "Array of unlocked badges: [{badge_id, unlocked_at}]"
-        timestamp created_at
-    }
-
-    ADMINS {
-        uuid id PK "FK to auth.users"
-        text full_name
-        text avatar_url
-        text gmail
-        text phone_number
-        enum admin_role
-        text_array assigned_batches
-        text expertise_areas
-        boolean is_onboarded
-        text telegram_id
-        timestamp created_at
+        text onboarding_tasks_json "JSON String"
+        text badges_json "JSON String"
+        text created_at
     }
 
     COURSES {
-        uuid id PK
+        text id PK
+        text slug UK "e.g. vibe-coding-201"
         text title
         text description
         text cover_image
+        boolean is_active
+        text created_at
     }
 
     BATCHES {
-        uuid id PK
-        uuid course_id FK
-        text name
-        date start_date
-        date end_date
-        uuid mentor_id FK
+        text id PK
+        text course_id FK "FK to COURSES"
+        text batch_code "e.g. K1, K2"
+        text title
+        text access_code UK "Mã kích hoạt khóa học (VD: VIBE201-K3-888)"
+        text start_date
+        text end_date
+        text mentor_id FK "FK to USERS"
+        boolean is_active
+        text created_at
+    }
+
+    BATCH_ENROLLMENTS {
+        text id PK
+        text user_id FK "FK to USERS"
+        text batch_id FK "FK to BATCHES"
+        text access_code_used
+        text enrolled_at
+        text status "active / suspended / completed"
+    }
+
+    BATCH_STAFF {
+        text id PK
+        text batch_id FK "FK to BATCHES"
+        text user_id FK "FK to USERS"
+        text role_in_batch "lead_trainer / co_trainer / assistant_ta"
+        text assigned_at
     }
 
     LESSONS {
-        uuid id PK
-        uuid course_id FK
-        text title
-        enum type "video/document"
-        text content
-        text video_url
+        text id PK
+        text batch_id FK "FK to BATCHES (Học liệu riêng theo Batch)"
         int order_index
-        date start_date
-        text target
-        boolean has_materials
-        text slide_url
-        text study_note_url
-        text_array key_concepts
-        jsonb supporting_resources
+        text title
+        text agenda
+        text recording_url "Link Zoom / YouTube"
+        text slide_url "Link Google Slides / Canva"
+        text study_note_url "Link Notion / Docs"
+        text ai_bot_url "Link NotebookLM Bot"
+        text assignment_title
         text assignment_description
-        jsonb assignment_rubric_checklist
-    }
-
-    ANNOUNCEMENTS {
-        uuid id PK
-        uuid course_id FK
-        uuid batch_id FK
-        text title
-        text content
-        uuid created_by FK
-        boolean send_email
-        timestamp sent_email_at
-        text_array media_urls
-        text category "system/leaderboard/content_update/schedule/achievement"
-        boolean is_auto
-        text target_id
-        timestamp created_at
-    }
-
-    ONBOARDING_DAYS {
-        int day PK
-        text title
-        text intro
-        text objective
-        text checklist
-        text takeaway
-        text email_subject
-        text email_body
-        text companionHint
-        text bonusResources
+        text assignment_resource_url
+        text assignment_rubric_json "JSON String"
+        text created_at
     }
 
     CALENDAR_EVENTS {
-        uuid id PK
+        text id PK
+        text batch_id FK "FK to BATCHES (Tách riêng theo Batch)"
         text title
-        text time
+        text event_type "Kick-off / Live Class / Office Hour"
+        text start_time
         text end_time
-        boolean all_day
-        int date
-        int month
-        int year
-        int day_of_week
-        bigint start_recur
-        bigint end_recur
-        text color_class
-        text dot_color_class
-        text type
-        text event_type
-        text details
-    }
-
-    NAUTICAL_MILES_TRANSACTIONS {
-        uuid id PK
-        uuid student_id FK
-        int amount
-        text action_type
-        uuid reference_id
+        text meeting_url
         text description
-        timestamp created_at
     }
 
-    BADGES {
-        uuid id PK
-        text name
-        text icon
-        text description
-        text condition
+    SUBMISSIONS {
+        text id PK
+        text batch_id FK "FK to BATCHES"
+        text lesson_id FK "FK to LESSONS"
+        text user_id FK "FK to USERS"
+        text facebook_post_url
+        text submission_note
+        text status "submitted / reviewed"
+        text feedback_text "Nhận xét hỗ trợ (không chấm điểm)"
+        text reviewed_by FK "FK to USERS"
+        text submitted_at
+        text reviewed_at
     }
 
-    HELP_DESK_FAQS {
-        uuid id PK
-        text category
-        text question
-        text description
-        jsonb sections
-        int order_index
-        timestamp last_updated
-    }
 
-    ABOUT_CONTENT {
-        text id PK "always 'default'"
-        text overview_text
-        text schedule_text
-        text benefits_text
-        text video_url
-        jsonb platform_buttons
-        jsonb benefit_clubs
-        text quote
-        jsonb gach_dau_dong
-        jsonb tru_cot_1
-        jsonb tru_cot_2
-        jsonb tru_cot_3
-        text outro
-        text sdt_note
-        text office_hour_desc
-        text luu_y_gold
-    }
-
-    %% Relationships
-    COURSES ||--o{ LESSONS : "contains"
-    COURSES ||--o{ BATCHES : "runs"
-    COURSES ||--o{ ANNOUNCEMENTS : "has"
-    
-    BATCHES ||--o{ ANNOUNCEMENTS : "has"
-    ADMINS ||--o{ ANNOUNCEMENTS : "creates"
-    
-    PROFILES ||--o{ NAUTICAL_MILES_TRANSACTIONS : "accumulates"
+    COURSES ||--o{ BATCHES : "contains"
+    BATCHES ||--o{ BATCH_ENROLLMENTS : "has enrollments"
+    USERS ||--o{ BATCH_ENROLLMENTS : "enrolls via access_code"
+    BATCHES ||--o{ BATCH_STAFF : "assigned staff"
+    USERS ||--o{ BATCH_STAFF : "serves as trainer/TA"
+    BATCHES ||--o{ LESSONS : "batch syllabus & links"
+    BATCHES ||--o{ CALENDAR_EVENTS : "batch schedule"
+    BATCHES ||--o{ SUBMISSIONS : "student submissions"
+    LESSONS ||--o{ SUBMISSIONS : "assignment responses"
+    USERS ||--o{ SUBMISSIONS : "submits work"
 ```
 
-## Chú giải (Legend):
-- `||--o{` : Quan hệ 1 - Nhiều (One-to-Many). Ví dụ: 1 Khóa học có nhiều Bài học (Lessons).
-- `PK` : Primary Key (Khóa chính).
-- `FK` : Foreign Key (Khóa ngoại).
+---
+
+## Mối quan hệ chính:
+
+1. **COURSES 1 - N BATCHES:** Một Khóa học (ví dụ: Vibe Coding 201) có thể mở nhiều Lớp (Batch K1, K2, K3...).
+2. **BATCHES 1 - N BATCH_ENROLLMENTS N - 1 USERS:** Học viên ghi danh vào từng Batch thông qua **`access_code`**.
+3. **BATCHES 1 - N BATCH_STAFF N - 1 USERS:** Phân công Giảng viên (Trainer) và Trợ giảng (TA) phụ trách cụ thể cho từng Batch.
+4. **BATCHES 1 - N LESSONS:** Mỗi Batch sở hữu danh sách bài học và tài nguyên links riêng biệt (hỗ trợ 1-click clone từ Batch trước khi mở lớp mới).
+5. **BATCHES 1 - N (CALENDAR_EVENTS / SUBMISSIONS):** Lịch học và Bài nộp được tách biệt hoàn toàn theo từng Batch để đảm bảo tính riêng tư và đúng ngữ cảnh cho từng lớp.
+

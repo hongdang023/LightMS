@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCommunity } from '../context/CommunityContext';
+import { Bot, VolumeX } from 'lucide-react';
 
 interface ParrotMascotProps {
   currentPage: string;
@@ -103,7 +104,7 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
       // Only pop up if it's recent (within 5 seconds)
       const isRecent = (new Date().getTime() - new Date(latest.created_at).getTime()) < 5000;
       if (isRecent) {
-        setBubbleText(`🦜 LOA LOA! ${latest.title}: ${latest.message.replace(/📢|⚓|📝|🏆/g, '')}`);
+        setBubbleText(`LOA LOA! ${latest.title}: ${latest.message.replace(/📢|⚓|📝|🏆/g, '')}`);
         setShowBubble(true);
         triggerWiggle();
         
@@ -154,7 +155,7 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         </div>
       )}
 
-      {/* Parrot Mascot Icon */}
+      {/* Mascot Icon */}
       <div 
         className={`w-16 h-16 bg-[#214C54] border-2 border-[#FFD94C] rounded-full shadow-lg flex items-center justify-center pointer-events-auto cursor-pointer relative overflow-visible ${
           isWiggling ? 'animate-wiggle' : 'hover:scale-110 transition-transform duration-300'
@@ -165,7 +166,7 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
         }}
         title={isMuted ? "Vẹt đang tắt tự động nói. Nhấp để bật/tương tác." : "Vẹt trợ lý. Nhấp để trò chuyện."}
       >
-        <span className="text-3xl filter drop-shadow">🦜</span>
+        <Bot size={30} className="text-[#FFD94C]" />
         
         {/* Glow pulsing effect */}
         {!isMuted && (
@@ -174,8 +175,8 @@ export const ParrotMascot: React.FC<ParrotMascotProps> = ({ currentPage }) => {
 
         {/* Small mute status badge */}
         {isMuted && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-[10px] text-white border border-white font-bold">
-            🔇
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-500 rounded-full flex items-center justify-center text-white border border-white">
+            <VolumeX size={12} />
           </div>
         )}
       </div>

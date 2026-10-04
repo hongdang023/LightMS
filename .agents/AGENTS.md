@@ -32,7 +32,7 @@ Toàn bộ quyết định về tính năng, thiết kế, database, và UX đ�
 | File | Phạm vi quy định | Code files bị ảnh hưởng |
 |------|-----------------|------------------------|
 | [B1_System_Design.md](B_Architecture/B1_System_Design.md) | Tech stack, kiến trúc hệ thống, deployment | `vite.config.ts`, `package.json`, env configs |
-| [B2_Database_Schema.md](B_Architecture/B2_Database_Schema.md) | Database schema, table definitions, relations | `supabase/migrations/`, `DatabaseContext.tsx`, tất cả types |
+| [B2_Database_Schema.md](B_Architecture/B2_Database_Schema.md) | Database schema, table definitions, relations | `website/src/db/schema.ts`, `drizzle/migrations/`, tất cả types |
 | [B3_ERD_Diagram.md](B_Architecture/B3_ERD_Diagram.md) | ERD diagram — visual của B2 | Không có file code trực tiếp |
 | [B4_UI_Design_System.md](B_Architecture/B4_UI_Design_System.md) | Colors, Typography, Components, Tokens | `src/index.css`, `src/components/ui/*`, mọi className UI |
 | [B5_Tone_of_Voices.md](B_Architecture/B5_Tone_of_Voices.md) | Ngôn ngữ, giọng văn, copy cho mọi UI text | Mọi string hiển thị cho user |

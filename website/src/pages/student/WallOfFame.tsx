@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import type { Profile } from '../../types/database';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
-import { Shield, HelpCircle } from 'lucide-react';
+import { Shield, HelpCircle, Trophy, Calendar, Zap, BarChart2, Star, Anchor } from 'lucide-react';
 import { BadgeIcon } from '../../components/ui/BadgeIcon';
 
 
@@ -128,10 +129,14 @@ const RankTrendIndicator: React.FC<{ trend: 'up' | 'down' | 'same' | 'new' }> = 
   return null;
 };
 
+import { useCourse } from '../../context/CourseContext';
+import { enrollmentService } from '../../services/enrollmentService';
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const WallOfFame: React.FC = () => {
   const { users, activeUser } = useAuth();
   const { badges, profileBadges, nauticalTransactions } = useGamification();
+  const { activeCourse, activeBatch } = useCourse();
   const [lastUpdated, setLastUpdated] = useState('');
   
   // Active View Filter Mode: 'alltime' | 'daily' | '7day' | 'all'
@@ -146,11 +151,25 @@ export const WallOfFame: React.FC = () => {
 
   const displayActiveUser = activeUser;
 
-  // Real students fetched from profiles table
-  const realStudents = users.filter(u => u.role === 'student');
-  const finalStudents = realStudents.some(s => s.id === displayActiveUser.id)
-    ? realStudents
-    : [...realStudents, displayActiveUser];
+  const currentBatchId = useMemo(() => {
+    if (activeBatch?.id) return activeBatch.id;
+    return activeCourse?.slug === 'vibe-coding-201' ? 'batch-vibe201-k2' : 'batch-obs101-k1';
+  }, [activeBatch?.id, activeCourse?.slug]);
+
+  // Filter students enrolled specifically in this active batch
+  const enrolledUserIds = useMemo(() => {
+    const batchEnrollments = enrollmentService.getEnrollmentsForBatch(currentBatchId);
+    return new Set(batchEnrollments.map(e => e.user_id));
+  }, [currentBatchId]);
+
+  // Real students belonging to this batch
+  const finalStudents = useMemo<Profile[]>(() => {
+    const batchStudents = users.filter(u => u.role === 'student' && enrolledUserIds.has(u.id));
+    if (activeUser.role === 'student' && enrolledUserIds.has(activeUser.id)) {
+      return batchStudents.some(s => s.id === activeUser.id) ? batchStudents : [...batchStudents, activeUser];
+    }
+    return batchStudents;
+  }, [users, enrolledUserIds, activeUser]);
 
   // Helper to calculate leaderboard list based exclusively on valid transactions
   const getLeaderboardData = (type: 'daily' | '7day' | 'alltime') => {
@@ -169,7 +188,11 @@ export const WallOfFame: React.FC = () => {
     // Calculate previous period ranks to compare trend
     const prevRankMap = new Map<string, number>();
     const allStudentPrevPoints = finalStudents.map(s => {
-      const sTxs = (nauticalTransactions || []).filter(t => t.student_id === s.id && (t.amount || 0) > 0);
+      const sTxs = (nauticalTransactions || []).filter(t => 
+        t.student_id === s.id && 
+        (t.amount || 0) > 0 && 
+        (!t.batch_id || t.batch_id === currentBatchId)
+      );
       let pPoints = 0;
       if (type === 'alltime') {
         const prevTxs = sTxs.filter(t => new Date(t.created_at).getTime() < startOfToday.getTime());
@@ -198,7 +221,11 @@ export const WallOfFame: React.FC = () => {
 
     const currentRankedList = finalStudents
       .map(s => {
-        const rawTxs = (nauticalTransactions || []).filter(t => t.student_id === s.id && (t.amount || 0) > 0);
+        const rawTxs = (nauticalTransactions || []).filter(t => 
+          t.student_id === s.id && 
+          (t.amount || 0) > 0 &&
+          (!t.batch_id || t.batch_id === currentBatchId)
+        );
         
         // Dedup: loại bỏ duplicate txs cùng description (link bằng chứng, bài học, onboarding)
         const seenDescKeys = new Set<string>();
@@ -223,7 +250,9 @@ export const WallOfFame: React.FC = () => {
           : Infinity;
 
         if (type === 'alltime') {
-          points = studentTxs.reduce((sum, t) => sum + (t.amount || 0), 0);
+          points = studentTxs.length > 0 
+            ? studentTxs.reduce((sum, t) => sum + (t.amount || 0), 0)
+            : (s.nautical_miles || 0);
         } else {
           const thresholdMs = type === 'daily' ? startOfToday.getTime() : startOf7DaysAgo.getTime();
           const filteredTxs = studentTxs.filter(t => {
@@ -278,6 +307,23 @@ export const WallOfFame: React.FC = () => {
   return (
     <div className="space-y-8 max-w-6xl mx-auto px-4 pb-12 animate-fade-in select-none">
       
+      {/* ─── Active Course & Batch Header Indicator ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-150 pb-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-black text-dark-slate">
+              Bảng Vàng Vinh Danh
+            </h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 font-extrabold border border-teal-200">
+              {activeBatch?.name || (activeCourse?.slug === 'vibe-coding-201' ? 'Vibe Coding 201 - Khóa 2' : 'Obsidian 101 - Khóa 1')}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 font-medium mt-1">
+            {activeCourse?.title || 'Khóa học The1ight'} • Bảng xếp hạng phân lập cho học viên lớp này
+          </p>
+        </div>
+      </div>
+
       {/* ─── Gamification Overview Card ─── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 flex flex-col lg:flex-row gap-8 items-stretch">
         
@@ -301,8 +347,9 @@ export const WallOfFame: React.FC = () => {
               </span>
             )}
           </h2>
-          <p className="text-sm font-black text-primary-teal mt-1">
-            ⭐️ {myMiles.toLocaleString()} Hải lý tích lũy
+          <p className="text-sm font-black text-primary-teal mt-1 flex items-center gap-1.5">
+            <Star size={16} className="text-amber-500 fill-amber-500" />
+            <span>{myMiles.toLocaleString()} Hải lý tích lũy</span>
           </p>
         </div>
 
@@ -332,6 +379,23 @@ export const WallOfFame: React.FC = () => {
         </div>
       </div>
 
+      {/* ─── Cohort Not Started Notice (if batch has 0 enrolled students) ─── */}
+      {finalStudents.length === 0 && (
+        <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0 text-xl font-bold">
+            ⏳
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-extrabold text-amber-900">
+              Khóa học chưa chính thức khởi tranh
+            </h3>
+            <p className="text-xs text-amber-800 font-medium mt-0.5 leading-relaxed">
+              Lớp {activeBatch?.name || (activeCourse?.slug === 'obsidian-101' ? 'Obsidian 101 - Khóa 1' : activeCourse?.title)} hiện tại chưa bắt đầu và chưa có học viên nào đăng nhập hay ghi danh. Bảng xếp hạng sẽ tự động cập nhật khi khóa học chính thức khai giảng!
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ─── Leaderboard Control Bar: View Pill Buttons & Tooltip Banner ─── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-3 md:px-5 md:py-3.5 rounded-2xl border border-gray-100 shadow-sm">
         
@@ -339,43 +403,47 @@ export const WallOfFame: React.FC = () => {
         <div className="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl w-full sm:w-auto">
           <button
             onClick={() => setViewMode('alltime')}
-            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
               viewMode === 'alltime'
                 ? 'bg-white text-primary-teal shadow-xs font-black'
                 : 'text-gray-500 hover:text-dark-slate'
             }`}
           >
-            🏆 Trọn đời (All-time)
+            <Trophy size={14} />
+            <span>Trọn đời</span>
           </button>
           <button
             onClick={() => setViewMode('7day')}
-            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
               viewMode === '7day'
                 ? 'bg-white text-primary-teal shadow-xs font-black'
                 : 'text-gray-500 hover:text-dark-slate'
             }`}
           >
-            🗓️ Tuần này (7-day)
+            <Calendar size={14} />
+            <span>Tuần này</span>
           </button>
           <button
             onClick={() => setViewMode('daily')}
-            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
               viewMode === 'daily'
                 ? 'bg-white text-primary-teal shadow-xs font-black'
                 : 'text-gray-500 hover:text-dark-slate'
             }`}
           >
-            ⚡ Hôm nay (Daily)
+            <Zap size={14} />
+            <span>Hôm nay</span>
           </button>
           <button
             onClick={() => setViewMode('all')}
-            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+            className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
               viewMode === 'all'
                 ? 'bg-primary-teal text-white shadow-xs font-black'
                 : 'text-gray-500 hover:text-dark-slate'
             }`}
           >
-            📊 Xem cả 3 cột
+            <BarChart2 size={14} />
+            <span>Xem cả 3 cột</span>
           </button>
         </div>
 
@@ -387,19 +455,21 @@ export const WallOfFame: React.FC = () => {
             
             {/* Tooltip Card */}
             <div className="absolute right-0 sm:right-auto sm:left-0 bottom-full mb-2.5 hidden group-hover:block w-80 p-4 bg-slate-900 text-white text-[10.5px] font-normal leading-relaxed rounded-xl shadow-lg z-50 border border-slate-800 normal-case select-text">
-              <p className="font-black text-amber-400 mb-1.5 uppercase tracking-wider text-[11px] flex items-center gap-1">
-                ⚓ BẢNG XẾP HẠNG THEO THỜI GIAN:
+              <p className="font-black text-amber-400 mb-1.5 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <Anchor size={14} />
+                <span>BẢNG XẾP HẠNG THEO THỜI GIAN:</span>
               </p>
               <ul className="space-y-1.5 list-disc pl-3.5 text-slate-300 mb-3">
-                <li><strong className="text-white">Hôm nay (Daily):</strong> Tổng số Hải lý tích lũy bắt đầu từ 00:00 ngày hôm nay.</li>
-                <li><strong className="text-white">Tuần này (7-day):</strong> Tổng số Hải lý tích lũy trong 7 ngày gần nhất.</li>
-                <li><strong className="text-white">Trọn đời (All-time):</strong> Toàn bộ số Hải lý tích lũy từ trước đến nay.</li>
+                <li><strong className="text-white">Hôm nay:</strong> Tổng số Hải lý tích lũy bắt đầu từ 00:00 ngày hôm nay.</li>
+                <li><strong className="text-white">Tuần này:</strong> Tổng số Hải lý tích lũy trong 7 ngày gần nhất.</li>
+                <li><strong className="text-white">Trọn đời:</strong> Toàn bộ số Hải lý tích lũy từ trước đến nay.</li>
               </ul>
 
               <div className="h-[1px] bg-slate-800 my-2.5" />
 
-              <p className="font-black text-amber-400 mb-1.5 uppercase tracking-wider text-[11px] flex items-center gap-1">
-                ⚡ CÁCH TÍCH LŨY HẢI LÝ:
+              <p className="font-black text-amber-400 mb-1.5 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <Zap size={14} />
+                <span>CÁCH TÍCH LŨY HẢI LÝ:</span>
               </p>
               <ul className="space-y-1.5 list-disc pl-3.5 text-slate-300">
                 <li><strong className="text-white">Hoàn thiện 100% Hồ sơ:</strong> +50 Hải lý</li>
@@ -425,7 +495,7 @@ export const WallOfFame: React.FC = () => {
         {/* Column 1: All-time */}
         {(viewMode === 'alltime' || viewMode === 'all') && (
           <LeaderboardColumn
-            title="Bảng xếp hạng Trọn đời (All-time)"
+            title="Bảng xếp hạng Trọn đời"
             type="alltime"
             data={getLeaderboardData('alltime')}
             activeUserId={displayActiveUser.id}
@@ -436,7 +506,7 @@ export const WallOfFame: React.FC = () => {
         {/* Column 2: 7-day */}
         {(viewMode === '7day' || viewMode === 'all') && (
           <LeaderboardColumn
-            title="Bảng xếp hạng Tuần này (7-day)"
+            title="Bảng xếp hạng Tuần này"
             type="7day"
             data={getLeaderboardData('7day')}
             activeUserId={displayActiveUser.id}
@@ -447,7 +517,7 @@ export const WallOfFame: React.FC = () => {
         {/* Column 3: Daily */}
         {(viewMode === 'daily' || viewMode === 'all') && (
           <LeaderboardColumn
-            title="Bảng xếp hạng Hôm nay (Daily)"
+            title="Bảng xếp hạng Hôm nay"
             type="daily"
             data={getLeaderboardData('daily')}
             activeUserId={displayActiveUser.id}
@@ -458,8 +528,9 @@ export const WallOfFame: React.FC = () => {
       </div>
 
       {/* ─── Footer note ─── */}
-      <p className="text-center text-xs text-gray-400 font-bold max-w-lg mx-auto leading-relaxed">
-        ⚓ Điểm số Hải lý được cập nhật tự động khi nộp bài tập, hoàn thành thử thách Onboarding, hoặc đạt cấp độ Mastery. Hãy sẵn sàng cho hải trình tự học và làm sản phẩm số thực chiến!
+      <p className="text-center text-xs text-gray-400 font-bold max-w-lg mx-auto leading-relaxed flex items-center justify-center gap-1.5">
+        <Anchor size={14} className="shrink-0" />
+        <span>Điểm số Hải lý được cập nhật tự động khi nộp bài tập, hoàn thành thử thách Onboarding, hoặc đạt cấp độ Mastery. Hãy sẵn sàng cho hải trình tự học và làm sản phẩm số thực chiến!</span>
       </p>
     </div>
   );
@@ -563,8 +634,8 @@ const LeaderboardColumn: React.FC<LeaderboardColumnProps> = ({
 
         {/* Empty placeholder if no students */}
         {top10.length === 0 && (
-          <div className="py-12 text-center text-xs text-gray-400 font-medium">
-            Chưa có thủy thủ nào lọt top
+          <div className="py-12 text-center text-xs text-gray-400 font-medium px-4">
+            Chưa có học viên nào tham gia lớp này
           </div>
         )}
       </div>

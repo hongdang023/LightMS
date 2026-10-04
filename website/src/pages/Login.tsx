@@ -4,7 +4,7 @@ import { BrandLogo } from '../components/BrandLogo';
 import { Shield, User, ArrowRight, X, Lock, BookOpen, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { loginWithGmail, loginWithSupabaseGoogle } = useAuth();
+  const { loginWithGmail, loginWithGoogle } = useAuth();
   
   // Auth flow states: 'role-select' | 'admin-password' | 'google-login'
   const [flowState, setFlowState] = useState<'role-select' | 'admin-password' | 'google-login'>('role-select');
@@ -275,10 +275,10 @@ export const Login: React.FC = () => {
             <button
               onClick={async () => {
                 try {
-                  setParrotText('Đang chuyển hướng sang cổng xác thực Google của Supabase... 🦜');
-                  await loginWithSupabaseGoogle(selectedRole);
+                  setParrotText('Đang kết nối xác thực Google... 🦜');
+                  await loginWithGoogle(selectedRole);
                 } catch (err: any) {
-                  setError('Không thể kết nối đến Supabase. Vui lòng kiểm tra cấu hình trong file .env.');
+                  setError('Lỗi đăng nhập Google. Vui lòng thử lại!');
                 }
               }}
               className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-700 font-black py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group cursor-pointer"

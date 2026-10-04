@@ -155,20 +155,6 @@ export const ProfileIcon: React.FC<IconProps> = ({ className = 'w-5 h-5', active
   );
 };
 
-// 11. AnnouncementsIcon (Megaphone / Bell)
-export const AnnouncementsIcon: React.FC<IconProps> = ({ className = 'w-5 h-5', active }) => {
-  const primaryColor = active ? '#FFD94C' : '#3E5E63';
-  const accentColor = '#EAB308';
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M11 5.5C11 4.67157 11.6716 4 12.5 4C13.3284 4 14 4.67157 14 5.5V7.12455C17.4111 8.01633 20 11.1963 20 15V18.25C20 18.6642 20.3358 19 20.75 19H3.25C3.66421 19 4 18.6642 4 18.25V15C4 11.1963 6.58889 8.01633 10 7.12455V5.5H11Z" stroke={primaryColor} strokeWidth="1.5" />
-      <path d="M10 19C10 20.6569 11.1193 22 12.5 22C13.8807 22 15 20.6569 15 19H10Z" fill={accentColor} stroke={accentColor} strokeWidth="1.5" />
-      <path d="M18 6L20 4" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M21 9L23 8" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-};
-
 // Admin Icons
 export const AdminDashboardIcon: React.FC<IconProps> = ({ className = 'w-5 h-5', active }) => {
   const primaryColor = active ? '#FFD94C' : '#3E5E63';

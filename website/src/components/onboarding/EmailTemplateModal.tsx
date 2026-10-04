@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail } from 'lucide-react';
+import { Mail, Check, Copy, Send, X } from 'lucide-react';
 import type { OnboardingDay } from '../../types/database';
 import { 
   getDefaultEmailSubject,
@@ -86,7 +86,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-[#15333B]/5 hover:bg-[#15333B]/10 flex items-center justify-center text-[#15333B] transition-colors cursor-pointer border-0"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 
@@ -96,7 +96,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
           <div className="flex-1 p-6 space-y-4 overflow-y-auto border-r border-gray-100 flex flex-col">
             {/* Subject Input */}
             <div className="space-y-1.5 shrink-0">
-              <label className="text-[11px] font-bold text-[#15333B] block">Tiêu đề Email (Subject):</label>
+              <label className="text-[11px] font-bold text-[#15333B] block">Tiêu đề Email:</label>
               <input 
                 type="text"
                 required
@@ -109,7 +109,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
 
             {/* Body Textarea */}
             <div className="space-y-1.5 flex-1 flex flex-col min-h-0">
-              <label className="text-[11px] font-bold text-[#15333B] block shrink-0">Nội dung Email (Body):</label>
+              <label className="text-[11px] font-bold text-[#15333B] block shrink-0">Nội dung Email:</label>
               <textarea 
                 required
                 placeholder="Nhập nội dung email..."
@@ -126,7 +126,17 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
                 onClick={handleCopyEmailFormat}
                 className="btn border border-teal-600 text-teal-850 hover:bg-teal-50/50 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer bg-white"
               >
-                {copySuccess ? 'Đã sao chép! ✓' : 'Sao chép định dạng 📋'}
+                {copySuccess ? (
+                  <>
+                    <Check size={14} />
+                    <span>Đã sao chép!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} />
+                    <span>Sao chép định dạng</span>
+                  </>
+                )}
               </button>
               
               <div className="flex gap-2">
@@ -149,7 +159,8 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
                   onClick={handleSendBulkEmail}
                   className="btn bg-[#214C54] text-white text-xs font-extrabold px-4 py-2 flex items-center gap-1.5 rounded-xl shadow-md cursor-pointer border-0"
                 >
-                  Gửi qua Gmail 🚀
+                  <Send size={14} />
+                  <span>Gửi qua Gmail</span>
                 </button>
               </div>
             </div>
@@ -161,7 +172,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
             <div className="bg-[#FDF5DA] p-6 rounded-2xl border border-[#ffd94c] flex-1 flex flex-col justify-start min-h-[300px]">
               <div className="bg-[#15333B] p-4 rounded-t-xl text-center border-b-4 border-[#ffd94c]">
                 <span className="text-[#ffd94c] font-black text-xs tracking-wider block">
-                  🦜 VẸT LẮM MỒM - THE1IGHT 🦜
+                  VẸT LẮM MỒM - THE1IGHT
                 </span>
               </div>
               <div className="bg-white p-5 rounded-b-xl flex-1 shadow-sm">
@@ -173,7 +184,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({
                 </div>
                 <div className="mt-6 pt-4 border-t border-gray-100 text-center">
                   <span className="inline-block bg-[#214C54] text-white text-[10px] font-black px-4 py-2 rounded-lg cursor-pointer">
-                    VÀO HỆ THỐNG LIGHTMS 🚀
+                    VÀO HỆ THỐNG LIGHTMS
                   </span>
                 </div>
               </div>

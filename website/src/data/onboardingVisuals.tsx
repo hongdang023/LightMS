@@ -30,7 +30,7 @@ export const DAY_VISUAL_STYLES: {
   2: {
     icon: <Wrench className="w-6 h-6" />,
     gradient: "from-[#0284C7] to-[#0369A1]", // Blueprint Blue
-    summary: "Xác định sản phẩm bạn muốn xây dựng",
+    summary: "Xác định sản phẩm & Problem Statement",
     bgPattern: (
       <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -44,9 +44,9 @@ export const DAY_VISUAL_STYLES: {
     )
   },
   3: {
-    icon: <Bot className="w-6 h-6" />,
+    icon: <Compass className="w-6 h-6" />,
     gradient: "from-[#059669] to-[#047857]", // Mystic Emerald Dragon
-    summary: "Làm quen với IDE, MCP và CLI",
+    summary: "IDE, MCP & CLI cho AI Coding",
     bgPattern: (
       <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
         <path d="M20 20 C60 5 90 40 130 20 C170 0 200 35 240 15" fill="none" stroke="white" strokeWidth="2" strokeDasharray="5 5" />
@@ -56,9 +56,9 @@ export const DAY_VISUAL_STYLES: {
     )
   },
   4: {
-    icon: <Compass className="w-6 h-6" />,
+    icon: <Bot className="w-6 h-6" />,
     gradient: "from-[#845EF7] to-[#6741D9]", // Telescope Deep Purple
-    summary: "Hiểu về Agent Skills và Agent Rules",
+    summary: "Làm chủ Skills & Rules cho AI Agent",
     bgPattern: (
       <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
         <circle cx="150" cy="50" r="35" fill="none" stroke="white" strokeWidth="1.5" />
@@ -73,7 +73,7 @@ export const DAY_VISUAL_STYLES: {
   5: {
     icon: <Palette className="w-6 h-6" />,
     gradient: "from-[#D946EF] to-[#C026D3]", // Oil Paint Palette Pink/Fuchsia
-    summary: "Lưu trữ và quản lý phiên bản với GitHub",
+    summary: "Quản lý phiên bản & lưu trữ với GitHub",
     bgPattern: (
       <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
         <circle cx="60" cy="30" r="20" fill="none" stroke="white" strokeWidth="1.5" />
@@ -86,7 +86,7 @@ export const DAY_VISUAL_STYLES: {
   6: {
     icon: <FlaskConical className="w-6 h-6" />,
     gradient: "from-[#F97316] to-[#EA580C]", // Bright Amber Sunset
-    summary: "Tìm hiểu cấu trúc Frontend và Backend",
+    summary: "Phân biệt bản chất Frontend vs Backend",
     bgPattern: (
       <svg className="absolute inset-0 w-full h-full opacity-15" xmlns="http://www.w3.org/2000/svg">
         <rect x="30" y="20" width="40" height="50" rx="3" fill="none" stroke="white" strokeWidth="2" />
@@ -138,18 +138,18 @@ Chào mừng bạn tới ngày học tiếp theo của Onboarding Week!
 
 Hôm nay chúng ta sẽ bắt đầu Thử thách Ngày ${dayData.day}: ${dayData.title}
 
-🎯 MỤC TIÊU:
+MỤC TIÊU:
 ${dayData.objective}
 
-📝 NHIỆM VỤ:
+NHIỆM VỤ:
 ${dayData.checklist}
 
-✨ ĐIỀU RÚT RA (TAKEAWAY):
+ĐIỀU RÚT RA (TAKEAWAY):
 ${dayData.takeaway}
 
 Hãy truy cập vào hệ thống LightMS để theo dõi chi tiết và cập nhật bài tập nhé!
 
-Chúc các thủy thủ thuận buồm xuôi gió! ⛵⚓`;
+Chúc các thủy thủ thuận buồm xuôi gió!`;
 };
 
 export const getHtmlEmail = (subject: string, bodyText: string) => {
@@ -162,7 +162,7 @@ export const getHtmlEmail = (subject: string, bodyText: string) => {
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FDF5DA; padding: 25px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1.5px solid #ffd94c;">
   <div style="background-color: #15333B; padding: 15px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid #ffd94c;">
     <h1 style="color: #ffd94c; margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase;">
-      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
+      VẸT LẮM MỒM - THE1IGHT
     </h1>
   </div>
   <div style="background-color: #ffffff; padding: 25px; border-radius: 0 0 12px 12px; border-top: none; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -172,7 +172,7 @@ export const getHtmlEmail = (subject: string, bodyText: string) => {
     ${formattedBody}
     <div style="margin-top: 25px; padding-top: 15px; border-top: 2px solid #F0F0F0; text-align: center;">
       <a href="${window.location.origin}" style="display: inline-block; background-color: #214C54; color: #ffffff; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 11px; box-shadow: 0 2px 4px rgba(33,76,84,0.2);">
-        VÀO HỆ THỐNG LIGHTMS 🚀
+        VÀO HỆ THỐNG LIGHTMS
       </a>
     </div>
   </div>
@@ -183,8 +183,35 @@ export const getHtmlEmail = (subject: string, bodyText: string) => {
   `.trim();
 };
 
+export const normalizeHtmlToMarkdown = (rawText: string): string => {
+  if (!rawText) return '';
+  if (!rawText.includes('<') && !rawText.includes('>')) return rawText;
+
+  return rawText
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_, inner) => {
+      let idx = 1;
+      return '\n' + inner.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_: string, item: string) => `${idx++}. ${item.trim()}\n`) + '\n';
+    })
+    .replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_, inner) => {
+      return '\n' + inner.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_: string, item: string) => `- ${item.trim()}\n`) + '\n';
+    })
+    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n')
+    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1\n')
+    .replace(/<div[^>]*>([\s\S]*?)<\/div>/gi, '$1\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**')
+    .replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, '**$1**')
+    .replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, '*$1*')
+    .replace(/<i[^>]*>([\s\S]*?)<\/i>/gi, '*$1*')
+    .replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, '<u>$1</u>')
+    .replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)')
+    .replace(/<\/?[a-z0-9]+[^>]*>/gi, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+};
+
 export const parseInlineMarkdown = (text: string): React.ReactNode => {
-  let cleanText = text
+  const cleanText = text
     .replace(/<span[^>]*>/gi, '')
     .replace(/<\/span>/gi, '')
     .replace(/<font[^>]*>/gi, '')
@@ -245,28 +272,64 @@ export const parseInlineMarkdown = (text: string): React.ReactNode => {
     }
     lastIndex = regex.lastIndex;
   }
-  if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex));
+  if (lastIndex < cleanText.length) {
+    parts.push(cleanText.substring(lastIndex));
   }
-  return parts.length > 0 ? <>{parts}</> : text;
+  return parts.length > 0 ? <>{parts}</> : cleanText;
 };
 
 export const renderRichText = (text: string): React.ReactNode => {
   if (!text) return null;
-  const lines = text.split('\n');
+  const normalized = normalizeHtmlToMarkdown(text);
+  const lines = normalized.split('\n');
+
   return lines.map((line, idx) => {
-    const isQuote = line.startsWith('> ');
-    if (isQuote) {
-      line = line.substring(2);
+    let cleanLine = line.trim();
+    if (!cleanLine) {
+      return <div key={idx} className="h-1" />;
     }
-    
-    const parsedLine = parseInlineMarkdown(line);
+
+    const isQuote = cleanLine.startsWith('> ');
+    if (isQuote) {
+      cleanLine = cleanLine.substring(2).trim();
+    }
+
+    const isBullet = /^[-*•]\s+/.test(cleanLine);
+    const isOrdered = /^\d+\.\s+/.test(cleanLine);
+
+    if (isBullet) {
+      cleanLine = cleanLine.replace(/^[-*•]\s+/, '');
+    } else if (isOrdered) {
+      cleanLine = cleanLine.replace(/^\d+\.\s+/, '');
+    }
+
+    const parsedLine = parseInlineMarkdown(cleanLine);
 
     if (isQuote) {
       return (
-        <blockquote key={idx} className="border-l-4 border-[#EAB308] pl-4 py-3 my-3 bg-[#FDF5DA] rounded-r-lg text-[#15333B] italic shadow-sm text-base">
+        <blockquote key={idx} className="border-l-4 border-[#EAB308] pl-4 py-2.5 my-2 bg-[#FDF5DA] rounded-r-lg text-[#15333B] italic shadow-sm text-base">
           {parsedLine}
         </blockquote>
+      );
+    }
+
+    if (isBullet) {
+      return (
+        <div key={idx} className="flex items-start gap-2 my-1 pl-1 text-base leading-relaxed text-[#3E5E63]">
+          <span className="text-[#214C54] font-black text-sm select-none shrink-0 mt-0.5">•</span>
+          <span className="flex-1 min-w-0">{parsedLine}</span>
+        </div>
+      );
+    }
+
+    if (isOrdered) {
+      const numberMatch = line.match(/^(\d+)\.\s+/);
+      const num = numberMatch ? numberMatch[1] : `${idx + 1}`;
+      return (
+        <div key={idx} className="flex items-start gap-2 my-1 pl-1 text-base leading-relaxed text-[#3E5E63]">
+          <span className="text-[#214C54] font-bold text-xs select-none shrink-0 mt-1 min-w-[1.2rem]">{num}.</span>
+          <span className="flex-1 min-w-0">{parsedLine}</span>
+        </div>
       );
     }
 
@@ -277,3 +340,4 @@ export const renderRichText = (text: string): React.ReactNode => {
     );
   });
 };
+

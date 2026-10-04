@@ -1,44 +1,10 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCourse } from '../../context/CourseContext';
 import { useGamification } from '../../context/GamificationContext';
 import { useCommunity } from '../../context/CommunityContext';
-import { PageHeader } from '../../components/PageHeader';
-import { Button } from '../../components/ui/Button';
-import { Shield, Calendar, Video, BookOpen, Trophy } from 'lucide-react';
-
-// Helper to extract logical first sentence/step summary
-const getShortDescription = (desc: string): string => {
-  if (!desc) return '';
-  const firstLine = desc.split('\n')[0].trim();
-  const match = firstLine.match(/^([^.\-+:—]+(?:—[^.\-+:—]+)?)/);
-  if (match) {
-    const clean = match[1].trim();
-    if (clean.length > 5) {
-      return clean.endsWith('.') ? clean : `${clean}.`;
-    }
-  }
-  return firstLine.length > 60 ? `${firstLine.substring(0, 60)}...` : firstLine;
-};
-
-// Helper to format weekday names to clean short Vietnamese representations
-const getWeekdayShort = (weekday: string): string => {
-  const normalized = weekday.toLowerCase();
-  if (normalized.includes('chủ nhật')) return 'Chủ Nhật';
-  if (normalized.includes('thứ hai')) return 'Thứ 2';
-  if (normalized.includes('thứ ba')) return 'Thứ 3';
-  if (normalized.includes('thứ tư')) return 'Thứ 4';
-  if (normalized.includes('thứ năm')) return 'Thứ 5';
-  if (normalized.includes('thứ sáu')) return 'Thứ 6';
-  if (normalized.includes('thứ bảy')) return 'Thứ 7';
-  return weekday;
-};
-
-// Helper to determine badge style consistently based on due date
-const getDeadlineBadgeStyle = (_dueDateStr: string): string => {
-  // Single unified neutral style for all due dates to keep absolute visual consistency
-  return 'text-[#3E5E63] bg-gray-50 border-gray-200';
-};
+import { enrollmentService } from '../../services/enrollmentService';
+import { ChevronDown, ChevronUp, Video, ArrowRight } from 'lucide-react';
 
 interface StudentDashboardProps {
   onPageChange: (page: string) => void;
@@ -46,9 +12,10 @@ interface StudentDashboardProps {
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange }) => {
   const { activeUser, users } = useAuth();
-  const { lessons } = useCourse();
+  const { lessons, activeCourse, activeBatch } = useCourse();
   const { nauticalTransactions } = useGamification();
-  const { calendarEvents } = useCommunity();
+  const { calendarEvents, onboardingDays } = useCommunity();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const filteredLessons = lessons;
 
@@ -56,30 +23,48 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
   const isLessonStarted = (lesson: typeof filteredLessons[0]): boolean => {
     if (!lesson.start_date) return true;
     const start = new Date(lesson.start_date).getTime();
-    // Use actual current time
     const now = new Date().getTime();
     return now >= start;
-
   };
 
   // 1. Calculate Onboarding Week progress & completion
-  const onboardingProgress = React.useMemo(() => {
+  const onboardingProgress = useMemo(() => {
     try {
       const saved = localStorage.getItem('lms_onboarding_tasks_v2');
       const checkedTasks = saved ? JSON.parse(saved) : {};
       
-      const taskCounts = [0, 4, 5, 4, 4, 5, 5, 4]; // Tasks per day (1 to 7)
+      const dayList = onboardingDays && onboardingDays.length > 0 ? onboardingDays : [];
       let completedCount = 0;
       let totalTasks = 0;
-      for (let day = 1; day <= 7; day++) {
-        const count = taskCounts[day];
-        totalTasks += count;
-        for (let t = 1; t <= count; t++) {
-          if (checkedTasks[`day-${day}-task-${t}`]) {
-            completedCount++;
+
+      if (dayList.length > 0) {
+        dayList.forEach((day: { day: number; checklist: string }) => {
+          const lines = day.checklist.split('\n');
+          let taskIdx = 0;
+          lines.forEach((line: string) => {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('- [ ]')) {
+              taskIdx++;
+              totalTasks++;
+              if (checkedTasks[`day-${day.day}-task-${taskIdx}`]) {
+                completedCount++;
+              }
+            }
+          });
+        });
+      } else {
+        const taskCounts = [0, 5, 5, 4, 4, 4];
+        for (let day = 1; day <= 5; day++) {
+          const count = taskCounts[day];
+          totalTasks += count;
+          for (let t = 1; t <= count; t++) {
+            if (checkedTasks[`day-${day}-task-${t}`]) {
+              completedCount++;
+            }
           }
         }
       }
+
       return {
         completed: completedCount,
         total: totalTasks,
@@ -87,67 +72,82 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
         isCompleted: completedCount === totalTasks && totalTasks > 0
       };
     } catch {
-      return { completed: 0, total: 31, percent: 0, isCompleted: false };
+      return { completed: 0, total: 22, percent: 0, isCompleted: false };
     }
-  }, []);
+  }, [onboardingDays]);
 
-  const onboardingDueDate = React.useMemo(() => {
+  const onboardingDueDate = useMemo(() => {
     const startSaved = localStorage.getItem('lms_onboarding_start_date');
     const start = startSaved ? new Date(startSaved) : new Date();
-    // Due date is start + 7 days
     const due = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-    return due.toLocaleDateString('vi-VN');
+    const d = due.getDate().toString().padStart(2, '0');
+    const m = (due.getMonth() + 1).toString().padStart(2, '0');
+    return `${d}/${m}`;
   }, []);
 
-  // 2. Fetch uncompleted assignments
-  const pendingAssignments = React.useMemo(() => {
+  // 2. Fetch assignments list
+  const allAssignments = useMemo(() => {
     const list: any[] = [];
     
-    // Add uncompleted class assignments for started lessons
-    filteredLessons.forEach(lesson => {
+    // Include onboarding if not completed
+    if (!onboardingProgress.isCompleted) {
+      list.push({
+        id: 'onboarding-task',
+        sessionLabel: 'ONBOARDING',
+        title: 'Thử thách tuần Onboarding - Khởi động & thiết lập môi trường',
+        dueDate: onboardingDueDate,
+        type: 'onboarding',
+        pageTarget: 'onboarding',
+        isCompleted: false
+      });
+    }
+
+    filteredLessons.forEach((lesson, index) => {
       if (!lesson.assignment_description) return;
-      
-      // Check if lesson has started
       if (!isLessonStarted(lesson)) return;
 
-      // Check if student has completed
       const hasCompleted = (nauticalTransactions || []).some(
         t => t.student_id === activeUser.id && 
              (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && 
              t.reference_id === lesson.id
       );
 
-      if (!hasCompleted) {
-        // Calculate due date (lesson start_date + 3 days)
-        let dueDateStr = 'N/A';
-        if (lesson.start_date) {
-          const start = new Date(lesson.start_date);
-          const due = new Date(start.getTime() + 3 * 24 * 60 * 60 * 1000);
-          dueDateStr = due.toLocaleDateString('vi-VN');
-        }
-        
-        list.push({
-          id: lesson.id,
-          title: `Bài tập ${lesson.title}`,
-          desc: lesson.assignment_description,
-          dueDate: dueDateStr,
-          type: 'syllabus',
-          progress: null,
-          pageTarget: 'syllabus'
-        });
+      let dueDateStr = '01/08';
+      if (lesson.start_date) {
+        const start = new Date(lesson.start_date);
+        const due = new Date(start.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const d = due.getDate().toString().padStart(2, '0');
+        const m = (due.getMonth() + 1).toString().padStart(2, '0');
+        dueDateStr = `${d}/${m}`;
       }
+      
+      const numStr = (index + 1).toString().padStart(2, '0');
+
+      list.push({
+        id: lesson.id,
+        sessionLabel: `BUỔI ${numStr}`,
+        title: lesson.title,
+        dueDate: dueDateStr,
+        type: 'syllabus',
+        pageTarget: 'syllabus',
+        isCompleted: hasCompleted
+      });
     });
 
     return list;
   }, [onboardingProgress, onboardingDueDate, filteredLessons, nauticalTransactions, activeUser.id]);
 
-  // 3. Find the nearest session from calendar events dynamically
-  const nearestLesson = React.useMemo(() => {
-    // Use actual current time
-    const mockNow = new Date().getTime();
+  const completedTaskCount = useMemo(() => {
+    return allAssignments.filter(a => a.isCompleted).length;
+  }, [allAssignments]);
 
-    
-    // Convert calendarEvents to a list of events with actual timestamps
+  const visibleAssignments = useMemo(() => {
+    return isExpanded ? allAssignments : allAssignments.slice(0, 3);
+  }, [allAssignments, isExpanded]);
+
+  // 3. Find the nearest session
+  const nearestLesson = useMemo(() => {
+    const mockNow = new Date().getTime();
     const eventsWithTimestamps = calendarEvents
       .filter(e => e.date !== undefined && e.month !== undefined && e.year !== undefined)
       .map(e => {
@@ -157,345 +157,236 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
       })
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    // Find the first event starting on or after mockNow
     const next = eventsWithTimestamps.find(e => e.timestamp >= mockNow);
-
-    // Default to the last scheduled event if none in future
     if (!next && eventsWithTimestamps.length > 0) {
       return eventsWithTimestamps[eventsWithTimestamps.length - 1];
     }
-    
     return next;
   }, [calendarEvents]);
 
-  // Get formatted date details for nearest lesson
-  const lessonDateDetails = React.useMemo(() => {
-    if (!nearestLesson || nearestLesson.date === undefined || nearestLesson.month === undefined || nearestLesson.year === undefined) return null;
+  const lessonDateDetails = useMemo(() => {
+    if (!nearestLesson || nearestLesson.date === undefined || nearestLesson.month === undefined || nearestLesson.year === undefined) {
+      return { day: '27', month: 'T9', weekdayShort: 'CN' };
+    }
     const dateObj = new Date(nearestLesson.year, nearestLesson.month, nearestLesson.date);
-    const day = dateObj.getDate();
-    const month = `Th${dateObj.getMonth() + 1}`;
-    const weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'long' });
-    return { day, month, weekday };
+    const day = dateObj.getDate().toString();
+    const month = `T${dateObj.getMonth() + 1}`;
+    const weekday = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
+    const weekdayShort = weekday.includes('Chủ') ? 'CN' : weekday;
+    return { day, month, weekdayShort };
   }, [nearestLesson]);
 
-  // Look up lesson details from course lessons context if calendar event doesn't have details
-  const lessonDetailsFromLessons = React.useMemo(() => {
-    if (!nearestLesson || !lessons) return null;
-    const matchDigits = nearestLesson.title?.match(/\d+/);
-    if (!matchDigits) return null;
-    const lessonNum = parseInt(matchDigits[0], 10);
-    return lessons.find(l => {
-      const lMatch = l.title?.match(/\d+/);
-      return lMatch && parseInt(lMatch[0], 10) === lessonNum;
-    });
-  }, [nearestLesson, lessons]);
+  const currentBatchId = useMemo(() => {
+    if (activeBatch?.id) return activeBatch.id;
+    return activeCourse?.slug === 'vibe-coding-201' ? 'batch-vibe201-k2' : 'batch-obs101-k1';
+  }, [activeBatch?.id, activeCourse?.slug]);
 
-  const lessonTopicName = React.useMemo(() => {
-    let rawTopic = '';
-    if (nearestLesson?.details) {
-      // Split by literal \n or actual newlines to get the first line
-      const firstLine = nearestLesson.details.split(/\\n|\n/)[0].trim();
-      // Remove prefixes like "Buổi 04:"
-      const parts = firstLine.split(':');
-      rawTopic = parts.length > 1 ? parts.slice(1).join(':').trim() : firstLine;
-    } else if (lessonDetailsFromLessons) {
-      const parts = lessonDetailsFromLessons.title.split(':');
-      rawTopic = parts.length > 1 ? parts.slice(1).join(':').trim() : lessonDetailsFromLessons.title;
-    }
-    return rawTopic || null;
-  }, [nearestLesson, lessonDetailsFromLessons]);
+  // 4. Leaderboard & Rank calculation strictly scoped to active batch
+  const leaderboard = useMemo(() => {
+    const batchEnrollments = enrollmentService.getEnrollmentsForBatch(currentBatchId);
+    const enrolledUserIds = new Set(batchEnrollments.map(e => e.user_id));
 
-  // 4. Calculate Rank and Voyage progress percentage
-  const leaderboard = React.useMemo(() => {
     return [...users]
-      .filter(u => 
-        u.role === 'student' && 
-        u.gmail !== 'dangtuyethong2324@gmail.com'
-      )
-      .sort((a, b) => b.nautical_miles - a.nautical_miles);
-  }, [users]);
+      .filter(u => u.role === 'student' && u.gmail !== 'dangtuyethong2324@gmail.com' && enrolledUserIds.has(u.id))
+      .sort((a, b) => (b.nautical_miles || 0) - (a.nautical_miles || 0));
+  }, [users, currentBatchId]);
 
-  const userRankIndex = React.useMemo(() => {
-    return leaderboard.findIndex(u => u.id === activeUser.id) + 1;
+  const userRankIndex = useMemo(() => {
+    const idx = leaderboard.findIndex(u => u.id === activeUser.id);
+    return idx >= 0 ? idx + 1 : 1;
   }, [leaderboard, activeUser.id]);
 
-
-
   return (
-    <div className="space-y-4 animate-fade-in select-none">
-      <PageHeader 
-        title={`Chào mừng, ${activeUser.full_name}!`}
-        description="Trạng thái hiện tại của hải trình và các nhiệm vụ cần hoàn thành hôm nay."
-        helpTitle="Dashboard học tập"
-        helpSummary="Bảng điều khiển trung tâm theo dõi toàn bộ tiến độ học tập của bạn."
-        helpPurpose="Giúp bạn nắm ngay tình trạng học tập, các bài tập chưa làm và các mốc quan trọng — không cần tìm kiếm ở đâu khác."
-      />
+    <div className="space-y-6 animate-fade-in select-none max-w-7xl mx-auto pb-8">
+      {/* Header Greeting Section */}
+      <div className="pt-2">
+        <h1 className="text-3xl font-extrabold text-[#15333B] tracking-tight">
+          Chào mừng, {activeUser.full_name}!
+        </h1>
+      </div>
 
-      {/* Grid Content */}
-      <div className="dashboard-grid">
-        {/* Left Column: Tasks & Assignments (Requirement 1) */}
-        <div className="flex flex-col h-full">
+      {/* Main Grid Section (Equal Height Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        
+        {/* Left Column: NHIỆM VỤ HỌC TẬP (~65% -> 8 cols) */}
+        <div className="lg:col-span-8 bg-white rounded-3xl p-6 md:p-7 shadow-sm border border-gray-150/80 flex flex-col justify-between h-full space-y-6">
+          <div className="space-y-6 flex-1">
+            {/* Card Title Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <svg className="w-5 h-5 text-[#15333B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+                <h2 className="text-sm font-extrabold text-[#15333B] tracking-wider uppercase">
+                  Nhiệm vụ học tập
+                </h2>
+              </div>
+              <span className="px-3 py-1 bg-gray-100/80 text-gray-500 rounded-full text-xs font-bold">
+                {completedTaskCount}/{allAssignments.length} hoàn thành
+              </span>
+            </div>
+
+            {/* Task Items List */}
+            <div className="space-y-3.5">
+              {visibleAssignments.map((task) => (
+                <div 
+                  key={task.id}
+                  onClick={() => onPageChange(task.pageTarget)}
+                  className="group flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50/80 transition-all border border-transparent hover:border-gray-150 cursor-pointer gap-3"
+                >
+                  {/* Left Task Title & Status Circle */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-[#214C54] flex items-center justify-center shrink-0 transition-colors">
+                      {task.isCompleted && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span className="text-xs font-bold text-gray-400 tracking-wide uppercase shrink-0">
+                        {task.sessionLabel}
+                      </span>
+                      <span className="text-gray-300 font-light hidden sm:inline">•</span>
+                      <h3 className="text-sm font-bold text-[#15333B] group-hover:text-[#214C54] transition-colors truncate max-w-md">
+                        {task.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Right Date & Action Button */}
+                  <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end pl-8 sm:pl-0">
+                    <span className="text-xs font-medium text-gray-400">
+                      {task.dueDate}
+                    </span>
+                    <button className="px-4 py-1.5 rounded-full bg-gray-100 group-hover:bg-[#214C54] text-gray-700 group-hover:text-white transition-all text-xs font-bold border border-gray-200 group-hover:border-[#214C54] flex items-center gap-1.5">
+                      <span>{task.type === 'onboarding' ? 'Tiếp tục làm' : 'Làm bài'}</span>
+                      <ArrowRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Collapsible Expand Button */}
+          {allAssignments.length > 3 && (
+            <div className="pt-3 border-t border-gray-100 text-center shrink-0">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-xs font-bold text-gray-500 hover:text-[#15333B] inline-flex items-center gap-1 transition-colors"
+              >
+                <span>{isExpanded ? 'Thu gọn' : `Xem thêm ${allAssignments.length - 3} bài tập sau`}</span>
+                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: 2 Cards Equal Height (~35% -> 4 cols) */}
+        <div className="lg:col-span-4 flex flex-col justify-between gap-6 h-full">
           
-          {/* Card: Bài tập chưa hoàn thành */}
-          <div className="card flex flex-col justify-between flex-1" style={{ padding: '1.25rem' }}>
-            <div>
-              <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-                <h3 className="font-extrabold text-base text-[#15333B] flex items-center gap-2">
-                  <BookOpen size={18} className="text-[#214C54]" strokeWidth={1.5} />
-                  Bài tập chưa hoàn thành
-                </h3>
-                <span className={`badge-pill text-[9px] font-extrabold ${(pendingAssignments.length === 0 && onboardingProgress.isCompleted) ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'badge-warning'}`}>
-                  {pendingAssignments.length + (onboardingProgress.isCompleted ? 0 : 1)} nhiệm vụ còn lại
+          {/* Card 1: LỊCH HỌC TIẾP THEO */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-150/80 flex flex-col justify-between flex-1 space-y-5">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-xs font-extrabold text-gray-400 tracking-wider uppercase">
+                Lịch học tiếp theo
+              </h3>
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-orange-50 text-orange-600 rounded-full text-[11px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                <span>Sắp diễn ra</span>
+              </div>
+            </div>
+
+            {/* Session Time & Title */}
+            <div className="flex items-center gap-3.5 my-auto py-2">
+              <div className="w-13 h-13 bg-gray-100/90 rounded-2xl flex flex-col items-center justify-center shrink-0 p-2 text-center min-w-[52px]">
+                <span className="text-[10px] font-extrabold text-gray-400 uppercase leading-tight">
+                  {lessonDateDetails.month}
+                </span>
+                <span className="text-lg font-black text-[#15333B] leading-none">
+                  {lessonDateDetails.day}
                 </span>
               </div>
-
-              {pendingAssignments.length === 0 && onboardingProgress.isCompleted ? (
-                <div className="bg-emerald-50/50 border-2 border-emerald-100 rounded-3xl p-8 text-center space-y-4">
-                  <span className="text-5xl block">🎉</span>
-                  <h4 className="font-extrabold text-[#065f46] text-lg">Rất tốt! Không còn bài tập nào chưa nộp!</h4>
-                  <p className="text-sm text-[#047857] max-w-md mx-auto font-medium leading-relaxed">
-                    Bạn đã hoàn thành xuất sắc tất cả bài tập và thử thách Onboarding. Hãy nghỉ ngơi, chuẩn bị tinh thần cho những hải trình tiếp theo! ⚓
-                  </p>
-                </div>
-              ) : (
-                 <div className="divide-y divide-gray-100">
-                  {/* Onboarding progress row (if not completed) */}
-                  {!onboardingProgress.isCompleted && (
-                    <div 
-                      onClick={() => onPageChange('onboarding')}
-                      className="pb-4 hover:opacity-95 transition-all cursor-pointer group flex flex-col gap-2.5"
-                    >
-                      <div className="space-y-2 flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5.5 h-5.5 rounded-full border-2 border-yellow-400 flex-shrink-0 flex items-center justify-center">
-                              <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full" />
-                            </span>
-                            <h4 className="font-extrabold text-sm text-[#15333B] group-hover:text-yellow-700 transition-colors">
-                              Thử thách tuần Onboarding
-                            </h4>
-                          </div>
-                          <span className={`text-[10px] font-black border px-2 py-0.5 rounded-md flex items-center gap-1 ${getDeadlineBadgeStyle(onboardingDueDate)}`}>
-                            📅 Hạn nộp: {onboardingDueDate}
-                          </span>
-                        </div>
-                        
-                        <p className="text-xs text-gray-500 font-medium pl-[30px] leading-relaxed">
-                          Hoàn thành các nhiệm vụ khởi động và thiết lập môi trường.
-                        </p>
-                      </div>
-
-                      {/* Progress bar and Action Button Inline */}
-                      <div className="pl-[30px] flex justify-between items-center gap-4 mt-2">
-                        <div className="flex-1 max-w-sm flex items-center gap-3">
-                          <span className="text-[11px] font-extrabold text-[#3E5E63] shrink-0">Tiến độ: {onboardingProgress.percent}%</span>
-                          <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden border border-gray-300/40">
-                            <div 
-                              className="h-full bg-gradient-to-r from-[#214C54] to-[#EAB308] transition-all duration-500 rounded-full"
-                              style={{ width: `${onboardingProgress.percent}%` }}
-                            />
-                          </div>
-                        </div>
-                        <span className="px-3.5 py-1.5 rounded-xl bg-[#214C54]/5 text-[#214C54] group-hover:bg-[#214C54] group-hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1 shrink-0">
-                          Tiếp tục làm ➔
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Pending assignments */}
-                  {pendingAssignments.map((assignment, index) => (
-                    <div 
-                      key={assignment.id} 
-                      onClick={() => onPageChange(assignment.pageTarget)}
-                      className={`${(!onboardingProgress.isCompleted || index > 0) ? 'pt-4' : ''} pb-4 hover:opacity-95 transition-all cursor-pointer group flex flex-col gap-2`}
-                    >
-                      <div className="space-y-1.5 flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="w-5.5 h-5.5 rounded-full border-2 border-gray-300 group-hover:border-[#214C54] transition-colors flex-shrink-0 flex items-center justify-center">
-                              <span className="w-2.5 h-2.5 bg-transparent group-hover:bg-[#214C54] transition-colors rounded-full" />
-                            </span>
-                            <h4 className="font-extrabold text-sm text-[#15333B] group-hover:text-[#214C54] transition-colors">
-                              {assignment.title}
-                            </h4>
-                          </div>
-                          <span className={`text-[10px] font-black border px-2 py-0.5 rounded-md flex items-center gap-1 ${getDeadlineBadgeStyle(assignment.dueDate)}`}>
-                            📅 Hạn nộp: {assignment.dueDate}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 font-medium pl-[30px] leading-relaxed">
-                          {getShortDescription(assignment.desc)}
-                        </p>
-                      </div>
-
-                      {/* Action Button */}
-                      <div className="flex justify-end mt-2 pr-1">
-                        <span className="px-3.5 py-1.5 rounded-xl bg-[#214C54]/5 text-[#214C54] group-hover:bg-[#214C54] group-hover:text-white transition-all text-xs font-bold inline-flex items-center gap-1">
-                          Làm bài ngay ➔
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {pendingAssignments.length > 0 && (
-              <div className="pt-4 border-t border-gray-100 mt-4 flex justify-center">
-                <Button 
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onPageChange('syllabus')}
-                  rightIcon={<span className="group-hover:translate-x-1 transition-transform">➔</span>}
-                >
-                  Xem toàn bộ danh sách Syllabus
-                </Button>
+              <div>
+                <h4 className="font-extrabold text-base text-[#15333B] leading-snug">
+                  {nearestLesson?.title || 'Office Hour'}
+                </h4>
+                <p className="text-xs font-medium text-gray-400 mt-0.5">
+                  {lessonDateDetails.weekdayShort}, {nearestLesson?.time && nearestLesson?.endTime ? `${nearestLesson.time} - ${nearestLesson.endTime}` : '15:30 - 16:30'}
+                </p>
               </div>
-            )}
+            </div>
+
+            {/* Zoom Action Button */}
+            <button 
+              onClick={() => window.open("https://daymai.vn/meet/0388148327", "_blank", "noopener,noreferrer")}
+              className="w-full py-3 px-4 rounded-xl bg-[#15333B] hover:bg-[#214C54] text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Video size={16} />
+              <span>Vào Zoom Class ngay</span>
+            </button>
           </div>
 
-        </div>
+          {/* Card 2: XẾP HẠNG CỦA BẠN */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-150/80 flex flex-col justify-between flex-1 space-y-5">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">🎖️</span>
+                <h3 className="text-xs font-extrabold text-gray-400 tracking-wider uppercase">
+                  Xếp hạng của bạn
+                </h3>
+              </div>
+            </div>
 
-        {/* Right Column: Nearest Session & Progress Info */}
-        <div className="space-y-6">
-          {/* Card: Nearest Session (Requirement 2) */}
-          <div className="card bg-gradient-to-br from-[#214C54]/5 to-transparent border-[#214C54]/15" style={{ padding: '1.25rem' }}>
-            <h3 className="font-extrabold text-xs text-[#15333B] border-b border-gray-150 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
-              <Calendar size={14} className="text-[#214C54]" strokeWidth={1.5} />
-              Buổi học gần nhất
-            </h3>
-
-            {nearestLesson && lessonDateDetails ? (
-              <div className="space-y-4">
-                <div className="flex gap-4 items-start">
-                  {/* Calendar Widget Graphic */}
-                  <div className="flex flex-col items-center bg-white border border-[#214C54]/20 rounded-xl overflow-hidden min-w-[65px] shadow-sm shrink-0">
-                    <span className="bg-[#B91C1C] text-white w-full text-[10px] font-black text-center py-1 uppercase tracking-wider">
-                      {getWeekdayShort(lessonDateDetails.weekday)}
-                    </span>
-                    <span className="text-2xl font-black text-[#214C54] py-1">
-                      {lessonDateDetails.day}
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-extrabold uppercase pb-1">
-                      {lessonDateDetails.month}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <h4 className="font-extrabold text-sm text-[#15333B] leading-snug">
-                      {nearestLesson.title}
-                    </h4>
-                    {lessonTopicName && (
-                      <p className="text-xs text-[#214C54] font-bold leading-snug">
-                        {lessonTopicName}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">
-                      Thời gian: {nearestLesson.time && nearestLesson.endTime ? `${nearestLesson.time} - ${nearestLesson.endTime}` : (nearestLesson.allDay || nearestLesson.time === '00:00' ? 'Cả ngày' : nearestLesson.time)}
-                    </p>
-
-                  </div>
-                </div>
-
-                {/* Direct Action Zoom Link */}
-                {!nearestLesson.title?.toLowerCase().includes('onboarding') && (
-                  <Button 
-                    variant="primary"
-                    className="w-full text-xs font-black text-center py-2 flex items-center justify-center gap-2"
-                    leftIcon={<Video size={16} strokeWidth={1.5} />}
-                    onClick={() => window.open("https://daymai.vn/meet/0388148327", "_blank", "noopener,noreferrer")}
-                  >
-                    Tham gia Zoom Class ngay
-                  </Button>
-                )}
+            {/* Highlighted Personal Rank Banner */}
+            {leaderboard.length === 0 ? (
+              <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 text-center my-auto">
+                <span className="text-xl mb-1 block">⏳</span>
+                <h4 className="font-extrabold text-xs text-[#15333B]">
+                  Khóa học chưa bắt đầu
+                </h4>
+                <p className="text-[11px] text-gray-500 font-medium mt-1">
+                  Chưa có thủy thủ nào tham gia lớp này. Bảng xếp hạng sẽ mở khi khóa học khởi tranh!
+                </p>
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-400 text-xs">
-                Chưa có buổi học tiếp theo được lên lịch.
+              <div className="bg-cyan-50/70 border border-cyan-100 rounded-2xl p-4 flex items-center justify-between my-auto">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#B9E6FE] text-[#0369A1] font-extrabold text-sm flex items-center justify-center shrink-0">
+                    #{userRankIndex}
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-sm text-[#15333B]">
+                      {activeUser.full_name}
+                    </h4>
+                    <p className="text-xs font-medium text-gray-400">
+                      {leaderboard.length} Thủy thủ
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-lg font-black text-[#15333B] block leading-none">
+                    {activeUser.nautical_miles ?? 0}
+                  </span>
+                  <span className="text-[9px] font-extrabold text-gray-400 tracking-wider uppercase block mt-1">
+                    HẢI LÝ
+                  </span>
+                </div>
               </div>
             )}
+
+            {/* Leaderboard CTA Button */}
+            <button
+              onClick={() => onPageChange('walloffame')}
+              className="w-full py-2.5 px-4 rounded-full border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all flex items-center justify-center gap-1"
+            >
+              <span>Vào Bảng vinh danh</span>
+              <span>➔</span>
+            </button>
           </div>
 
-          {/* Card: Giải đấu hiện tại & Bảng vinh danh */}
-          <div className="card p-0 overflow-hidden bg-white shadow-sm border border-gray-100" style={{ padding: 0 }}>
-            {/* Header / Giải đấu */}
-            <div className="bg-[#FDF5DA] border-b border-[#EAB308]/20 p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm bg-[#EAB308]">
-                  <Trophy size={20} className="text-white" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#3E5E63]">
-                    Hải Lý Tích Lũy
-                  </div>
-                  <div className="text-sm font-black text-[#15333B] leading-tight">
-                    {activeUser.nautical_miles.toLocaleString()} Hải lý
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mini Leaderboard */}
-            <div className="p-4 pb-6">
-              <div className="flex justify-between items-center mb-2.5">
-                <h4 className="text-xs font-extrabold text-[#15333B] flex items-center gap-1.5 uppercase tracking-wider">
-                  <Shield size={14} className="text-[#3E5E63]" /> Top Thủy Thủ
-                </h4>
-                <span className="text-[10px] text-gray-400 font-semibold">⚓ Hải lý</span>
-              </div>
-              
-              <div className="space-y-1.5">
-                {leaderboard.slice(0, 3).map((student, idx) => (
-                  <div key={student.id} className={`flex items-center gap-2 px-2 py-1 rounded-lg ${student.id === activeUser.id ? 'bg-[#EAB308]/15 border border-[#EAB308]/30 shadow-sm' : ''}`}>
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-[#EAB308] text-[#15333B]' : idx === 1 ? 'bg-[#E5E7EB] text-[#374151]' : idx === 2 ? 'bg-[#fed7aa]/60 text-[#7c2d12]' : 'bg-gray-100 text-gray-400'}`}>
-                      {idx + 1}
-                    </span>
-                    <img src={student.avatar_url} alt={student.full_name} className="w-6 h-6 rounded-full object-cover border border-gray-200" />
-                    <span className="flex-1 text-xs font-bold text-[#15333B] truncate">
-                      {student.full_name} {student.id === activeUser.id && <span className="text-[9px] bg-[#214C54] text-white px-1.5 py-0.5 rounded-full ml-1">BẠN</span>}
-                    </span>
-                    <span className="text-xs font-medium text-gray-500 tabular-nums">
-                      {student.nautical_miles}
-                    </span>
-                  </div>
-                ))}
-
-                {userRankIndex > 3 && (
-                  <>
-                    <div className="flex items-center justify-center py-1">
-                      <div className="h-[1px] w-full border-t border-dashed border-gray-200" />
-                    </div>
-                    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-[#EAB308]/15 border border-[#EAB308]/30 shadow-sm">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black bg-gray-100 text-gray-400">
-                        {userRankIndex}
-                      </span>
-                      <img src={activeUser.avatar_url} alt={activeUser.full_name} className="w-6 h-6 rounded-full object-cover border border-[#EAB308]/30" />
-                      <span className="flex-1 text-xs font-bold text-[#15333B] truncate">
-                        {activeUser.full_name} <span className="text-[9px] bg-[#214C54] text-white px-1.5 py-0.5 rounded-full ml-1">BẠN</span>
-                      </span>
-                      <span className="text-xs font-medium text-gray-500 tabular-nums">
-                        {activeUser.nautical_miles}
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              <div className="pt-3 mt-3 border-t border-gray-100 text-center">
-                <Button 
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onPageChange('walloffame')}
-                  rightIcon={<span className="group-hover:translate-x-1 transition-transform">➔</span>}
-                >
-                  Xem Bảng Xếp Hạng
-                </Button>
-              </div>
-            </div>
-          </div>
         </div>
+
       </div>
     </div>
   );
 };
+
 

@@ -1,13 +1,54 @@
 import React from 'react';
 
+export const normalizeHtmlToMarkdown = (rawText: string): string => {
+  if (!rawText) return '';
+  if (!rawText.includes('<') && !rawText.includes('>')) return rawText;
+
+  return rawText
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_, inner) => {
+      let idx = 1;
+      return '\n' + inner.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_: string, item: string) => `${idx++}. ${item.trim()}\n`) + '\n';
+    })
+    .replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_, inner) => {
+      return '\n' + inner.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_: string, item: string) => `- ${item.trim()}\n`) + '\n';
+    })
+    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n')
+    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1\n')
+    .replace(/<div[^>]*>([\s\S]*?)<\/div>/gi, '$1\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**')
+    .replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, '**$1**')
+    .replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, '*$1*')
+    .replace(/<i[^>]*>([\s\S]*?)<\/i>/gi, '*$1*')
+    .replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, '<u>$1</u>')
+    .replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)')
+    .replace(/<\/?[a-z0-9]+[^>]*>/gi, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+};
+
 export const renderRichText = (text: string): React.ReactNode => {
   if (!text) return null;
-  const lines = text.split('\n');
+  const normalized = normalizeHtmlToMarkdown(text);
+  const lines = normalized.split('\n');
   return lines.map((line, idx) => {
-    let currentLine = line;
+    let currentLine = line.trim();
+    if (!currentLine) {
+      return <div key={idx} className="h-1" />;
+    }
+
     const isQuote = currentLine.startsWith('> ');
     if (isQuote) {
-      currentLine = currentLine.substring(2);
+      currentLine = currentLine.substring(2).trim();
+    }
+
+    const isBullet = /^[-*•]\s+/.test(currentLine);
+    const isOrdered = /^\d+\.\s+/.test(currentLine);
+
+    if (isBullet) {
+      currentLine = currentLine.replace(/^[-*•]\s+/, '');
+    } else if (isOrdered) {
+      currentLine = currentLine.replace(/^\d+\.\s+/, '');
     }
 
     // Parser for inline markdown styling (Bold, Italic, Underline, Link)
@@ -70,10 +111,30 @@ export const renderRichText = (text: string): React.ReactNode => {
       return (
         <blockquote
           key={idx}
-          className="border-l-4 border-yellow-500 pl-4 py-2 my-2 bg-yellow-50 rounded-r-lg text-gray-700 italic shadow-sm"
+          className="border-l-4 border-[#EAB308] pl-4 py-2.5 my-2 bg-[#FDF5DA] rounded-r-lg text-[#15333B] italic shadow-sm text-base"
         >
           {parsedLine}
         </blockquote>
+      );
+    }
+
+    if (isBullet) {
+      return (
+        <div key={idx} className="flex items-start gap-2 my-1 pl-1 text-base leading-relaxed text-[#3E5E63]">
+          <span className="text-[#214C54] font-black text-sm select-none shrink-0 mt-0.5">•</span>
+          <span className="flex-1 min-w-0">{parsedLine}</span>
+        </div>
+      );
+    }
+
+    if (isOrdered) {
+      const numberMatch = line.match(/^(\d+)\.\s+/);
+      const num = numberMatch ? numberMatch[1] : `${idx + 1}`;
+      return (
+        <div key={idx} className="flex items-start gap-2 my-1 pl-1 text-base leading-relaxed text-[#3E5E63]">
+          <span className="text-[#214C54] font-bold text-xs select-none shrink-0 mt-1 min-w-[1.2rem]">{num}.</span>
+          <span className="flex-1 min-w-0">{parsedLine}</span>
+        </div>
       );
     }
 

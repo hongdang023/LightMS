@@ -127,8 +127,9 @@ Tài liệu này quy định hệ thống thiết kế giao diện (UI Design Sy
 - **Linh vật "Vẹt lắm mồm":** Trợ lý ảo xuất hiện dạng Pop-up/Tooltip ở góc màn hình. Lời thoại đậm chất cướp biển (VD: _"Aye aye Thuyền trưởng! Bão bài tập đang đến!"_).
 
 - **Iconography:**
-  - Dùng **Lucide** làm thư viện icon chuẩn. `strokeWidth={1.5}` thống nhất toàn hệ thống.
-  - Kích thước chuẩn: `24x24px` thường | `20x20px` trong button/badge | `16x16px` inline.
+  - Dùng **Lucide Icons** làm thư viện icon duy nhất và chuẩn hóa cho hệ thống. `strokeWidth={1.5}` thống nhất toàn hệ thống.
+  - **Tuyệt đối KHÔNG dùng Emoji icons** (VD: 🏆, 🗓️, ⚡, 📊, 🚀, ⚓, 📖...) hoặc **AI/3D icons** trong văn bản giao diện, tabs, buttons, bộ lọc hay tiêu đề.
+  - Kích thước chuẩn: `24x24px` thường | `20x20px` trong button/badge | `16x16px` inline (`14x14px` cho tab/filter nhỏ).
   - Màu: `var(--primary-teal)` icon chính | `var(--muted-teal)` icon phụ | `var(--deep-gold)` icon Gamification.
   - Micro-animation: mũi tên `group-hover:translate-x-1`, tải lên `group-hover:-translate-y-0.5`.
 
@@ -191,7 +192,7 @@ CTA nổi bật đặt tại: cuối bài học, góc trên phải header, botto
 
 ### 6.7. Admin UI Consistency (WYSIWYG)
 
-Admin (Course Builder, Onboarding, Thông báo) dùng chung 100% component với Student Mode.
+Admin (Course Builder, Onboarding) dùng chung 100% component với Student Mode.
 
 ### 6.8. Mobile Responsiveness
 
@@ -256,8 +257,9 @@ File: `src/components/ui/Badge.tsx`
 | Variant | Nền | Chữ | Ứng dụng |
 |---------|-----|-----|----------|
 | `mastery` | `#FDF5DA` | `#EAB308` | Đạt Mastery, thành tích Gamification |
-| `submitted` | `#EFF6FF` | `#214C54` | Đã nộp bài, chờ chấm |
-| `graded` | `#ECFDF5` | `#10B981` | Đã chấm xong |
+| `submitted` | `#EFF6FF` | `#214C54` | Đã nộp bài |
+| `graded` | `#ECFDF5` | `#10B981` | Đã có phản hồi / Đã hoàn thành |
+
 | `pending` | `#F0F0F0` | `#6B7280` | Chưa nộp, chờ mở khóa |
 | `overdue` | `#FEF2F2` | `#EF4444` | Trễ deadline |
 | `info` | `#EFF6FF` | `#3B82F6` | Thông tin chung |
@@ -330,6 +332,8 @@ Khi hiển thị Tooltip hoặc Popover trên các phần tử nằm trong conta
 | Hardcode hex brand trực tiếp trong JSX | CSS variable hoặc `bg-[#214C54]` |
 | Nhiều hơn 1 Primary button / màn hình | Chỉ 1 Primary, còn lại Secondary/Ghost |
 | `variant="amber"` trong `<Button>` | `variant="gamification"` |
+| Dùng Emoji Icon hoặc AI/3D Icon trên UI text, tabs, buttons | Bắt buộc dùng **Lucide Icons** (`strokeWidth={1.5}`) |
+| Đính kèm mở ngoặc chú thích song ngữ (VD: `Trọn đời (All-time)`) | Sử dụng 100% Tiếng Việt thuần túy (`Trọn đời`) |
 | Đặt tooltip/popover tuyệt đối (`absolute`) trực tiếp bên trong container chứa `overflow` | Sử dụng React Portal (`createPortal`) đưa ra ngoài `document.body` và dùng `fixed` positioning |
 
 ---

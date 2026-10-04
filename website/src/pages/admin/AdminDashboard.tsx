@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCourse } from '../../context/CourseContext';
 import { useGamification } from '../../context/GamificationContext';
 import { useCommunity } from '../../context/CommunityContext';
+import { enrollmentService } from '../../services/enrollmentService';
 import { PageHeader } from '../../components/PageHeader';
 import { 
   LayoutDashboard, Users, CheckSquare, 
-  Mail, X, ChevronDown, ChevronRight, Trophy, Sparkles, ShieldAlert
+  Mail, X, ChevronDown, ChevronRight, Trophy, Sparkles, ShieldAlert,
+  Compass, BookOpen, Check, XCircle, CheckCircle2
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -15,25 +17,36 @@ interface AdminDashboardProps {
 
 import { DonutChart, BarChart } from '../../components/admin/dashboard/AdminStatGrid';
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange: _onPageChange }) => {
   const { users } = useAuth();
-  const { lessons } = useCourse();
+  const { lessons, activeBatch } = useCourse();
   const { nauticalTransactions } = useGamification();
-  const { onboardingDays, addNotification } = useCommunity();
+  const { onboardingDays } = useCommunity();
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const courseLessons = lessons;
   const lessonsWithAssignments = courseLessons.filter(l => !!l.assignment_description);
 
-  const students = users.filter(u => u.role === 'student');
+  // Filter students enrolled in the active batch
+  const enrolledStudentIds = useMemo(() => {
+    if (!activeBatch) return new Set(users.filter(u => u.role === 'student').map(u => u.id));
+    return new Set(enrollmentService.getEnrollmentsForBatch(activeBatch.id).map(e => e.user_id));
+  }, [activeBatch, users]);
+
+  const students = useMemo(() => {
+    return users.filter(u => u.role === 'student' && enrolledStudentIds.has(u.id));
+  }, [users, enrolledStudentIds]);
   const totalStudents = students.length;
 
+  // Filter nautical transactions for students in this batch
+  const batchTransactions = useMemo(() => {
+    return (nauticalTransactions || []).filter(t => enrolledStudentIds.has(t.student_id));
+  }, [nauticalTransactions, enrolledStudentIds]);
+
   // Total completions of lessons that have assignments
-  const totalCompletedAssignments = (nauticalTransactions || []).filter(
+  const totalCompletedAssignments = batchTransactions.filter(
     t => (t.action_type === 'lesson_complete' || t.action_type === 'assignment_graded') && 
          lessonsWithAssignments.some(l => l.id === t.reference_id)
   ).length;
@@ -152,12 +165,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   const countNeedingSupport = riskStudents.length;
   const countNeedingReward = outstandingStudents.length;
 
-  const triggerCommendation = (name: string) => {
-    setToastMessage(`Đã gửi thư khen ngợi và tuyên dương học viên **${name}** xuất sắc! 🎉`);
-    addNotification('Tuyên dương học viên', `Học viên ${name} được vinh danh vì thành tích xuất sắc!`, 'system');
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
   // --- STATS CALCULATIONS ---
 
   // 1. Overall Onboarding Completion (completed >= 5 days)
@@ -210,87 +217,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
     return `mailto:${student.gmail}?subject=${emailSubject}&body=${emailBody}`;
   };
 
-  const getRecommendedAction = () => {
-    const studentsWithBottlenecks = students
-      .map((s) => {
-        const unsubmitted = getStudentUnsubmittedLessons(s.id);
-        return {
-          student: s,
-          unsubmitted,
-          missingCount: unsubmitted.length,
-        };
-      })
-      .filter((item) => item.missingCount > 0)
-      .sort((a, b) => b.missingCount - a.missingCount);
-
-    if (studentsWithBottlenecks.length > 0) {
-      const target = studentsWithBottlenecks[0];
-      return {
-        type: 'support',
-        title: 'Hỗ trợ học viên chậm tiến độ',
-        description: `Thủy thủ **${target.student.full_name}** đang bị chậm ${target.missingCount} bài tập (nghẽn tại: ${target.unsubmitted[0]?.title || 'bài học'}).`,
-        actionLabel: 'Gửi email hỗ trợ',
-        actionLink: getMailtoLink(target.student, target.missingCount),
-        isEmail: true
-      };
-    }
-
-    if (outstandingStudents.length > 0) {
-      const target = outstandingStudents[0];
-      return {
-        type: 'commend',
-        title: 'Khen thưởng học viên xuất sắc',
-        description: `Thủy thủ **${target.full_name}** đã hoàn thành xuất sắc tất cả ngày Onboarding và có tương tác tích cực.`,
-        actionLabel: 'Tuyên dương ngay',
-        onClick: () => triggerCommendation(target.full_name),
-        isEmail: false
-      };
-    }
-
-    const liveClassStats = liveClassBarData.filter(d => d.total > 0);
-    if (liveClassStats.length > 0) {
-      const sortedLiveClass = [...liveClassStats].sort((a, b) => (a.completed / a.total) - (b.completed / b.total));
-      const worstLesson = sortedLiveClass[0];
-      const rate = Math.round((worstLesson.completed / worstLesson.total) * 100);
-      if (rate < 70) {
-        return {
-          type: 'improve_liveclass',
-          title: 'Cải thiện tỷ lệ nộp bài tập',
-          description: `Buổi học **${worstLesson.title}** đang có tỷ lệ hoàn thành thấp (${rate}% với ${worstLesson.completed}/${worstLesson.total} học viên).`,
-          actionLabel: 'Xem lộ trình',
-          onClick: () => onPageChange('curriculum'),
-          isEmail: false
-        };
-      }
-    }
-
-    const onboardingStats = onboardingBarData.filter(d => d.total > 0);
-    if (onboardingStats.length > 0) {
-      const sortedOnboarding = [...onboardingStats].sort((a, b) => (a.completed / a.total) - (b.completed / b.total));
-      const worstDay = sortedOnboarding[0];
-      const rate = Math.round((worstDay.completed / worstDay.total) * 100);
-      return {
-        type: 'improve_onboarding',
-        title: 'Tối ưu tài liệu Onboarding',
-        description: `Ngày **${worstDay.label}** (${worstDay.title}) có tỷ lệ hoàn thành thấp nhất (${rate}%). Cần cải thiện tài liệu hướng dẫn hoặc task checklist.`,
-        actionLabel: 'Quản lý học viên',
-        onClick: () => onPageChange('students'),
-        isEmail: false
-      };
-    }
-
-    return {
-      type: 'generic',
-      title: 'Tổ chức Office Hour',
-      description: 'Lên lịch một buổi Q&A trực tuyến tuần này để giải đáp thắc mắc và thúc đẩy động lực học tập cho cả lớp.',
-      actionLabel: 'Quản lý lịch học',
-      onClick: () => onPageChange('calendar'),
-      isEmail: false
-    };
-  };
-
-  const recommendation = getRecommendedAction();
-
   // Generate detailed progress helper for modal
   const getStudentProgress = (studentId: string) => {
     const onboardingDetail = onboardingDays.map(d => {
@@ -342,21 +268,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
   return (
     <div className="space-y-8 animate-fade-in select-none">
       <PageHeader
-        title="Tổng quan hệ thống"
-        description="Theo dõi toàn bộ hoạt động của học viên và trạng thái khóa học."
+        title={`Tổng quan ${activeBatch ? `— ${activeBatch.name}` : 'hệ thống'}`}
+        description={`Theo dõi toàn bộ hoạt động của học viên và tiến độ học tập ${activeBatch ? `cho lớp ${activeBatch.name}` : 'trên hệ thống'}.`}
         icon={<LayoutDashboard size={32} strokeWidth={1.5} />}
       />
 
-      {/* Floating Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-teal-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-teal-700 flex items-center gap-3 animate-scale-up">
-          <Trophy className="text-yellow-400 w-5 h-5 animate-bounce" />
-          <span className="text-xs font-bold" dangerouslySetInnerHTML={{ __html: toastMessage }}></span>
-          <button onClick={() => setToastMessage(null)} className="text-teal-300 hover:text-white ml-2">
-            <X size={14} />
-          </button>
-        </div>
-      )}
+
 
       {/* Admin Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -397,38 +314,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
         </div>
       </div>
 
-      {/* Recommended Action Card */}
-      <div className="bg-gradient-to-r from-[#1E3E45]/90 to-[#2A5C66]/90 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-lg text-white space-y-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="bg-[#FFD94C] text-[#15333B] text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider">GỢI Ý TỪ HỆ THỐNG</span>
-            <span className="text-xs text-white/60 font-semibold">• Phân tích thời gian thực</span>
-          </div>
-          <h4 className="text-base font-black text-[#FFD94C] flex items-center gap-1.5 mt-1">
-            {recommendation.title}
-          </h4>
-          <p className="text-xs text-white/80 font-medium max-w-2xl leading-relaxed">
-            {recommendation.description}
-          </p>
-        </div>
-
-        {recommendation.isEmail ? (
-          <a
-            href={recommendation.actionLink}
-            className="btn bg-[#FFD94C] hover:bg-[#FFE375] text-[#15333B] text-xs font-black px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto"
-          >
-            <Mail size={14} /> {recommendation.actionLabel}
-          </a>
-        ) : (
-          <button
-            onClick={recommendation.onClick}
-            className="btn bg-[#FFD94C] hover:bg-[#FFE375] text-[#15333B] text-xs font-black px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 self-start md:self-auto cursor-pointer"
-          >
-            {recommendation.type === 'commend' && <Trophy size={14} />}
-            {recommendation.actionLabel}
-          </button>
-        )}
-      </div>
 
       {/* --- STATS SECTIONS --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -516,7 +401,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h5 className="font-extrabold text-sm text-[#15333B] flex items-center gap-1.5">
-                    🚀 Chặng 1: Onboarding Week (7 Ngày)
+                    <Compass size={16} className="text-[#214C54]" />
+                    <span>Chặng 1: Onboarding Week (7 Ngày)</span>
                   </h5>
                 </div>
                 
@@ -537,7 +423,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
                       >
                         <div className="flex items-center gap-2">
                           {day.completed ? (
-                            <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold">✓</span>
+                            <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-[10px] font-bold">
+                              <Check size={12} />
+                            </span>
                           ) : (
                             <span className="w-5 h-5 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-[10px] font-bold">!</span>
                           )}
@@ -557,7 +445,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
                             day.tasks.map((task, idx) => (
                               <div key={idx} className="flex items-start gap-2 text-gray-700">
                                 <span className={`mt-0.5 font-bold ${task.completed ? 'text-green-600' : 'text-red-500'}`}>
-                                  {task.completed ? '✓' : '✗'}
+                                  {task.completed ? <Check size={12} /> : <X size={12} />}
                                 </span>
                                 <span className={task.completed ? 'line-through text-gray-400' : 'font-medium'}>
                                   {task.name}
@@ -575,7 +463,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
               {/* Live Class Stage Details */}
               <div className="space-y-4">
                 <h5 className="font-extrabold text-sm text-[#15333B] flex items-center gap-1.5">
-                  📚 Chặng 2: Live Class & Bài tập
+                  <BookOpen size={16} className="text-[#214C54]" />
+                  <span>Chặng 2: Live Class & Bài tập</span>
                 </h5>
 
                 <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
@@ -590,10 +479,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
                         <span className="text-[10px] text-gray-400 font-bold block">BUỔI {index + 1}</span>
                         <span className="text-xs font-bold text-[#15333B] block leading-tight">{lesson.title}</span>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1 ${
                             lesson.completed ? 'bg-teal-50 text-[#214C54]' : 'bg-gray-100 text-gray-500'
                           }`}>
-                            {lesson.completed ? 'Đã xem bài học ✓' : 'Chưa xem ✗'}
+                            <span>{lesson.completed ? 'Đã xem bài học' : 'Chưa xem'}</span>
+                            {lesson.completed ? <Check size={10} /> : <X size={10} />}
                           </span>
                         </div>
                       </div>
@@ -604,10 +494,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onPageChange }) 
                           <span className="text-[10px] text-gray-400 italic">Không có bài tập</span>
                         )}
                         {lesson.assignmentStatus === 'not_submitted' && (
-                          <span className="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded-lg font-bold">Chưa hoàn thành ❌</span>
+                          <span className="text-[10px] bg-red-100 text-red-800 px-2 py-1 rounded-lg font-bold flex items-center gap-1">
+                            <XCircle size={12} />
+                            <span>Chưa hoàn thành</span>
+                          </span>
                         )}
                         {lesson.assignmentStatus === 'graded' && (
-                          <span className="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded-lg font-bold">Đã hoàn thành ✓</span>
+                          <span className="text-[10px] bg-green-100 text-green-800 px-2 py-1 rounded-lg font-bold flex items-center gap-1">
+                            <CheckCircle2 size={12} />
+                            <span>Đã hoàn thành</span>
+                          </span>
                         )}
                       </div>
                     </div>

@@ -60,7 +60,7 @@ Phần này dùng để phân hóa học viên, dành cho những ai có nhiều
 
 ### 3.2. Cơ chế khóa theo lịch hẹn trước (Scheduled Unlocking)
 
-- **Cơ chế đặt lịch bằng tay (Manual Date/Time Scheduling):** Thay vì dùng công thức cố định, Admin được toàn quyền cấu hình mốc thời gian (ngày, giờ) mở khóa tự động cụ thể cho từng Ngày trong Onboarding thông qua cơ sở dữ liệu (Supabase/LocalStorage) bằng input chọn ngày giờ trên giao diện Course Builder.
+- **Cơ chế đặt lịch bằng tay (Manual Date/Time Scheduling):** Thay vì dùng công thức cố định, Admin được toàn quyền cấu hình mốc thời gian (ngày, giờ) mở khóa tự động cụ thể cho từng Ngày trong Onboarding thông qua cơ sở dữ liệu (Cloudflare D1/LocalStorage) bằng input chọn ngày giờ trên giao diện Course Builder.
 - **Điều kiện mở khóa kết hợp:** Một ngày học chặng thứ X chỉ thực sự mở khóa đối với học viên khi:
   1. Đã đến hoặc vượt qua mốc thời gian mở khóa đã lên lịch (`scheduled_at`).
   2. Học viên đã hoàn thành 100% nhiệm vụ của ngày học trước đó (X-1).

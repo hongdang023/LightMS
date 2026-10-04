@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Badge, ProfileBadge, NauticalMilesTransaction, Profile } from '../types/database';
 import { useAuth } from './AuthContext';
+import { useCourse } from './CourseContext';
+import { localDataService } from '../services/localDataService';
 
 export interface GamificationContextType {
   badges: Badge[];
@@ -17,7 +18,8 @@ export interface GamificationContextType {
     referenceId?: string,
     profiles?: Profile[],
     setProfiles?: React.Dispatch<React.SetStateAction<Profile[]>>,
-    addNotification?: (title: string, message: string, type?: 'telegram' | 'system') => void
+    addNotification?: (title: string, message: string, type?: 'telegram' | 'system') => void,
+    batchId?: string
   ) => Promise<{ error: any }>;
   unlockBadge: (
     studentId: string,
@@ -33,10 +35,11 @@ const GamificationContext = createContext<GamificationContextType | undefined>(u
 
 export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { users } = useAuth();
+  const { activeBatch } = useCourse();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [nauticalTransactions, setNauticalTransactions] = useState<NauticalMilesTransaction[]>([]);
 
-  // Dynamically derive profileBadges from the real student profiles loaded from Supabase
+  // Dynamically derive profileBadges from student profiles
   const profileBadges: ProfileBadge[] = useMemo(() => {
     const list: ProfileBadge[] = [];
     users.forEach(u => {
@@ -53,22 +56,24 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return list;
   }, [users]);
 
-  // ── Initial data fetch from Supabase ──────────────────────────────────────
+  // Load gamification data from localDataService
   useEffect(() => {
     const loadGamificationData = async () => {
-      const [
-        { data: badgesData },
-        { data: txData },
-      ] = await Promise.all([
-        supabase.from('badges').select('*'),
-        supabase.from('nautical_miles_transactions')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100),
-      ]);
-
-      if (badgesData) setBadges(badgesData);
-      if (txData) setNauticalTransactions(txData);
+      try {
+        await localDataService.init();
+        let loadedBadges = localDataService.getBadges();
+        if (!loadedBadges || loadedBadges.length === 0) {
+          const res = await fetch('/data/badges.json');
+          if (res.ok) {
+            loadedBadges = await res.json();
+            localDataService.setBadges(loadedBadges);
+          }
+        }
+        if (loadedBadges) setBadges(loadedBadges);
+        setNauticalTransactions(localDataService.getTransactions());
+      } catch (e) {
+        console.warn('Lỗi load gamification data:', e);
+      }
     };
 
     loadGamificationData();
@@ -97,6 +102,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setProfiles(prev => prev.map(p => p.id === studentId ? { ...p, badges: updatedBadges } : p));
     }
 
+    localDataService.updateUser(studentId, { badges: updatedBadges });
+
     const badge = badges.find(b => b.id === badgeId);
 
     if (!silent && addNotification) {
@@ -111,16 +118,6 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         'telegram'
       );
     }
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ badges: updatedBadges })
-        .eq('id', studentId);
-      if (error) console.error('Lỗi khi lưu badge vào profile trên Supabase:', error);
-    } catch (e) {
-      console.error(e);
-    }
   };
 
   const addNauticalMiles = async (
@@ -129,48 +126,19 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     actionType: NauticalMilesTransaction['action_type'],
     description: string,
     referenceId?: string,
-    _profiles: Profile[] = [],
+    profiles: Profile[] = [],
     setProfiles?: React.Dispatch<React.SetStateAction<Profile[]>>,
-    _addNotification?: (title: string, message: string, type?: 'telegram' | 'system') => void
+    _addNotification?: (title: string, message: string, type?: 'telegram' | 'system') => void,
+    batchId?: string
   ) => {
-    let effectiveStudentId = studentId;
-
     try {
-      // 0. Ensure student profile exists in Supabase to prevent FK constraint failure
-      const { data: existingProf } = await supabase
-        .from('profiles')
-        .select('id, nautical_miles')
-        .eq('id', studentId)
-        .maybeSingle();
-
-      if (!existingProf) {
-        // Attempt fallback lookup in local profiles list or create placeholder in Supabase
-        const localProfile = _profiles.find(p => p.id === studentId);
-        if (localProfile) {
-          const { data: profByGmail } = await supabase
-            .from('profiles')
-            .select('id, nautical_miles')
-            .eq('gmail', localProfile.gmail)
-            .maybeSingle();
-
-          if (profByGmail) {
-            effectiveStudentId = profByGmail.id;
-          } else {
-            const { role: _r, ...dbProfile } = localProfile as any;
-            const { data: createdProf, error: cErr } = await supabase
-              .from('profiles')
-              .insert([dbProfile])
-              .select('id')
-              .maybeSingle();
-            if (cErr) console.error('Lỗi khởi tạo profile trước transaction:', cErr);
-            if (createdProf) effectiveStudentId = createdProf.id;
-          }
-        }
-      }
+      const targetUser = profiles.find(p => p.id === studentId) || localDataService.getUserById(studentId);
+      const newMiles = (targetUser?.nautical_miles || 0) + amount;
 
       const newTx: NauticalMilesTransaction = {
         id: crypto.randomUUID(),
-        student_id: effectiveStudentId,
+        student_id: studentId,
+        batch_id: batchId || activeBatch?.id,
         amount,
         action_type: actionType,
         reference_id: referenceId,
@@ -178,41 +146,14 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         created_at: new Date().toISOString()
       };
 
-      // 1. Insert transaction into Supabase
-      const { error: txError } = await supabase
-        .from('nautical_miles_transactions')
-        .insert([newTx]);
+      localDataService.addTransaction(newTx);
+      localDataService.updateUser(studentId, { nautical_miles: newMiles });
 
-      if (txError) {
-        console.error('Lỗi khi lưu nautical miles transaction lên Supabase:', txError);
-        return { error: txError };
-      }
-
-      // 2. Fetch current profile from Supabase to get latest nautical_miles
-      const { data: currentProf } = await supabase
-        .from('profiles')
-        .select('nautical_miles')
-        .eq('id', effectiveStudentId)
-        .maybeSingle();
-
-      const newMiles = ((currentProf?.nautical_miles || 0) + amount);
-
-      // 3. Update profile's nautical_miles in Supabase
-      const { error: profError } = await supabase
-        .from('profiles')
-        .update({ nautical_miles: newMiles })
-        .eq('id', effectiveStudentId);
-
-      if (profError) {
-        console.error('Lỗi khi cập nhật nautical_miles của profile trên Supabase:', profError);
-      }
-
-      // 4. Update local React states
       setNauticalTransactions(prev => [newTx, ...prev]);
 
       if (setProfiles) {
         setProfiles(prev => prev.map(p => {
-          if (p.id === studentId || p.id === effectiveStudentId) {
+          if (p.id === studentId) {
             return { ...p, nautical_miles: newMiles };
           }
           return p;
@@ -221,7 +162,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       return { error: null };
     } catch (e: any) {
-      console.error('Lỗi không xác định khi addNauticalMiles:', e);
+      console.error('Lỗi khi addNauticalMiles:', e);
       return { error: e };
     }
   };

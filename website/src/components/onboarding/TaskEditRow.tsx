@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+import { Markdown } from 'tiptap-markdown';
 import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { normalizeHtmlToMarkdown } from '../../data/onboardingVisuals';
 
 interface TaskEditRowProps {
   task: { id: string; label: string; isOptional: boolean };
@@ -26,73 +32,76 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
   onToggleOptional,
   onDelete,
 }) => {
+  const initialContent = normalizeHtmlToMarkdown(task.label);
 
-  const applyFormatting = (format: 'bold' | 'italic' | 'underline' | 'ordered-list' | 'bullet-list' | 'link' | 'clear') => {
-    const editor = document.getElementById(`input-${task.id}`) as HTMLDivElement;
-    if (!editor) return;
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: false,
+        codeBlock: false,
+        blockquote: false,
+      }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-sky-600 underline font-semibold',
+        },
+      }),
+      Markdown.configure({
+        html: false,
+        transformPastedText: true,
+        transformCopiedText: true,
+      }),
+    ],
+    content: initialContent,
+    onUpdate: ({ editor: currentEditor }) => {
+      const md = (currentEditor.storage as any).markdown?.getMarkdown() || currentEditor.getText();
+      onLabelChange(task.id, md);
+    },
+    onBlur: ({ editor: currentEditor }) => {
+      const md = (currentEditor.storage as any).markdown?.getMarkdown() || currentEditor.getText();
+      onLabelBlur(task.id, md);
+      setTimeout(() => {
+        setFocusedTaskId(null);
+      }, 200);
+    },
+    onFocus: () => {
+      setFocusedTaskId(task.id);
+    },
+    editorProps: {
+      attributes: {
+        class: 'focus:outline-none min-h-[2em] text-sm text-[#15333B] font-semibold py-1 px-1.5 leading-relaxed',
+      },
+    },
+  });
 
-    editor.focus();
-
-    if (format === 'bold') {
-      document.execCommand('bold', false);
-    } else if (format === 'italic') {
-      document.execCommand('italic', false);
-    } else if (format === 'underline') {
-      document.execCommand('underline', false);
-    } else if (format === 'ordered-list') {
-      document.execCommand('insertOrderedList', false);
-    } else if (format === 'bullet-list') {
-      document.execCommand('insertUnorderedList', false);
-    } else if (format === 'link') {
-      const url = prompt('Nhập địa chỉ liên kết (URL):', 'https://');
-      if (url) {
-        document.execCommand('createLink', false, url);
+  useEffect(() => {
+    if (editor) {
+      const normalized = normalizeHtmlToMarkdown(task.label);
+      const currentMd = (editor.storage as any).markdown?.getMarkdown() || '';
+      if (normalized !== currentMd && !editor.isFocused) {
+        editor.commands.setContent(normalized);
       }
-    } else if (format === 'clear') {
-      document.execCommand('removeFormat', false);
     }
-
-    // Trigger onInput manually to sync state and save
-    const html = editor.innerHTML;
-    let markdown = html
-      .replace(/<span[^>]*>/gi, '')
-      .replace(/<\/span>/gi, '')
-      .replace(/<font[^>]*>/gi, '')
-      .replace(/<\/font>/gi, '')
-      .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-      .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-      .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-      .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-      .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-      .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
-      .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, p1) => {
-        let listIdx = 1;
-        return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, () => `${listIdx++}. $1\n`).trim() + '\n';
-      })
-      .replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, p1) => {
-        return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, '- $1\n').trim() + '\n';
-      })
-      .replace(/<div><br><\/div>/gi, '\n')
-      .replace(/<div>(.*?)<\/div>/gi, '\n$1')
-      .replace(/<br>/gi, '\n')
-      .replace(/&nbsp;/g, ' ')
-      .trim();
-
-    onLabelChange(task.id, markdown);
-  };
+  }, [task.label, editor]);
 
   return (
     <div className="flex flex-col gap-2 bg-white p-4 rounded-2xl border border-gray-200 hover:border-sky-300 hover:shadow-md transition-all">
       {/* Formatting toolbar shown only when this task is active */}
-      {focusedTaskId === task.id && (
+      {focusedTaskId === task.id && editor && (
         <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/60 shadow-inner">
           <button
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('bold');
+              editor.chain().focus().toggleBold().run();
             }}
-            className="w-7 h-7 flex items-center justify-center text-sm font-extrabold hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+            className={`w-7 h-7 flex items-center justify-center text-sm font-extrabold rounded-lg transition-colors border ${
+              editor.isActive('bold')
+                ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
+                : 'text-slate-700 hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
+            }`}
             title="In đậm (Bold)"
           >
             B
@@ -101,9 +110,13 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('italic');
+              editor.chain().focus().toggleItalic().run();
             }}
-            className="w-7 h-7 flex items-center justify-center text-sm italic hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+            className={`w-7 h-7 flex items-center justify-center text-sm italic rounded-lg transition-colors border ${
+              editor.isActive('italic')
+                ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
+                : 'text-slate-700 hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
+            }`}
             title="In nghiêng (Italic)"
           >
             I
@@ -112,9 +125,13 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('underline');
+              editor.chain().focus().toggleUnderline().run();
             }}
-            className="w-7 h-7 flex items-center justify-center text-sm underline hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+            className={`w-7 h-7 flex items-center justify-center text-sm underline rounded-lg transition-colors border ${
+              editor.isActive('underline')
+                ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
+                : 'text-slate-700 hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
+            }`}
             title="Gạch chân (Underline)"
           >
             U
@@ -124,9 +141,13 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('ordered-list');
+              editor.chain().focus().toggleOrderedList().run();
             }}
-            className="px-2 h-7 flex items-center justify-center text-[10px] font-black hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+            className={`px-2 h-7 flex items-center justify-center text-[10px] font-black rounded-lg transition-colors border ${
+              editor.isActive('orderedList')
+                ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
+                : 'text-slate-700 hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
+            }`}
             title="Danh sách số"
           >
             1.2.3.
@@ -135,9 +156,13 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('bullet-list');
+              editor.chain().focus().toggleBulletList().run();
             }}
-            className="px-2 h-7 flex items-center justify-center text-xs hover:bg-white rounded-lg text-[#214C54] transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
+            className={`px-2 h-7 flex items-center justify-center text-xs rounded-lg transition-colors border ${
+              editor.isActive('bulletList')
+                ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
+                : 'text-[#214C54] hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
+            }`}
             title="Danh sách điểm"
           >
             •••
@@ -147,9 +172,20 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('link');
+              if (editor.isActive('link')) {
+                editor.chain().focus().unsetLink().run();
+                return;
+              }
+              const url = prompt('Nhập địa chỉ liên kết (URL):', 'https://');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
             }}
-            className="px-2.5 h-7 flex items-center justify-center text-xs hover:bg-white rounded-lg text-slate-700 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm gap-1"
+            className={`px-2.5 h-7 flex items-center justify-center text-xs rounded-lg transition-colors border gap-1 ${
+              editor.isActive('link')
+                ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
+                : 'text-slate-700 hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
+            }`}
             title="Gắn link"
           >
             🔗 Link
@@ -158,7 +194,7 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
             type="button"
             onMouseDown={(e) => {
               e.preventDefault();
-              applyFormatting('clear');
+              editor.chain().focus().unsetAllMarks().clearNodes().run();
             }}
             className="w-7 h-7 flex items-center justify-center text-sm hover:bg-white rounded-lg text-rose-600 transition-colors border border-transparent hover:border-slate-200/80 hover:shadow-sm"
             title="Xóa định dạng"
@@ -192,61 +228,9 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
           </button>
         </div>
 
-        {/* Task Text Area (WYSIWYG contentEditable) */}
-        <div className="flex-1 min-w-0">
-          <div
-            id={`input-${task.id}`}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => {
-              const target = e.currentTarget;
-              const html = target.innerHTML;
-              
-              let markdown = html
-                .replace(/\s+style="[^"]*"/gi, '')
-                .replace(/<span[^>]*>/gi, '')
-                .replace(/<\/span>/gi, '')
-                .replace(/<font[^>]*>/gi, '')
-                .replace(/<\/font>/gi, '')
-                .replace(/<b>(.*?)<\/b>/gi, '**$1**')
-                .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
-                .replace(/<i>(.*?)<\/i>/gi, '*$1*')
-                .replace(/<em>(.*?)<\/em>/gi, '*$1*')
-                .replace(/<u>(.*?)<\/u>/gi, '<u>$1</u>')
-                .replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
-                .replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, p1) => {
-                  let listIdx = 1;
-                  return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, () => `${listIdx++}. $1\n`).trim() + '\n';
-                })
-                .replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, p1) => {
-                  return '\n' + p1.replace(/<li>(.*?)<\/li>/gi, '- $1\n').trim() + '\n';
-                })
-                .replace(/<div[^>]*><br[^>]*><\/div>/gi, '\n')
-                .replace(/<div[^>]*>(.*?)<\/div>/gi, '\n$1')
-                .replace(/<br\s*[^>]*>/gi, '\n')
-                .replace(/&nbsp;/g, ' ')
-                .replace(/\s+(?:class|id|dir|align|style)="[^"]*"/gi, '')
-                .trim();
-              
-              onLabelChange(task.id, markdown);
-            }}
-            onBlur={() => {
-              onLabelBlur(task.id, task.label);
-              setTimeout(() => setFocusedTaskId(null), 200);
-            }}
-            onFocus={() => {
-              setFocusedTaskId(task.id);
-            }}
-            className="w-full bg-transparent focus:outline-none py-1 px-1.5 text-sm text-[#15333B] font-semibold border-b border-transparent focus:border-slate-200 min-h-[2em]"
-            dangerouslySetInnerHTML={{
-              __html: task.label
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-sky-650 hover:underline">$1</a>')
-                .split('\n').join('<br>')
-            }}
-          />
+        {/* Task Text Area (TipTap Editor) */}
+        <div className="flex-1 min-w-0 border-b border-transparent focus-within:border-slate-200 transition-colors">
+          <EditorContent editor={editor} />
         </div>
 
         {/* Optional toggle */}

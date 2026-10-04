@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu } from 'lucide-react';
+import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCourse } from '../context/CourseContext';
 import { useGamification } from '../context/GamificationContext';
 import { useCommunity } from '../context/CommunityContext';
-import { AnnouncementsIcon } from './Icons';
 
 interface GlobalHeaderProps {
   currentPage: string;
@@ -14,6 +13,7 @@ interface GlobalHeaderProps {
 
 // Map page id → { label, parent }
 const PAGE_META: Record<string, { label: string; parent?: string; parentId?: string }> = {
+  'course-hub':   { label: 'Danh mục Khóa học' },
   dashboard:      { label: 'Dashboard học tập' },
   about:          { label: 'Giới thiệu' },
   onboarding:     { label: 'Onboarding' },
@@ -23,19 +23,19 @@ const PAGE_META: Record<string, { label: string; parent?: string; parentId?: str
   walloffame:     { label: 'Bảng vinh danh' },
   helpdesk:       { label: 'Hỏi đáp & Hỗ trợ' },
   profile:        { label: 'Hồ sơ cá nhân' },
-  announcements:  { label: 'Thông báo' },
-  'admin-announcements': { label: 'Thông báo' },
   'admin-dashboard': { label: 'Tổng quan hệ thống' },
   'course-builder':  { label: 'Soạn lộ trình' },
   'admin-calendar':  { label: 'Lịch học' },
+  'admin-batches':   { label: 'Quản lý Lớp & Mã' },
   'speedgrader':     { label: 'Chấm bài tập' },
   'student-mgmt':    { label: 'Quản lý học viên' },
   'internal-team':   { label: 'Quản lý nhân sự' },
+  'admin-settings':  { label: 'Cài đặt hệ thống' },
 };
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageChange, toggleSidebar }) => {
   const { activeUser, switchUser, logout, admins } = useAuth();
-  const { lessons } = useCourse();
+  const { lessons, activeCourse, activeBatch } = useCourse();
   const { nauticalTransactions } = useGamification();
   const { onboardingDays } = useCommunity();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -57,11 +57,23 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
 
   // Breadcrumbs
   const pageMeta = PAGE_META[currentPage];
-  const breadcrumbs: { label: string; id?: string }[] = [{ label: 'LightMS' }];
-  if (pageMeta) breadcrumbs.push({ label: pageMeta.label, id: currentPage });
+  const breadcrumbs: { label: string; id?: string; action?: () => void }[] = [{ label: 'LightMS' }];
+
+  if (isAdmin) {
+    if (activeBatch && currentPage !== 'admin-batches') {
+      breadcrumbs.push({
+        label: `${activeCourse?.slug === 'obsidian-101' ? 'Obsidian' : 'Vibe 201'} - ${activeBatch.name}`,
+        action: () => onPageChange('admin-batches')
+      });
+    }
+    if (pageMeta) breadcrumbs.push({ label: pageMeta.label, id: currentPage });
+  } else {
+    if (pageMeta) breadcrumbs.push({ label: pageMeta.label, id: currentPage });
+  }
 
   // Progress bar calculation
-  const totalItems = (lessons || []).length + 7;
+  const totalOnboardingDaysCount = (onboardingDays && onboardingDays.length > 0) ? onboardingDays.length : 5;
+  const totalItems = (lessons || []).length + totalOnboardingDaysCount;
   const completedMainLessons = (lessons || []).filter(lesson => {
     return (nauticalTransactions || []).some(
       t => t.student_id === activeUser.id && t.action_type === 'lesson_complete' && t.reference_id === lesson.id
@@ -87,7 +99,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
         if (requiredTasks.length === 0) return true;
         return requiredTasks.every(key => !!activeUser.onboarding_tasks?.[key]);
       }).length
-    : Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
+    : Array.from({ length: totalOnboardingDaysCount }, (_, i) => i + 1).filter(day => {
         return (nauticalTransactions || []).some(
           t => t.student_id === activeUser.id && 
           t.action_type === 'lesson_complete' && 
@@ -112,24 +124,32 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
         </button>
       )}
 
-      {/* LEFT: Breadcrumbs */}
-      <nav className="flex items-center gap-1.5 text-sm">
-        {breadcrumbs.map((crumb, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-gray-300" />}
-            {crumb.id ? (
-              <span className="font-bold text-[#15333B]">{crumb.label}</span>
-            ) : (
-              <span
-                className="text-gray-400 font-semibold cursor-pointer hover:text-[#214C54] transition-colors"
-                onClick={() => onPageChange(isStudent ? 'dashboard' : 'admin-dashboard')}
-              >
-                {crumb.label}
-              </span>
-            )}
-          </React.Fragment>
-        ))}
-      </nav>
+      {/* LEFT: Breadcrumbs & Active Course/Batch Selector */}
+      <div className="flex items-center gap-3">
+        <nav className="flex items-center gap-1.5 text-sm">
+          {breadcrumbs.map((crumb, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-gray-300" />}
+              {crumb.id ? (
+                <span className="font-bold text-[#15333B]">{crumb.label}</span>
+              ) : (
+                <span
+                  className="text-gray-400 font-semibold cursor-pointer hover:text-[#214C54] transition-colors"
+                  onClick={() => {
+                    if (crumb.action) {
+                      crumb.action();
+                    } else {
+                      onPageChange(isStudent ? 'dashboard' : 'admin-dashboard');
+                    }
+                  }}
+                >
+                  {crumb.label}
+                </span>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+      </div>
 
       {/* CENTER: Sailing Progress Bar (student only) */}
       {isStudent && (
@@ -154,26 +174,14 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
         </div>
       )}
 
-      {/* RIGHT: Notifications & Avatar Dropdown */}
+      {/* RIGHT: Avatar Dropdown */}
       <div className="flex items-center gap-3">
-        {/* Notification Button */}
-        <button
-          onClick={() => onPageChange(isStudent ? 'announcements' : 'admin-announcements')}
-          title="Thông báo"
-          className={`p-2 rounded-full transition-all relative ${
-            ['announcements', 'admin-announcements'].includes(currentPage)
-              ? 'text-[#FFD94C] bg-[#214C54] hover:bg-[#214C54]/90'
-              : 'text-[#3E5E63] hover:text-[#15333B] hover:bg-gray-100'
-          }`}
-        >
-          <AnnouncementsIcon active={['announcements', 'admin-announcements'].includes(currentPage)} className="w-5 h-5" />
-        </button>
 
         {/* Avatar Dropdown */}
         <div className="relative" ref={dropdownRef}>
         <button
           id="header-profile-dropdown"
-          onClick={() => setDropdownOpen(prev => !prev)}
+          onClick={() => setDropdownOpen((prev: boolean) => !prev)}
           className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
         >
           <img
@@ -221,6 +229,14 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
             {/* Actions */}
             <div className="py-1.5">
               <button
+                onClick={() => { onPageChange('course-hub'); setDropdownOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-[#214C54] hover:text-white transition-colors"
+              >
+                <BookOpen className="w-4 h-4 text-[#FFD94C]" />
+                Đổi khóa học
+              </button>
+
+              <button
                 onClick={() => { onPageChange('profile'); setDropdownOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-[#214C54] hover:text-white transition-colors"
               >
@@ -234,7 +250,6 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
                   onClick={() => {
                     const isAdminPage = [
                       'admin-dashboard',
-                      'admin-announcements',
                       'course-builder',
                       'admin-calendar',
                       'speedgrader',
@@ -254,7 +269,6 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
                   <LayoutDashboard className="w-4 h-4 text-[#FFD94C]" />
                   {[
                     'admin-dashboard',
-                    'admin-announcements',
                     'course-builder',
                     'admin-calendar',
                     'speedgrader',

@@ -107,7 +107,7 @@ export const getFaqs = (onPageChange?: (page: string) => void): FAQArticle[] => 
               className="inline-flex items-center gap-2 font-bold text-xs bg-[#214C54] text-white px-4 py-2.5 rounded-xl hover:bg-[#15333B] transition-all shadow-sm hover:shadow"
             >
               <BookMarked className="w-4 h-4" />
-              📖 Xem Hướng dẫn vượt ngợp (Canva Link)
+              <span>Xem Hướng dẫn vượt ngợp (Canva)</span>
             </a>
           </div>
         )
@@ -164,7 +164,7 @@ export const getFaqs = (onPageChange?: (page: string) => void): FAQArticle[] => 
               className="inline-flex items-center gap-2 font-bold text-xs bg-[#214C54] text-white px-4 py-2.5 rounded-xl hover:bg-[#15333B] transition-all shadow-sm hover:shadow"
             >
               <Layers className="w-4 h-4" />
-              📊 Bảng Tracking Tiến độ & Leo Rank lớp học
+              <span>Bảng Tracking Tiến độ & Leo Rank lớp học</span>
             </button>
           </div>
         )
@@ -295,7 +295,7 @@ export const getFaqs = (onPageChange?: (page: string) => void): FAQArticle[] => 
               rel="noreferrer" 
               className="inline-flex items-center gap-2 font-bold text-xs bg-[#15333B] text-[#FFD94C] px-3.5 py-2 rounded-xl hover:bg-[#214C54] transition-all"
             >
-              🚀 Truy cập Google NotebookLM
+              <span>Truy cập Google NotebookLM</span>
             </a>
           </div>
         )

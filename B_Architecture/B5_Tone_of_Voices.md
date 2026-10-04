@@ -23,6 +23,11 @@ Văn phong của giao diện chính cần tuân thủ **Biểu đồ Cân bằng
   - Học viên đang học cần biết chính xác nút đó làm gì, không được bắt họ giải đố.
   - Tốt: *Vào học*, *Nộp bài tập*, *Thảo luận*, *Hỗ trợ*.
   - Tránh tuyệt đối: *Giương buồm (Vào học)*, *Nộp chiến lợi phẩm (Nộp bài)*, *Phát tín hiệu SOS (Hỗ trợ)*.
+- **Quy chuẩn Ngôn ngữ UI (Thuần Tiếng Việt - Không dùng ngoặc song ngữ):**
+  - Mọi văn bản hiển thị trên giao diện (Tiêu đề, Tabs, Nút bấm, Nhãn form, Tooltips, Bộ lọc) phải sử dụng **100% Tiếng Việt thuần túy**.
+  - **Tuyệt đối KHÔNG đính kèm mở ngoặc chú thích song ngữ Anh-Việt.**
+  - *Ví dụ chuẩn:* `Trọn đời`, `Hôm nay`, `Tuần này`, `Lộ trình học`, `Giới tính`, `Độ tuổi`.
+  - *Ví dụ vi phạm:* `Trọn đời (All-time)`, `Hôm nay (Daily)`, `Tuần này (7-day)`, `Lộ trình Học (Syllabus)`, `Giới tính (Gender)`.
 - **Tiêu đề phân hệ (Headings): 50% Rõ ràng - 50% Theme.**
   - Tốt: *Hải trình Tuần 1*, *Thử thách chướng ngại vật (Bài tập)*.
 - **Trạng thái trống (Empty States):**
@@ -50,8 +55,9 @@ Linh vật là nơi "bung xõa" nhất về mặt ngôn từ. Con Vẹt đóng v
 
 Khác với con Vẹt hài hước, Admin đóng vai trò là "Thuyền trưởng chỉ đường" - Cần sự uy nghiêm, sắc bén (chuyên môn sâu) nhưng mang tính nâng đỡ (Scaffolding).
 
-- **Khi đưa Feedback (Chấm bài):**
-  - Tập trung vào sự thật: Phân tích đúng/sai một cách trực diện bằng kỹ thuật "Bánh mì kẹp thịt" (Khen -> Chê -> Gợi ý cách sửa).
+- **Khi đưa Feedback (Phản hồi bài nộp):**
+  - Tập trung vào sự thật: Phân tích đúng/sai một cách trực diện bằng kỹ thuật "Bánh mì kẹp thịt" (Khen -> Góp ý -> Gợi ý cách sửa).
+
   - Không nạt nộ: Thay vì "Em làm sai hết rồi", hãy dùng "Hướng đi này đang làm thuyền lệch bánh lái. Hãy thử phân tích lại góc nhìn X, Y xem sao".
 - **Khi thảo luận (Threads):**
   - Không bao giờ đưa ra đáp án trực tiếp.

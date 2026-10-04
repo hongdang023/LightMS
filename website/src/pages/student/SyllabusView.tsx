@@ -5,7 +5,7 @@ import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
 import type { Lesson } from '../../types/database';
 import { EditableText } from '../../components/EditableText';
-import { X, Save, Undo } from 'lucide-react';
+import { X, Save, Undo, Lightbulb, Key } from 'lucide-react';
 import { LessonMaterials } from '../../components/syllabus/LessonMaterials';
 import { LessonAssignmentSection } from '../../components/syllabus/LessonAssignmentSection';
 import { LessonCard } from '../../components/syllabus/LessonCard';
@@ -68,9 +68,9 @@ export const SyllabusView: React.FC<{
       }
       const { error } = await updateLesson(draftLesson.id, updates);
       if (error) {
-        showToast(`❌ Lỗi khi lưu vào Supabase: ${error.message || 'Vui lòng kiểm tra RLS policy!'}`);
+        showToast(`❌ Lỗi khi lưu dữ liệu: ${error.message || 'Vui lòng thử lại!'}`);
       } else {
-        showToast('✨ Đã lưu mọi thay đổi vào Supabase thành công!');
+        showToast('✨ Đã lưu mọi thay đổi thành công!');
       }
     }
   };
@@ -303,7 +303,10 @@ export const SyllabusView: React.FC<{
 
             {/* Key Concepts */}
             <div className="space-y-2">
-              <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">💡 Khái niệm cốt lõi</h4>
+              <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest flex items-center gap-1.5">
+                <Lightbulb size={16} />
+                <span>Khái niệm cốt lõi</span>
+              </h4>
               {isEditMode && draftLesson ? (
                 <div className="space-y-2.5 w-full">
                   <div className="flex flex-wrap gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl">
@@ -312,7 +315,8 @@ export const SyllabusView: React.FC<{
                         key={idx} 
                         className="inline-flex items-center gap-1.5 text-[10px] bg-amber-50 text-amber-800 border border-amber-200/50 rounded-lg px-2.5 py-1 font-extrabold"
                       >
-                        🔑 {concept}
+                        <Key size={12} />
+                        <span>{concept}</span>
                         <button 
                           type="button" 
                           onClick={() => handleRemoveConcept(concept)}
@@ -346,8 +350,9 @@ export const SyllabusView: React.FC<{
               ) : (activeLesson.key_concepts || defaultKeyConcepts).length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {(activeLesson.key_concepts || defaultKeyConcepts).map((concept, idx) => (
-                    <span key={idx} className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200/50 rounded-lg px-2.5 py-1 font-extrabold">
-                      🔑 {concept}
+                    <span key={idx} className="inline-flex items-center gap-1.5 text-[10px] bg-amber-50 text-amber-800 border border-amber-200/50 rounded-lg px-2.5 py-1 font-extrabold">
+                      <Key size={12} />
+                      <span>{concept}</span>
                     </span>
                   ))}
                 </div>

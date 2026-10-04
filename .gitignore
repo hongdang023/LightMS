@@ -44,3 +44,12 @@ Thumbs.db
 .vite
 .parcel-cache
 .cache/
+
+# Local backups
+backup/
+
+# Agent & Cloudflare local state
+.agents/mcp_config.json
+.wrangler/
+website/.wrangler/
+

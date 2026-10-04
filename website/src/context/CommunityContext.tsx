@@ -1,24 +1,30 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Announcement, CalendarEvent, OnboardingDay, AboutContent, NotificationLog, HelpDeskFaq } from '../types/database';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import type { CalendarEvent, OnboardingDay, AboutContent, NotificationLog, HelpDeskFaq } from '../types/database';
+import { useCourse } from './CourseContext';
+import { DEFAULT_OBSIDIAN_CALENDAR_EVENTS, DEFAULT_OBSIDIAN_ONBOARDING_DAYS } from '../data/seedCourses';
+import { VIBE_201_CALENDAR_EVENTS } from '../data/vibeCalendarEvents';
+import { VIBE_7DAY_ONBOARDING_DAYS } from '../data/vibeOnboardingDays';
+import {
+  DEFAULT_OBSIDIAN_ABOUT_CONTENT,
+  DEFAULT_VIBE_ABOUT_CONTENT
+} from '../data/aboutViewData';
+
+import { d1ApiService } from '../services/d1ApiService';
+
+const STORAGE_FAQS_KEY = 'lightms_help_desk_faqs';
 
 export interface CommunityContextType {
-  announcements: Announcement[];
   calendarEvents: CalendarEvent[];
   onboardingDays: OnboardingDay[];
   aboutContent: AboutContent;
   helpDeskFaqs: HelpDeskFaq[];
   notifications: NotificationLog[];
-  setAnnouncements: React.Dispatch<React.SetStateAction<Announcement[]>>;
   setCalendarEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
   setOnboardingDays: React.Dispatch<React.SetStateAction<OnboardingDay[]>>;
   setAboutContent: React.Dispatch<React.SetStateAction<AboutContent>>;
   setHelpDeskFaqs: React.Dispatch<React.SetStateAction<HelpDeskFaq[]>>;
   setNotifications: React.Dispatch<React.SetStateAction<NotificationLog[]>>;
   addNotification: (title: string, message: string, type?: 'telegram' | 'system') => void;
-  addAnnouncement: (title: string, content: string, sendEmail: boolean, mediaUrls?: string[]) => void;
-  updateAnnouncement: (id: string, updates: Partial<Announcement>) => void;
-  deleteAnnouncement: (id: string) => void;
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => void;
   updateCalendarEvent: (id: string, updates: Partial<CalendarEvent>) => void;
   deleteCalendarEvent: (id: string) => void;
@@ -33,87 +39,128 @@ export interface CommunityContextType {
 const CommunityContext = createContext<CommunityContextType | undefined>(undefined);
 
 export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>([]);
-  const [helpDeskFaqs, setHelpDeskFaqs] = useState<HelpDeskFaq[]>([]);
-  const [notifications, setNotifications] = useState<NotificationLog[]>([]);
-  const [aboutContent, setAboutContent] = useState<AboutContent>({
-    overviewText: '',
-    scheduleText: '',
-    benefitsText: ''
+  const { activeCourse, activeBatch } = useCourse();
+
+  const isVibeCourse = useMemo(() => {
+    return (
+      activeCourse?.slug === 'vibe-coding-201' ||
+      activeCourse?.id === 'course-vibe-201' ||
+      activeCourse?.id === '3f26048a-6689-400e-99fc-e0499161d934'
+    );
+  }, [activeCourse]);
+
+  const currentBatchKey = useMemo(() => {
+    if (activeBatch?.id) return activeBatch.id;
+    return isVibeCourse ? 'batch-vibe201-k2' : 'batch-obs101-k1';
+  }, [activeBatch?.id, isVibeCourse]);
+
+  const currentCourseKey = useMemo(() => {
+    if (activeCourse?.id) return activeCourse.id;
+    return isVibeCourse ? 'course-vibe-201' : 'course-obsidian-101';
+  }, [activeCourse?.id, isVibeCourse]);
+
+  const getCalendarEventsForBatch = useCallback((batchId: string, isVibe: boolean): CalendarEvent[] => {
+    try {
+      const saved = localStorage.getItem(`lightms_calendar_events_${batchId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return isVibe ? VIBE_201_CALENDAR_EVENTS : DEFAULT_OBSIDIAN_CALENDAR_EVENTS;
+  }, []);
+
+  const getOnboardingDaysForCourse = useCallback((courseKey: string, isVibe: boolean): OnboardingDay[] => {
+    try {
+      const saved = localStorage.getItem(`lightms_onboarding_days_${courseKey}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If cached data contains outdated/fabricated day titles or old companion hints, discard cache
+        const isStale = Array.isArray(parsed) && parsed.some((d: any) => 
+          typeof d.title === 'string' && (d.title.includes('Cloudflare') || d.title.includes('Mindset & Thiết lập')) ||
+          (typeof d.companionHint === 'string' && (d.companionHint.includes('Tri thức chỉ có giá trị') || d.companionHint.includes('Ghi nhớ nhỏ: Bạn không cần')))
+        );
+        if (Array.isArray(parsed) && parsed.length > 0 && !isStale) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return isVibe ? VIBE_7DAY_ONBOARDING_DAYS : DEFAULT_OBSIDIAN_ONBOARDING_DAYS;
+  }, []);
+
+  const getAboutContentForCourse = useCallback((courseKey: string, isVibe: boolean): AboutContent => {
+    try {
+      const saved = localStorage.getItem(`lightms_about_content_${courseKey}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If cached data contains outdated/fabricated about content, discard cache
+        const isStale = parsed && (
+          (parsed.quote && parsed.quote.includes('AI Codes')) ||
+          (parsed.truCot1?.title && parsed.truCot1.title.includes('Product Builder'))
+        );
+        if (parsed && typeof parsed === 'object' && (parsed.quote || parsed.gachDauDong) && !isStale) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return isVibe ? DEFAULT_VIBE_ABOUT_CONTENT : DEFAULT_OBSIDIAN_ABOUT_CONTENT;
+  }, []);
+
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => {
+    return getCalendarEventsForBatch(currentBatchKey, isVibeCourse);
   });
 
-  // ── Initial data fetch from Supabase ──────────────────────────────────────
+  const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>(() => {
+    return getOnboardingDaysForCourse(currentCourseKey, isVibeCourse);
+  });
+
+  const [aboutContent, setAboutContent] = useState<AboutContent>(() => {
+    return getAboutContentForCourse(currentCourseKey, isVibeCourse);
+  });
+
+  // Automatically sync calendar, onboarding, and about content when course or batch changes (D1 first, fallback local)
   useEffect(() => {
-    const loadCommunityData = async () => {
-      const [
-        { data: announcementsData, error: annErr },
-        { data: calendarData, error: calErr },
-        { data: onboardingData, error: onbErr },
-        { data: aboutData, error: abtErr },
-        { data: faqsData, error: faqErr },
-      ] = await Promise.all([
-        supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(20),
-        supabase.from('calendar_events').select('*'),
-        supabase.from('onboarding_days').select('*').order('day', { ascending: true }),
-        supabase.from('about_content').select('*').eq('id', 'default').single(),
-        supabase.from('help_desk_faqs').select('*').order('order_index', { ascending: true }),
-      ]);
+    let isCancelled = false;
 
-      if (annErr) console.error('Lỗi announcements:', annErr);
-      if (calErr) console.error('Lỗi calendar_events:', calErr);
-      if (onbErr) console.error('Lỗi onboarding_days:', onbErr);
-      if (abtErr) console.error('Lỗi about_content:', abtErr);
-      if (faqErr) console.error('Lỗi help_desk_faqs:', faqErr);
+    // Fetch from D1 Database
+    d1ApiService.getOnboardingDays(currentCourseKey).then(d1Days => {
+      if (!isCancelled && d1Days && d1Days.length > 0) {
+        setOnboardingDays(d1Days);
+        localStorage.setItem(`lightms_onboarding_days_${currentCourseKey}`, JSON.stringify(d1Days));
+      } else if (!isCancelled) {
+        setOnboardingDays(getOnboardingDaysForCourse(currentCourseKey, isVibeCourse));
+      }
+    });
 
-      if (announcementsData) setAnnouncements(announcementsData);
-      if (calendarData) {
-        const mapped = calendarData.map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          time: e.time,
-          endTime: e.end_time,
-          allDay: e.all_day,
-          date: e.date,
-          month: e.month,
-          year: e.year,
-          dayOfWeek: e.day_of_week,
-          startRecur: e.start_recur ? Number(e.start_recur) : undefined,
-          endRecur: e.end_recur ? Number(e.end_recur) : undefined,
-          colorClass: e.color_class,
-          dotColorClass: e.dot_color_class,
-          type: e.type,
-          eventType: e.event_type,
-          details: e.details
-        }));
-        setCalendarEvents(mapped);
+    d1ApiService.getCalendarEvents(currentBatchKey).then(d1Events => {
+      if (!isCancelled && d1Events && d1Events.length > 0) {
+        setCalendarEvents(d1Events);
+        localStorage.setItem(`lightms_calendar_events_${currentBatchKey}`, JSON.stringify(d1Events));
+      } else if (!isCancelled) {
+        setCalendarEvents(getCalendarEventsForBatch(currentBatchKey, isVibeCourse));
       }
-      if (onboardingData) setOnboardingDays(onboardingData);
-      if (faqsData) setHelpDeskFaqs(faqsData);
-      if (aboutData) {
-        setAboutContent({
-          overviewText: aboutData.overview_text ?? '',
-          scheduleText: aboutData.schedule_text ?? '',
-          benefitsText: aboutData.benefits_text ?? '',
-          videoUrl: aboutData.video_url ?? undefined,
-          platformButtons: aboutData.platform_buttons ?? undefined,
-          benefitClubs: aboutData.benefit_clubs ?? undefined,
-          quote: aboutData.quote ?? undefined,
-          gachDauDong: aboutData.gach_dau_dong ?? undefined,
-          truCot1: aboutData.tru_cot_1 ?? undefined,
-          truCot2: aboutData.tru_cot_2 ?? undefined,
-          truCot3: aboutData.tru_cot_3 ?? undefined,
-          outro: aboutData.outro ?? undefined,
-          sdtNote: aboutData.sdt_note ?? undefined,
-          officeHourDesc: aboutData.office_hour_desc ?? undefined,
-          luuYGold: aboutData.luu_y_gold ?? undefined,
-        });
-      }
+    });
+
+    setAboutContent(getAboutContentForCourse(currentCourseKey, isVibeCourse));
+
+    return () => {
+      isCancelled = true;
     };
+  }, [currentBatchKey, currentCourseKey, isVibeCourse, getCalendarEventsForBatch, getOnboardingDaysForCourse, getAboutContentForCourse]);
 
-    loadCommunityData();
-  }, []);
+  const [helpDeskFaqs, setHelpDeskFaqs] = useState<HelpDeskFaq[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_FAQS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return [];
+  });
+
+  const [notifications, setNotifications] = useState<NotificationLog[]>([]);
 
   const addNotification = (title: string, message: string, type: 'telegram' | 'system' = 'system') => {
     const newLog: NotificationLog = {
@@ -126,171 +173,91 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNotifications(prev => [newLog, ...prev]);
   };
 
-  const addAnnouncement = (title: string, content: string, sendEmail: boolean, mediaUrls?: string[]) => {
-    const newAnn: Announcement = {
-      id: crypto.randomUUID(),
-      title,
-      content,
-      created_by: 'Admin',
-      send_email: sendEmail,
-      created_at: new Date().toISOString(),
-      media_urls: mediaUrls || []
-    };
-
-    setAnnouncements(prev => [newAnn, ...prev]);
-    addNotification('Thông báo mới', `Admin vừa phát thông báo: "${title}"`, 'system');
-
-    if (sendEmail) {
-      addNotification('Gửi Email hàng loạt', `Đã gửi thông báo "${title}" tới tất cả email học viên.`, 'system');
-    }
-
-    const { isNew, ...dbAnn } = newAnn as any;
-    supabase.from('announcements').insert([dbAnn]).then(({ error }) => {
-      if (error) console.error('Lỗi khi lưu announcement lên Supabase:', error);
-    });
-  };
-
-  const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
-    setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
-    addNotification('Cập nhật thông báo', 'Nội dung thông báo đã được chỉnh sửa', 'system');
-    const { isNew, ...dbUpdates } = updates as any;
-    supabase.from('announcements').update(dbUpdates).eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi cập nhật announcement trên Supabase:', error);
-    });
-  };
-
-  const deleteAnnouncement = (id: string) => {
-    setAnnouncements(prev => prev.filter(a => a.id !== id));
-    addNotification('Xóa thông báo', 'Đã xóa 1 thông báo khỏi hệ thống', 'system');
-    supabase.from('announcements').delete().eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi xóa announcement trên Supabase:', error);
-    });
-  };
-
   const addCalendarEvent = (event: Omit<CalendarEvent, 'id'>) => {
+    const tempId = crypto.randomUUID();
     const newEvent: CalendarEvent = {
       ...event,
-      id: crypto.randomUUID()
+      id: tempId,
+      batch_id: currentBatchKey,
+      course_id: currentCourseKey,
     };
-    setCalendarEvents(prev => [...prev, newEvent]);
-    addNotification('Lịch học mới', `Đã thêm sự kiện "${event.title}" vào lịch`, 'system');
-    
-    const dbEvent = {
-      id: newEvent.id,
-      title: newEvent.title,
-      time: newEvent.time,
-      end_time: newEvent.endTime,
-      all_day: newEvent.allDay,
-      date: newEvent.date,
-      month: newEvent.month,
-      year: newEvent.year,
-      day_of_week: newEvent.dayOfWeek,
-      start_recur: newEvent.startRecur,
-      end_recur: newEvent.endRecur,
-      color_class: newEvent.colorClass,
-      dot_color_class: newEvent.dotColorClass,
-      type: newEvent.type,
-      event_type: newEvent.eventType,
-      details: newEvent.details
-    };
-
-    supabase.from('calendar_events').insert([dbEvent]).then(({ error }) => {
-      if (error) console.error('Lỗi khi lưu calendar event lên Supabase:', error);
+    setCalendarEvents(prev => {
+      const next = [...prev, newEvent];
+      localStorage.setItem(`lightms_calendar_events_${currentBatchKey}`, JSON.stringify(next));
+      return next;
     });
+    // Async persist to D1
+    d1ApiService.createCalendarEvent(newEvent).catch(err => console.warn('D1 createCalendarEvent error:', err));
+    addNotification('Lịch học mới', `Đã thêm sự kiện "${event.title}" vào lịch`, 'system');
   };
 
   const updateCalendarEvent = (id: string, updates: Partial<CalendarEvent>) => {
-    setCalendarEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
-    addNotification('Cập nhật lịch học', 'Thông tin sự kiện lịch đã được cập nhật', 'system');
-    
-    const dbUpdates: any = {};
-    if (updates.title !== undefined) dbUpdates.title = updates.title;
-    if (updates.time !== undefined) dbUpdates.time = updates.time;
-    if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime;
-    if (updates.allDay !== undefined) dbUpdates.all_day = updates.allDay;
-    if (updates.date !== undefined) dbUpdates.date = updates.date;
-    if (updates.month !== undefined) dbUpdates.month = updates.month;
-    if (updates.year !== undefined) dbUpdates.year = updates.year;
-    if (updates.dayOfWeek !== undefined) dbUpdates.day_of_week = updates.dayOfWeek;
-    if (updates.startRecur !== undefined) dbUpdates.start_recur = updates.startRecur;
-    if (updates.endRecur !== undefined) dbUpdates.end_recur = updates.endRecur;
-    if (updates.colorClass !== undefined) dbUpdates.color_class = updates.colorClass;
-    if (updates.dotColorClass !== undefined) dbUpdates.dot_color_class = updates.dotColorClass;
-    if (updates.type !== undefined) dbUpdates.type = updates.type;
-    if (updates.eventType !== undefined) dbUpdates.event_type = updates.eventType;
-    if (updates.details !== undefined) dbUpdates.details = updates.details;
-
-    supabase.from('calendar_events').update(dbUpdates).eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi cập nhật calendar event trên Supabase:', error);
+    setCalendarEvents(prev => {
+      const next = prev.map(e => e.id === id ? { ...e, ...updates } : e);
+      localStorage.setItem(`lightms_calendar_events_${currentBatchKey}`, JSON.stringify(next));
+      return next;
     });
+    // Async persist to D1
+    d1ApiService.updateCalendarEvent(id, updates).catch(err => console.warn('D1 updateCalendarEvent error:', err));
+    addNotification('Cập nhật lịch học', 'Thông tin sự kiện lịch đã được cập nhật', 'system');
   };
 
   const deleteCalendarEvent = (id: string) => {
-    setCalendarEvents(prev => prev.filter(e => e.id !== id));
-    addNotification('Xóa sự kiện lịch', 'Đã xóa sự kiện khỏi lịch học', 'system');
-    supabase.from('calendar_events').delete().eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi xóa calendar event trên Supabase:', error);
+    setCalendarEvents(prev => {
+      const next = prev.filter(e => e.id !== id);
+      localStorage.setItem(`lightms_calendar_events_${currentBatchKey}`, JSON.stringify(next));
+      return next;
     });
+    // Async persist to D1
+    d1ApiService.deleteCalendarEvent(id).catch(err => console.warn('D1 deleteCalendarEvent error:', err));
+    addNotification('Xóa sự kiện lịch', 'Đã xóa sự kiện khỏi lịch học', 'system');
   };
 
   const shiftCalendarEvents = (startDateStr: string, daysToShift: number) => {
     const targetDate = new Date(startDateStr);
-    setCalendarEvents(prev => prev.map(evt => {
-      if (evt.date !== undefined && evt.month !== undefined && evt.year !== undefined) {
-        const evtDate = new Date(evt.year, evt.month, evt.date);
-        if (evtDate >= targetDate) {
-          evtDate.setDate(evtDate.getDate() + daysToShift);
-          const updated = {
-            ...evt,
-            date: evtDate.getDate(),
-            month: evtDate.getMonth(),
-            year: evtDate.getFullYear()
-          };
-          supabase.from('calendar_events').update({
-            date: updated.date,
-            month: updated.month,
-            year: updated.year
-          }).eq('id', evt.id).then(({ error }) => {
-            if (error) console.error('Lỗi khi dời lịch sự kiện trên Supabase:', error);
-          });
-          return updated;
+    setCalendarEvents(prev => {
+      const next = prev.map(evt => {
+        if (evt.date !== undefined && evt.month !== undefined && evt.year !== undefined) {
+          const evtDate = new Date(evt.year, evt.month, evt.date);
+          if (evtDate >= targetDate) {
+            evtDate.setDate(evtDate.getDate() + daysToShift);
+            const updated = {
+              ...evt,
+              date: evtDate.getDate(),
+              month: evtDate.getMonth(),
+              year: evtDate.getFullYear()
+            };
+            d1ApiService.updateCalendarEvent(evt.id, updated).catch(() => {});
+            return updated;
+          }
         }
-      }
-      return evt;
-    }));
+        return evt;
+      });
+      localStorage.setItem(`lightms_calendar_events_${currentBatchKey}`, JSON.stringify(next));
+      return next;
+    });
   };
 
   const updateOnboardingDay = (dayNumber: number, updates: Partial<OnboardingDay>) => {
-    setOnboardingDays(prev => prev.map(d => d.day === dayNumber ? { ...d, ...updates } : d));
-    addNotification('Cập nhật Onboarding', `Đã cập nhật nội dung Ngày ${dayNumber}`, 'system');
-    supabase.from('onboarding_days').update(updates).eq('day', dayNumber).then(({ error }) => {
-      if (error) console.error('Lỗi khi cập nhật onboarding_days trên Supabase:', error);
+    setOnboardingDays(prev => {
+      const next = prev.map(d => d.day === dayNumber ? { ...d, ...updates } : d);
+      localStorage.setItem(`lightms_onboarding_days_${currentCourseKey}`, JSON.stringify(next));
+      return next;
     });
+    // Async persist directly to Cloudflare D1 Database!
+    d1ApiService.saveOnboardingDay(currentCourseKey, dayNumber, updates).catch(err => {
+      console.warn('[CommunityContext] D1 saveOnboardingDay error:', err);
+    });
+    addNotification('Cập nhật Onboarding', `Đã lưu nội dung Ngày ${dayNumber} vào D1`, 'system');
   };
 
   const updateAboutContent = (updates: Partial<AboutContent>) => {
-    const updated = { ...aboutContent, ...updates };
-    setAboutContent(updated);
-    addNotification('Cập nhật Giới thiệu', 'Thông tin trang About đã được cập nhật', 'system');
-    supabase.from('about_content').update({
-      overview_text: updated.overviewText,
-      schedule_text: updated.scheduleText,
-      benefits_text: updated.benefitsText,
-      video_url: updated.videoUrl,
-      platform_buttons: updated.platformButtons,
-      benefit_clubs: updated.benefitClubs,
-      quote: updated.quote,
-      gach_dau_dong: updated.gachDauDong,
-      tru_cot_1: updated.truCot1,
-      tru_cot_2: updated.truCot2,
-      tru_cot_3: updated.truCot3,
-      outro: updated.outro,
-      sdt_note: updated.sdtNote,
-      office_hour_desc: updated.officeHourDesc,
-      luu_y_gold: updated.luuYGold,
-    }).eq('id', 'default').then(({ error }) => {
-      if (error) console.error('Lỗi khi cập nhật about_content trên Supabase:', error);
+    setAboutContent(prev => {
+      const updated = { ...prev, ...updates };
+      localStorage.setItem(`lightms_about_content_${currentCourseKey}`, JSON.stringify(updated));
+      return updated;
     });
+    addNotification('Cập nhật Giới thiệu', 'Thông tin trang About đã được cập nhật', 'system');
   };
 
   // ── Help Desk FAQ CRUD ─────────────────────────────────────────────────────
@@ -299,47 +266,45 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ...faq,
       order_index: helpDeskFaqs.length + 1,
     };
-    setHelpDeskFaqs(prev => [...prev, newFaq]);
-    addNotification('FAQ mới', `Đã thêm câu hỏi: "${faq.question}"`, 'system');
-    supabase.from('help_desk_faqs').insert([newFaq]).then(({ error }) => {
-      if (error) console.error('Lỗi khi thêm FAQ lên Supabase:', error);
+    setHelpDeskFaqs(prev => {
+      const next = [...prev, newFaq];
+      localStorage.setItem(STORAGE_FAQS_KEY, JSON.stringify(next));
+      return next;
     });
+    addNotification('FAQ mới', `Đã thêm câu hỏi: "${faq.question}"`, 'system');
   };
 
   const updateHelpDeskFaq = (id: string, updates: Partial<HelpDeskFaq>) => {
-    setHelpDeskFaqs(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
-    addNotification('Cập nhật FAQ', 'Nội dung câu hỏi đã được chỉnh sửa', 'system');
-    supabase.from('help_desk_faqs').update(updates).eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi cập nhật FAQ trên Supabase:', error);
+    setHelpDeskFaqs(prev => {
+      const next = prev.map(f => f.id === id ? { ...f, ...updates } : f);
+      localStorage.setItem(STORAGE_FAQS_KEY, JSON.stringify(next));
+      return next;
     });
+    addNotification('Cập nhật FAQ', 'Nội dung câu hỏi đã được chỉnh sửa', 'system');
   };
 
   const deleteHelpDeskFaq = (id: string) => {
-    setHelpDeskFaqs(prev => prev.filter(f => f.id !== id));
-    addNotification('Xóa FAQ', 'Đã xóa câu hỏi khỏi hệ thống', 'system');
-    supabase.from('help_desk_faqs').delete().eq('id', id).then(({ error }) => {
-      if (error) console.error('Lỗi khi xóa FAQ trên Supabase:', error);
+    setHelpDeskFaqs(prev => {
+      const next = prev.filter(f => f.id !== id);
+      localStorage.setItem(STORAGE_FAQS_KEY, JSON.stringify(next));
+      return next;
     });
+    addNotification('Xóa FAQ', 'Đã xóa câu hỏi khỏi hệ thống', 'system');
   };
 
   return (
     <CommunityContext.Provider value={{
-      announcements,
       calendarEvents,
       onboardingDays,
       aboutContent,
       helpDeskFaqs,
       notifications,
-      setAnnouncements,
       setCalendarEvents,
       setOnboardingDays,
       setAboutContent,
       setHelpDeskFaqs,
       setNotifications,
       addNotification,
-      addAnnouncement,
-      updateAnnouncement,
-      deleteAnnouncement,
       addCalendarEvent,
       updateCalendarEvent,
       deleteCalendarEvent,

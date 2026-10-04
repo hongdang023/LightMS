@@ -1,76 +1,69 @@
 # LightMS - B1: System Design (Kiến trúc Hệ thống)
 
-> **Last Updated:** 2026-08-07 | **Status:** ✅ Synced với codebase hiện tại
+> **Last Updated:** 2026-10-01 | **Status:** ✅ Synced với Cloudflare D1/R2 Stack & Multi-Course Multi-Batch
 
-Dựa trên các yêu cầu (Requirements) và quyết định công nghệ mới nhất, hệ thống LightMS sẽ được xây dựng theo kiến trúc **Serverless & Edge Computing**, tận dụng tối đa sức mạnh của hệ sinh thái Supabase và Cloudflare để đảm bảo tốc độ cao, khả năng mở rộng tốt và chi phí vận hành tối ưu.
+Dựa trên các yêu cầu (Requirements) và quyết định công nghệ mới nhất, hệ thống LightMS được xây dựng theo kiến trúc **Serverless & Edge Computing**, chạy hoàn toàn trên hệ sinh thái **Cloudflare (Pages, Workers, D1, R2)** với **Drizzle ORM** để đảm bảo tốc độ đáp ứng siêu tốc (Edge latency), khả năng mở rộng đa khóa học/đa lớp (Multi-Course & Multi-Batch), và tối ưu hóa chi phí vận hành.
+
+---
 
 ## 1. Technology Stack (Công nghệ Cốt lõi)
 
 - **Frontend (Giao diện người dùng):**
   - **Framework:** **Vite + React + TypeScript**.
-  - **Lợi ích:** Build cực nhanh, HMR (Hot Module Replacement) siêu mốc, tối ưu hóa trải nghiệm "Zero Friction".
-  - **WYSIWYG Admin UI:** Giao diện Edit Mode/Reading Mode của Admin (Course Builder, Thông báo) sử dụng chung 100% UI Components với Student Mode, đảm bảo tính đồng nhất tuyệt đối.
-  - **Mobile Responsive Design:** Áp dụng phương thức Mobile-first thông qua các breakpoint của Tailwind CSS (`md: 768px`) và media queries tùy chỉnh. Giao diện Sidebar chuyển thành Drawer trượt có bóng đổ (backdrop shadow) và nút kích hoạt Hamburger trên Header, giúp tối ưu hóa diện tích hiển thị trên các thiết bị di động.
-- **Backend & Database (Dữ liệu & Logic):**
-  - **Nền tảng:** **Supabase** (BaaS - Backend as a Service).
-  - **Database:** PostgreSQL (Cấu trúc dữ liệu quan hệ mạnh, lý tưởng cho LMS).
-  - **Security:** Tận dụng Row Level Security (RLS) của Supabase PostgreSQL để phân quyền (Admin, Student) trực tiếp ở tầng Data.
-  - **Logic & API:** Supabase Edge Functions (Deno) để xử lý các logic nghiệp vụ phức tạp hoặc webhook.
-  - **Cloudflare Pages / Workers:** Deploy Frontend trực tiếp lên Cloudflare Pages.
+  - **Deployment:** Cloudflare Pages (SPA - Single Page Application).
+  - **WYSIWYG Admin UI:** Giao diện Edit Mode/Reading Mode của Admin sử dụng chung 100% UI Components với Student Mode.
+  - **Mobile Responsive Design:** Phương thức Mobile-first thông qua các breakpoint của Tailwind CSS (`md: 768px`) và media queries tùy chỉnh. Giao diện Sidebar chuyển thành Drawer trượt trên thiết bị di động.
+- **Backend & Database (Dữ liệu & Logic ở Edge):**
+  - **Database:** **Cloudflare D1** (Serverless SQL Database dựa trên SQLite ở Edge).
+  - **ORM & Data Layer:** **Drizzle ORM** (Type-safe SQL query builder & schema migration tool tối ưu nhất cho D1).
+  - **Object Storage:** **Cloudflare R2** (Lưu trữ ảnh đại diện, tài liệu bài học, ảnh nộp bài tập).
+  - **API & Logic Layer:** **Cloudflare Workers** (Edge Functions xử lý API REST/RPC, JWT Auth, Enrollment Codes).
+  - **Auth Strategy:** Cloudflare Worker JWT / Session Token lưu tại D1 HTTP-only Cookies + Secure Headers.
 - **Rich-Text & Formatting:**
-  - **Editor Components (TipTap / Quill):** Sử dụng các thư viện Rich-Text Editor chuyên nghiệp để đảm bảo yêu cầu bài tập, feedback và comment được format đẹp mắt (bôi đậm, chèn ảnh, code block, highlight) mang lại trải nghiệm cao cấp.
+  - **Editor Components (TipTap / Quill):** Format bài viết, yêu cầu bài tập, feedback và comment đẹp mắt (bôi đậm, chèn ảnh, code block, highlight).
 
 ---
 
 ## 2. High-Level Architecture (Kiến trúc Tổng quan)
 
-Mô hình hệ thống hoạt động theo chuẩn **BaaS (Backend-as-a-Service)**:
+Mô hình hệ thống hoạt động theo chuẩn **Edge Micro-Services / API Gateway**:
 
-1. **Client Layer (Vite App):**
-   - Ứng dụng SPA (Single Page Application) được host trên Cloudflare Pages.
-   - Giao tiếp trực tiếp với Supabase thông qua `supabase-js` SDK. Sử dụng cơ chế **Supabase Realtime** để tự động lắng nghe và đồng bộ thay đổi (Ví dụ: cập nhật tức thời khi Admin sửa nội dung bài học).
-2. **Data Layer (Supabase PostgreSQL):**
-   - Mọi dữ liệu về khóa học, tiến độ, bài tập được lưu ở PostgreSQL.
-   - Khi Học viên query danh sách khóa học, Supabase RLS sẽ tự động kiểm tra xem Học viên đó có quyền truy cập khóa học đó không.
-3. **Integration Layer (Edge Functions):**
-   - **Onboarding Scheduler & Email Broadcast:** Sử dụng **Supabase pg_cron** kết hợp Edge Functions để chạy các tác vụ định kỳ (mở khóa tự động). Tích hợp các Email Provider API (như **Resend**) để gửi thông báo email đồng loạt cho học viên.
-
----
-
-## 3. Core Database Entities (Thiết kế Dữ liệu Cốt lõi)
-
-Dựa vào triết lý **Outcome-based Mastery** và **Action-Oriented**, hệ thống sẽ có các bảng (Tables) chính sau:
-
-### 3.1. Users & Roles
-
-- `profiles`: Liên kết với Supabase Auth. Lưu trữ thông tin cá nhân cơ bản (Name, Avatar, Role, Bio) cùng các thông tin nhân khẩu học & chuyên môn mở rộng (Gmail, Phone/Zalo, Facebook, Lĩnh vực, Chức danh, Tech Level, Ý tưởng sản phẩm, Cam kết thời gian, Đặt cược cá nhân, Trạng thái điền profile, và số Hải lý tích lũy).
-
-### 3.2. Course Content (Lộ trình học)
-
-- `courses`: Tên khóa, Mô tả, Ảnh bìa.
-- `lessons`: Thuộc `courses`, Loại bài học (Video/Doc), Video_URL (ĐưỜng link bảo mật dẫn ra player ngoài), các thông tin bổ sung như ngày học, mục tiêu, tài liệu đi kèm (slide, study notes), yêu cầu bài tập, rubric checklist.
-- `announcements`: Quản lý các thông báo từ Ban tổ chức kèm tùy chọn gửi email tự động. Hỗ trợ phân loại (category) và tự động tạo (is_auto) bởi Automated Announcement System.
-- `onboarding_days`: Lộ trình Onboarding 7 ngày (7 cards) quản lý việc mở khóa và nội dung từng ngày.
-- `calendar_events`: Lịch học và sự kiện kiểu Google Calendar (phân loại theo: Kick-off, Office Hour, Live Class, Onboarding, Capstone, Class Bonding). Hỗ trợ tịnh tiến lịch hàng loạt (bulk shift) thông qua `CommunityContext`.
-- `about_content`: Nội dung trang Giới thiệu (editable bởi Admin, hiển thị Student).
-- `help_desk_faqs`: Nội dung FAQ cho trang Hỏi đáp & Hỗ trợ.
-
-### 3.3. Gamification & Rewards (Hệ thống phần thưởng)
-
-- `nautical_miles_transactions`: Lưu lịch sử giao dịch cộng/trừ điểm Hải lý của học viên (ngày, lý do, số lượng).
-- `badges`: Danh mục các Huy hiệu có thể đạt được trong khóa học.
-- **Huy hiệu học viên (đã mở khóa)** được lưu trực tiếp trong `profiles.badges` dưới dạng JSONB array: `[{ "badge_id": "uuid", "unlocked_at": "timestamp" }]`. **Không dùng junction table `profile_badges`** — thiết kế này cho phép truy vấn thông tin học viên kèm huy hiệu trong một câu lệnh, không cần JOIN nhiều bảng.
+1. **Client Layer (Vite SPA on Cloudflare Pages):**
+   - Học viên & Admin tương tác với ứng dụng Web SPA.
+   - Giao tiếp với Backend qua Cloudflare Worker REST API (`/api/*`).
+2. **Edge API Layer (Cloudflare Workers):**
+   - Xử lý xác thực người dùng (Auth Worker), xác minh **Mã kích hoạt khóa học (Access Code)**, cấp quyền truy cập Batch.
+   - Xử lý các tác vụ nghiệp vụ, tính điểm Hải lý, cấp Badge.
+3. **Data & Storage Layer (Cloudflare D1 & R2):**
+   - **D1 SQL Database:** Quản lý `courses`, `batches`, `enrollments`, `users`, `lessons`, `calendar_events`, `submissions`, `badges`.
+   - **R2 Storage:** Lưu trữ và phân phối static media, avatar, assignment attachments qua Cloudflare CDN URL.
 
 ---
 
-## 4. Rule Engine & Automations (Kiến trúc Tự động hóa)
+## 3. Core Database Entities (Thiết kế Dữ liệu Multi-Course & Multi-Batch)
 
-Hệ thống sử dụng **Supabase Database Webhooks** kết hợp **Edge Functions** để tự động hóa các tác vụ khi có sự kiện xảy ra trong database:
+Hệ thống hỗ trợ hệ sinh thái nhiều Khóa học (Vibe Coding 101, Vibe Coding 201, Obsidian 101, Mobile Agents...) và nhiều Batch (K1, K2, K3...):
 
-1. **Trigger (Bóp cò):** Một bản ghi được INSERT/UPDATE trong database.
-   - _Ví dụ:_ Khi `is_profile_completed` của học viên được cập nhật thành `true` trong bảng `profiles`.
-2. **Processing (Xử lý):** Webhook đẩy data gọi Supabase Edge Function (hoặc Cloudflare Worker).
-3. **Action (Hành động):**
-   - Function format lại thông báo và cập nhật hệ thống (tích điểm, mở khóa badge, v.v.).
+### 3.1. Users, Roles & Enrollments
+- `users`: Tài khoản người dùng (Email, Password Hash / Auth Provider ID, Role: `Admin` | `Student`, Profile Info, Hải lý tích lũy tổng).
+- `courses`: Danh mục khóa học (id, slug, title, description, cover_image, is_active).
+- `batches`: Danh sách các khóa/lớp học của từng Course (id, course_id, batch_name, access_code, start_date, end_date, max_students).
+- `batch_enrollments`: Quản lý việc ghi danh của học viên vào từng Batch (id, user_id, batch_id, access_code_used, enrolled_at, status). Học viên phải nhập đúng `access_code` của Batch để kích hoạt ghi danh.
 
-Kiến trúc này giúp hệ thống tách bạch hoàn toàn phần logic xử lý sự kiện ra khỏi Frontend, không làm chậm quá trình nộp bài của học viên, và cực kỳ dễ scale khi số lượng học viên tăng đột biến.
+### 3.2. Shared vs Batch-Scoped Content
+- **Course Level (Dùng chung cho cả Course):**
+  - `lessons`: Danh mục bài học, video URL, study notes, rubric bài tập, onboarding cards framework.
+- **Batch Level (Tách riêng cho từng Batch):**
+  - `calendar_events`: Lịch học, Office Hours, Kick-off riêng của từng Batch.
+  - `submissions`: Bài nộp & Feedback của học viên theo Batch.
+  - `leaderboard`: Bảng xếp hạng Hải lý riêng của từng Batch.
+
+---
+
+## 4. Enrollment Code & Access Control (Cơ chế Mã kích hoạt)
+
+1. **Khóa học công khai vs Khóa học bảo mật:**
+   - Mỗi Batch sở hữu một **Mã kích hoạt (Access Code)** duy nhất do Admin tạo (ví dụ: `VIBE201-K3-888`).
+2. **Kích hoạt tài khoản / Khóa học:**
+   - Khi học viên truy cập Course Hub trên Dashboard, các khóa học chưa kích hoạt sẽ có biểu tượng 🔒 **Yêu cầu mã kích hoạt**.
+   - Học viên nhập mã -> API xác thực `access_code` -> Tạo bản ghi trong `batch_enrollments` -> Mở khóa không gian học tập của Batch tương ứng.

@@ -36,16 +36,20 @@ function getEventBg(event: CalendarEvent): string {
   return '#EA580C';
 }
 
-// Returns all dates (as YYYY-MM-DD strings) on which a CalendarEvent occurs
+// Returns all dates on which a CalendarEvent occurs in the given month/year
 function getEventDates(event: CalendarEvent, year: number, month: number): number[] {
   const dates: number[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  if (event.date !== undefined && event.month === month && event.year === year) {
-    dates.push(event.date);
-    return dates;
+  // 1. Specific fixed-date event
+  if (event.date !== undefined && event.month !== undefined && event.year !== undefined) {
+    if (event.month === month && event.year === year) {
+      dates.push(event.date);
+    }
+    return dates; // Return immediately to avoid fall-through to dayOfWeek recurring rule
   }
 
+  // 2. Pure recurring event (without fixed date)
   if (event.dayOfWeek !== undefined) {
     // dayOfWeek: 1=Mon...7=Sun; JS getDay: 0=Sun...6=Sat
     const jsTarget = event.dayOfWeek === 7 ? 0 : event.dayOfWeek;
@@ -352,6 +356,7 @@ export const CalendarManagement: React.FC = () => {
         helpSummary="Xem và quản lý lịch học theo tháng hoặc danh sách."
         helpPurpose="Giúp admin thêm, sửa, xóa sự kiện học và dời lịch hàng loạt khi có thay đổi."
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 

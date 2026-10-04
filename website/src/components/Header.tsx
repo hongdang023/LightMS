@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCourse } from '../context/CourseContext';
 import { useGamification } from '../context/GamificationContext';
 import { useCommunity } from '../context/CommunityContext';
-// No lucide-react imports
+import { Navigation } from 'lucide-react';
 
 interface HeaderProps {
   currentPage: string;
@@ -40,7 +40,8 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange: _onPa
   };
 
   // Progress bar calculation
-  const totalItems = (lessons || []).length + 7;
+  const totalOnboardingDaysCount = (onboardingDays && onboardingDays.length > 0) ? onboardingDays.length : 5;
+  const totalItems = (lessons || []).length + totalOnboardingDaysCount;
   const completedMainLessons = (lessons || []).filter(lesson => {
     return (nauticalTransactions || []).some(
       t => t.student_id === activeUser.id && 
@@ -68,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange: _onPa
         if (requiredTasks.length === 0) return true;
         return requiredTasks.every(key => !!activeUser.onboarding_tasks?.[key]);
       }).length
-    : Array.from({ length: 7 }, (_, i) => i + 1).filter(day => {
+    : Array.from({ length: totalOnboardingDaysCount }, (_, i) => i + 1).filter(day => {
         return (nauticalTransactions || []).some(
           t => t.student_id === activeUser.id && 
           t.action_type === 'lesson_complete' && 
@@ -110,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange: _onPa
               className="absolute -top-3.5 transition-all duration-1000 ease-out text-base animate-bounce-slow"
               style={{ left: `calc(${progressPercent}% - 8px)` }}
             >
-              ⛵
+              <Navigation size={18} className="text-[#214C54] fill-[#214C54] -rotate-45" />
             </div>
           </div>
         </div>

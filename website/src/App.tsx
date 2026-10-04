@@ -13,8 +13,8 @@ import { AdminOnboardingForm } from './pages/admin/AdminOnboardingForm';
 import { ProductTour } from './components/ProductTour';
 
 // Lazy-loaded Pages (Code Splitting)
+const StudentCourseHub = lazy(() => import('./pages/student/StudentCourseHub').then(m => ({ default: m.StudentCourseHub })));
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
-const AnnouncementsView = lazy(() => import('./pages/student/AnnouncementsView').then(m => ({ default: m.AnnouncementsView })));
 const AboutView = lazy(() => import('./pages/student/AboutView').then(m => ({ default: m.AboutView })));
 const OnboardingView = lazy(() => import('./pages/student/OnboardingView').then(m => ({ default: m.OnboardingView })));
 const SyllabusView = lazy(() => import('./pages/student/SyllabusView').then(m => ({ default: m.SyllabusView })));
@@ -26,9 +26,9 @@ const ProfileView = lazy(() => import('./pages/student/ProfileView').then(m => (
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminProfileView = lazy(() => import('./pages/admin/AdminProfileView').then(m => ({ default: m.AdminProfileView })));
 const CourseBuilder = lazy(() => import('./pages/admin/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
+const AdminBatchManager = lazy(() => import('./pages/admin/AdminBatchManager').then(m => ({ default: m.AdminBatchManager })));
 const StudentManagement = lazy(() => import('./pages/admin/StudentManagement').then(m => ({ default: m.StudentManagement })));
 const InternalTeam = lazy(() => import('./pages/admin/InternalTeam').then(m => ({ default: m.InternalTeam })));
-const AdminAnnouncements = lazy(() => import('./pages/admin/Announcements').then(m => ({ default: m.Announcements })));
 const AdminCalendarManagement = lazy(() => import('./pages/admin/CalendarManagement').then(m => ({ default: m.CalendarManagement })));
 const AdminSettings = lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
 
@@ -45,6 +45,7 @@ function MainAppShell() {
       const path = window.location.pathname;
       const pathToPageMap: { [key: string]: string } = {
         '/': 'dashboard',
+        '/courses': 'course-hub',
         '/about': 'about',
         '/onboarding': 'onboarding',
         '/syllabus': 'syllabus',
@@ -52,13 +53,12 @@ function MainAppShell() {
         '/walloffame': 'walloffame',
         '/helpdesk': 'helpdesk',
         '/profile': 'profile',
-        '/announcements': 'announcements',
         '/admin': 'admin-dashboard',
         '/admin/profile': 'admin-profile',
+        '/admin/batches': 'admin-batches',
         '/admin/course-builder': 'course-builder',
         '/admin/student-mgmt': 'student-mgmt',
         '/admin/internal-team': 'internal-team',
-        '/admin/announcements': 'announcements-management',
         '/admin/calendar': 'admin-calendar',
         '/admin/settings': 'admin-settings',
       };
@@ -91,6 +91,7 @@ function MainAppShell() {
       const path = window.location.pathname;
       const pathToPageMap: { [key: string]: string } = {
         '/': 'dashboard',
+        '/courses': 'course-hub',
         '/about': 'about',
         '/onboarding': 'onboarding',
         '/syllabus': 'syllabus',
@@ -98,32 +99,41 @@ function MainAppShell() {
         '/walloffame': 'walloffame',
         '/helpdesk': 'helpdesk',
         '/profile': 'profile',
-        '/announcements': 'announcements',
         '/admin': 'admin-dashboard',
         '/admin/profile': 'admin-profile',
+        '/admin/batches': 'admin-batches',
         '/admin/course-builder': 'course-builder',
         '/admin/student-mgmt': 'student-mgmt',
         '/admin/internal-team': 'internal-team',
-        '/admin/announcements': 'announcements-management',
         '/admin/calendar': 'admin-calendar',
         '/admin/settings': 'admin-settings',
       };
 
       if (activeUser.role === 'admin') {
         if (path.startsWith('/admin')) {
-          setCurrentPage(pathToPageMap[path] || 'admin-dashboard');
+          // /admin (root) redirects to /admin/batches (the batch hub)
+          if (path === '/admin') {
+            setCurrentPage('admin-batches');
+            window.history.replaceState(null, '', '/admin/batches');
+          } else {
+            setCurrentPage(pathToPageMap[path] || 'admin-batches');
+          }
         } else {
-          setCurrentPage('admin-dashboard');
-          window.history.replaceState(null, '', '/admin');
+          setCurrentPage('admin-batches');
+          window.history.replaceState(null, '', '/admin/batches');
         }
       } else {
         // Student role - block all admin paths
         if (path.startsWith('/admin')) {
-          const visitCount = activeUser.visits || 0;
-          setCurrentPage(visitCount <= 2 ? 'about' : 'dashboard');
-          window.history.replaceState(null, '', '/');
+          setCurrentPage('course-hub');
+          window.history.replaceState(null, '', '/courses');
         } else {
-          setCurrentPage(pathToPageMap[path] || ((activeUser.visits || 0) <= 2 ? 'about' : 'dashboard'));
+          // If accessing root or /courses, show course-hub gateway
+          if (path === '/' || path === '/courses') {
+            setCurrentPage('course-hub');
+          } else {
+            setCurrentPage(pathToPageMap[path] || 'course-hub');
+          }
         }
       }
     }
@@ -135,6 +145,7 @@ function MainAppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const pageToPathMap: { [key: string]: string } = {
+      'course-hub': '/courses',
       'dashboard': '/',
       'about': '/about',
       'onboarding': '/onboarding',
@@ -143,13 +154,12 @@ function MainAppShell() {
       'walloffame': '/walloffame',
       'helpdesk': '/helpdesk',
       'profile': '/profile',
-      'announcements': '/announcements',
       'admin-dashboard': '/admin',
       'admin-profile': '/admin/profile',
+      'admin-batches': '/admin/batches',
       'course-builder': '/admin/course-builder',
       'student-mgmt': '/admin/student-mgmt',
       'internal-team': '/admin/internal-team',
-      'announcements-management': '/admin/announcements',
       'admin-calendar': '/admin/calendar',
       'admin-settings': '/admin/settings',
     };
@@ -178,6 +188,20 @@ function MainAppShell() {
     return <AdminOnboardingForm onComplete={() => setCurrentPage('admin-dashboard')} />;
   }
 
+  // Full-page Course Gateway (before entering course workspace or when switching courses)
+  if (currentPage === 'course-hub') {
+    return (
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#F0F0F0] space-y-3">
+          <div className="w-8 h-8 border-4 border-[#214C54] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-bold text-[#3E5E63]">Đang tải danh mục khóa học...</span>
+        </div>
+      }>
+        <StudentCourseHub onEnterClass={(p) => handlePageChange(p || 'dashboard')} />
+      </Suspense>
+    );
+  }
+
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': return <StudentDashboard onPageChange={handlePageChange} />;
@@ -188,18 +212,32 @@ function MainAppShell() {
       case 'walloffame': return <WallOfFame />;
       case 'helpdesk': return <HelpDesk />;
       case 'profile': return <ProfileView onPageChange={handlePageChange} />;
-      case 'announcements': return <AnnouncementsView onPageChange={handlePageChange} />;
       case 'admin-dashboard': return <AdminDashboard onPageChange={handlePageChange} />;
       case 'admin-profile': return <AdminProfileView />;
+      case 'admin-batches': return <AdminBatchManager onPageChange={handlePageChange} />;
+
       case 'course-builder': return <CourseBuilder />;
       case 'student-mgmt': return <StudentManagement />;
       case 'internal-team': return <InternalTeam />;
-      case 'announcements-management': return <AdminAnnouncements />;
       case 'admin-calendar': return <AdminCalendarManagement />;
       case 'admin-settings': return <AdminSettings />;
       default: return <StudentDashboard onPageChange={handlePageChange} />;
     }
   };
+
+  // Full-page Hub for batch selection (no sidebar, no header)
+  if (currentPage === 'admin-batches' && activeUser.role === 'admin') {
+    return (
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#F0F0F0] space-y-3">
+          <div className="w-8 h-8 border-4 border-[#214C54] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-bold text-[#3E5E63]">Đang tải...</span>
+        </div>
+      }>
+        <AdminBatchManager onPageChange={handlePageChange} />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="app-layout flex h-screen bg-slate-950 text-slate-100 overflow-hidden">

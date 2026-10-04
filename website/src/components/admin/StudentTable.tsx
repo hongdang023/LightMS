@@ -40,7 +40,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   const outstandingStudentsCount = students.filter(s => getStudentStatus(s) === 'outstanding').length;
 
   return (
-    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+    <div className="flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       {/* Filters & Search Header */}
       <div className="p-4 bg-gray-50 border-b border-gray-200 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -102,7 +102,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       </div>
 
       {/* Students Table */}
-      <div className="flex-1 overflow-auto custom-scrollbar">
+      <div className="overflow-x-auto">
         {filteredStudents.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center text-gray-400">
             <span className="text-4xl mb-2">🔍</span>

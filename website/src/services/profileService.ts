@@ -1,45 +1,20 @@
-import { supabase } from '../lib/supabase';
+import { localDataService } from './localDataService';
 import type { Profile } from '../types/database';
 
 export const profileService = {
   async getProfile(userId: string): Promise<Profile | null> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-    return data as Profile;
+    await localDataService.init();
+    return localDataService.getUserById(userId);
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>): Promise<boolean> {
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating profile:', error);
-      return false;
-    }
-    return true;
+    await localDataService.init();
+    return localDataService.updateUser(userId, updates);
   },
 
   async getAllStudents(): Promise<Profile[]> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', 'student')
-      .order('full_name');
-
-    if (error) {
-      console.error('Error fetching students:', error);
-      return [];
-    }
-    return (data || []) as Profile[];
+    await localDataService.init();
+    const all = localDataService.getUsers();
+    return all.filter(u => u.role !== 'admin').sort((a, b) => a.full_name.localeCompare(b.full_name));
   },
 };
