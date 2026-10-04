@@ -19,6 +19,12 @@ export const DayCard: React.FC<DayCardProps> = ({
   const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
   const cardVisual = DAY_VISUAL_STYLES[dayData.day] || DAY_VISUAL_STYLES[1];
 
+  const displaySummary = (dayData.objective || dayData.intro || cardVisual.summary || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[*_~`#]/g, '')
+    .trim();
+
   return (
     <button
       onClick={onClick}
@@ -52,7 +58,7 @@ export const DayCard: React.FC<DayCardProps> = ({
         </h4>
         
         <p className="text-sm text-[#3E5E63] line-clamp-2 mb-4 leading-relaxed h-10">
-          {cardVisual.summary}
+          {displaySummary}
         </p>
         
         {/* Progress Bar */}
