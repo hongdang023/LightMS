@@ -68,7 +68,16 @@ export const CourseBuilder: React.FC<{ onPageChange?: (page: string) => void }> 
 
         {/* ABOUT TAB */}
         {activeTab === 'about' && (
-          <AboutView onPageChange={() => {}} isEditMode={isEditMode} />
+          <AboutView 
+            onPageChange={(page) => {
+              if (page === 'onboarding' || page === 'syllabus' || page === 'about') {
+                setActiveTab(page);
+              } else if (onPageChange) {
+                onPageChange(page);
+              }
+            }} 
+            isEditMode={isEditMode} 
+          />
         )}
 
         {/* ONBOARDING TAB */}

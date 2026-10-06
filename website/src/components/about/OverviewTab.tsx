@@ -84,7 +84,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       </div>
 
       <p className="font-bold text-sm md:text-[15px] text-[#15333B] pt-2">
-        Không giống như các khoá dạy làm sản phẩm truyền thống, ở <strong>Build With The1ight</strong>, bạn sẽ:
+        Không giống các khoá học truyền thống, ở <strong>Obsidian Second Brain</strong>, bạn sẽ:
       </p>
       
       {isEditMode ? (

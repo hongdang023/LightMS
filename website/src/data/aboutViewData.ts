@@ -24,7 +24,7 @@ export const DEFAULT_PLATFORM_BUTTONS: PlatformButton[] = [
   { icon: '📒', title: 'LightMS', subtitle: 'Nền tảng tổng hợp toàn bộ học liệu của lớp', url: '' },
   { icon: '📅', title: 'Google Calendar', subtitle: 'Nhắc lịch học và các sự kiện của lớp', url: 'https://calendar.google.com/calendar/u/0?cid=ZWQ4ZGE1M2QzMThmMDM4ZTY1MzcxYjY4NmJhYTNiM2QyYTg2MDZhZDk2MmIxMTFlODhhODAxZGZiODY4NjE0NkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t' },
   { icon: '💬', title: 'Zalo Group', subtitle: 'Nền tảng nhắn tin giao lưu & đăng ký Office Hour của lớp', url: 'https://zalo.me/g/zcsfkw4u0vzlna8jq5pi' },
-  { icon: '👥', title: 'Facebook Group', subtitle: 'Nơi nộp Bài tập về nhà và nhận góp ý', url: 'https://www.facebook.com/groups/2251571492466555' }
+  { icon: '👥', title: 'Facebook Group', subtitle: 'Nơi nộp Bài tập về nhà và nhận góp ý', url: 'https://www.facebook.com/groups/1342256920980058' }
 ];
 
 export const DEFAULT_BENEFIT_CLUBS: BenefitClub[] = [
@@ -39,7 +39,7 @@ export const DEFAULT_BENEFIT_CLUBS: BenefitClub[] = [
     name: '1ight Club',
     desc: 'Cộng đồng tự chủ sự nghiệp cùng AI trả phí chuyên sâu.',
     links: [
-      { label: 'Group Facebook', url: 'https://www.facebook.com/groups/2251571492466555' },
+      { label: 'Group Facebook', url: 'https://www.facebook.com/groups/1342256920980058' },
       { label: 'Zalo Group', url: 'https://zalo.me/g/zcsfkw4u0vzlna8jq5pi' }
     ]
   },
@@ -48,7 +48,7 @@ export const DEFAULT_BENEFIT_CLUBS: BenefitClub[] = [
     name: 'Alumni Club',
     desc: 'Không gian dành riêng cho cựu học sinh các khoá học tại The1ight.',
     links: [
-      { label: 'Group Facebook', url: 'https://www.facebook.com/groups/2251571492466555' },
+      { label: 'Group Facebook', url: 'https://www.facebook.com/groups/1634104510891968' },
       { label: 'Zalo Chat', url: 'https://zalo.me/g/zcsfkw4u0vzlna8jq5pi' }
     ]
   }

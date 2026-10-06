@@ -81,7 +81,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                       <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-semibold mb-4">{descPart}</p>
                     </div>
                     
-                    {idx === 1 && (
+                    {idx === 0 && (
                       <button 
                         onClick={() => onPageChange('onboarding')}
                         className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors"
