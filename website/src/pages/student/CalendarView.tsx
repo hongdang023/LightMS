@@ -39,7 +39,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
         if (e.date === dateNum && e.month === monthNum && e.year === yearNum) return true;
         return false;
       }
-      // Recurring
+      // Date range check (e.g. multi-day events without fixed dayOfWeek)
+      if (e.startRecur && e.endRecur) {
+        const startDay = new Date(e.startRecur);
+        startDay.setHours(0, 0, 0, 0);
+        const endDay = new Date(e.endRecur);
+        endDay.setHours(23, 59, 59, 999);
+        if (currentTimestamp >= startDay.getTime() && currentTimestamp <= endDay.getTime()) {
+          return true;
+        }
+      }
+      // Recurring by dayOfWeek
       if (e.dayOfWeek === dayOfWeek) {
         if (e.startRecur && currentTimestamp < e.startRecur) return false;
         if (e.endRecur && currentTimestamp > e.endRecur) return false;

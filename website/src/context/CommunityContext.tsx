@@ -64,7 +64,8 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const saved = localStorage.getItem(`lightms_calendar_events_${batchId}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        const isStale = Array.isArray(parsed) && parsed.some((e: any) => e.id === 'evt-obs-oh-1' || e.id === 'evt-obs-onboarding-range');
+        if (Array.isArray(parsed) && parsed.length > 0 && !isStale) return parsed;
       }
     } catch {
       // fallback
@@ -77,10 +78,11 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const saved = localStorage.getItem(`lightms_onboarding_days_${courseKey}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If cached data contains outdated/fabricated day titles or old companion hints, discard cache
+        // If cached data contains outdated/fabricated day titles or old Facebook Group link, discard cache
         const isStale = Array.isArray(parsed) && parsed.some((d: any) => 
           typeof d.title === 'string' && (d.title.includes('Cloudflare') || d.title.includes('Mindset & Thiết lập')) ||
-          (typeof d.companionHint === 'string' && (d.companionHint.includes('Tri thức chỉ có giá trị') || d.companionHint.includes('Ghi nhớ nhỏ: Bạn không cần')))
+          (typeof d.companionHint === 'string' && (d.companionHint.includes('Tri thức chỉ có giá trị') || d.companionHint.includes('Ghi nhớ nhỏ: Bạn không cần'))) ||
+          (typeof d.checklist === 'string' && d.checklist.includes('1342256920980058'))
         );
         if (Array.isArray(parsed) && parsed.length > 0 && !isStale) return parsed;
       }
@@ -95,10 +97,11 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const saved = localStorage.getItem(`lightms_about_content_${courseKey}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If cached data contains outdated/fabricated about content, discard cache
+        // If cached data contains outdated/fabricated about content or old Facebook Group link, discard cache
         const isStale = parsed && (
           (parsed.quote && parsed.quote.includes('AI Codes')) ||
-          (parsed.truCot1?.title && parsed.truCot1.title.includes('Product Builder'))
+          (parsed.truCot1?.title && parsed.truCot1.title.includes('Product Builder')) ||
+          JSON.stringify(parsed).includes('1342256920980058')
         );
         if (parsed && typeof parsed === 'object' && (parsed.quote || parsed.gachDauDong) && !isStale) return parsed;
       }
