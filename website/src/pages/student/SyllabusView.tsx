@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCourse } from '../../context/CourseContext';
+import { useCommunity } from '../../context/CommunityContext';
 import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
 import type { Lesson } from '../../types/database';
@@ -90,17 +91,66 @@ export const SyllabusView: React.FC<{
     }
   };
 
+  const { calendarEvents } = useCommunity();
+
+  // Helper to extract lesson index (0, 1, 2...) from lesson title or order_index
+  const getLessonNumber = (lesson: Lesson): number => {
+    const match = lesson.title.match(/^Buổi\s+(\d+)/i);
+    if (match) return parseInt(match[1], 10);
+    return Math.max(0, lesson.order_index - 1);
+  };
+
+  // Resolve scheduled date for lesson: priority lesson.start_date, then matching calendar event
+  const getLessonStartDate = (lesson: Lesson): string | undefined => {
+    if (lesson.start_date) return lesson.start_date;
+    const lessonNum = getLessonNumber(lesson);
+    const isKickoff = lesson.title.toLowerCase().includes('kick-off') || lesson.title.toLowerCase().includes('kickoff') || lessonNum === 0;
+    const isPitching = lesson.title.toLowerCase().includes('pitching');
+
+    // Find in calendar events
+    const matchedEvent = calendarEvents.find(e => {
+      const titleLower = e.title.toLowerCase();
+      if (isKickoff && (titleLower.includes('kick-off') || titleLower.includes('kickoff'))) return true;
+      if (isPitching && (titleLower.includes('pitching') || titleLower.includes('capstone'))) return true;
+      
+      const eventMatch = e.title.match(/^Buổi\s+(\d+)/i) || e.title.match(/Buổi\s+(\d+)/i);
+      if (eventMatch && parseInt(eventMatch[1], 10) === lessonNum) return true;
+      return false;
+    });
+
+    if (matchedEvent && matchedEvent.year && matchedEvent.month && matchedEvent.date) {
+      const monthStr = String(matchedEvent.month).padStart(2, '0');
+      const dateStr = String(matchedEvent.date).padStart(2, '0');
+      const timeStr = matchedEvent.time && matchedEvent.time !== 'Cả ngày' ? matchedEvent.time : '20:30';
+      return `${matchedEvent.year}-${monthStr}-${dateStr}T${timeStr}:00+07:00`;
+    }
+
+    return undefined;
+  };
+
   // Checks if a lesson's scheduled date has arrived
   const isLessonStarted = (lesson: Lesson): boolean => {
-    if (!lesson.start_date) return true;
-    const start = new Date(lesson.start_date).getTime();
+    const startDateStr = getLessonStartDate(lesson);
+    if (!startDateStr) return true;
+    const start = new Date(startDateStr).getTime();
     const now = new Date().getTime();
     return now >= start;
   };
 
-  // Checks if admin has uploaded at least one real learning material
+  // Checks if admin has uploaded at least one real learning material (not placeholder)
   const hasLessonMaterials = (lesson: Lesson): boolean => {
-    return !!(lesson.video_url?.trim() || lesson.slide_url?.trim() || lesson.study_note_url?.trim());
+    const validUrl = (url?: string) => {
+      if (!url) return false;
+      const trimmed = url.trim();
+      return (
+        trimmed.length > 0 &&
+        !trimmed.endsWith('drive.google.com') &&
+        !trimmed.endsWith('app.notion.com') &&
+        trimmed !== 'https://drive.google.com' &&
+        trimmed !== 'https://app.notion.com'
+      );
+    };
+    return validUrl(lesson.video_url) || validUrl(lesson.slide_url) || validUrl(lesson.study_note_url);
   };
 
   // Checks if a lesson is locked for students:
@@ -348,7 +398,7 @@ export const SyllabusView: React.FC<{
                   <span className="text-4xl animate-bounce">⏳</span>
                   <h3 className="text-base font-black text-[#214C54]">Buổi học chưa diễn ra</h3>
                   <p className="text-xs text-gray-500 max-w-md leading-relaxed">
-                    Nội dung buổi học sẽ mở vào ngày {activeLesson.start_date ? new Date(activeLesson.start_date).toLocaleDateString('vi-VN') : 'khai giảng'}. Vui lòng quay lại sau!
+                    Nội dung buổi học sẽ mở vào ngày {getLessonStartDate(activeLesson) ? new Date(getLessonStartDate(activeLesson)!).toLocaleDateString('vi-VN') : 'khai giảng'}. Vui lòng quay lại sau!
                   </p>
                 </>
               ) : (
@@ -370,7 +420,7 @@ export const SyllabusView: React.FC<{
                 <div className="text-xs text-amber-800">
                   <p className="font-bold">Buổi học chưa diễn ra đối với học viên</p>
                   <p className="text-[11px] text-amber-700 font-medium">
-                    Học viên sẽ chỉ xem được nội dung này sau ngày {activeLesson.start_date ? new Date(activeLesson.start_date).toLocaleDateString('vi-VN') : 'khai giảng'}. Bạn có thể chuẩn bị sẵn slide, bài tập và học liệu ngay bây giờ.
+                    Học viên sẽ chỉ xem được nội dung này sau ngày {getLessonStartDate(activeLesson) ? new Date(getLessonStartDate(activeLesson)!).toLocaleDateString('vi-VN') : 'khai giảng'}. Bạn có thể chuẩn bị sẵn slide, bài tập và học liệu ngay bây giờ.
                   </p>
                 </div>
               </div>
@@ -562,20 +612,24 @@ export const SyllabusView: React.FC<{
                 </div>
               ))
             ) : (
-              filteredLessons.map((les) => (
-                <LessonCard
-                  key={les.id}
-                  lesson={les}
-                  locked={isLessonLocked(les)}
-                  completed={isLessonCompletedByStudent(les.id)}
-                  isStarted={isLessonStarted(les)}
-                  onSelectLesson={(id) => {
-                    setSelectedLessonId(id);
-                    setRubricSelfCheck({});
-                    setEvidenceUrl('');
-                  }}
-                />
-              ))
+              filteredLessons.map((les) => {
+                const resolvedStartDate = getLessonStartDate(les);
+                const enrichedLesson = { ...les, start_date: resolvedStartDate };
+                return (
+                  <LessonCard
+                    key={les.id}
+                    lesson={enrichedLesson}
+                    locked={isLessonLocked(les)}
+                    completed={isLessonCompletedByStudent(les.id)}
+                    isStarted={isLessonStarted(les)}
+                    onSelectLesson={(id) => {
+                      setSelectedLessonId(id);
+                      setRubricSelfCheck({});
+                      setEvidenceUrl('');
+                    }}
+                  />
+                );
+              })
             )}
           </div>
         </div>
