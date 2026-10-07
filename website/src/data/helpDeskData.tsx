@@ -53,8 +53,166 @@ export const categories: CategoryInfo[] = [
   { 
     id: 'support-community', 
     label: 'Cộng đồng & Hỗ trợ', 
-    description: 'Kết nối Telegram Support 24/7 và thông tin hỗ trợ từ Ban tổ chức.',
+    description: 'Kết nối Kênh hỗ trợ lớp học (Zalo / Telegram) và thông tin hỗ trợ từ Ban tổ chức.',
     icon: <MessageSquare className="w-6 h-6 text-white" /> 
+  }
+];
+
+export const DEFAULT_HELP_DESK_FAQS = [
+  {
+    id: 'recording-notes',
+    category: 'materials-schedule',
+    question: 'Tôi có thể tìm học liệu (Recording, Study Notes,…) ở đâu?',
+    description: 'Tìm các đường link học tập và tài liệu tại NavItem "Lộ trình học".',
+    last_updated: '9 Tháng 7, 2026',
+    order_index: 1,
+    sections: [
+      {
+        id: 'roadmap-links',
+        title: 'Tìm các đường link trên tại NavItem "Lộ trình học"',
+        content: 'Tất cả các liên kết học liệu quan trọng (Notion học tập của lớp, Facebook Group, và kênh nhắn tin trao đổi) đều có thể dễ dàng tìm thấy tại mục **Lộ trình học** trên thanh điều hướng.'
+      }
+    ]
+  },
+  {
+    id: 'overwhelmed-english',
+    category: 'methods',
+    question: 'Khoá học có quá nhiều tài liệu cần đọc, nhiều thuật ngữ chuyên ngành. Làm sao để hết ngợp?',
+    description: 'Cung cấp cẩm nang và tài liệu định hướng tư duy giúp bạn vượt qua cảm giác bị quá tải kiến thức.',
+    last_updated: '3 Tháng 7, 2026',
+    order_index: 2,
+    sections: [
+      {
+        id: 'dont-panic',
+        title: '1. Đừng lo lắng, bạn không cô đơn',
+        content: 'Việc tiếp cận khối lượng kiến thức chuẩn quốc tế và thuật ngữ chuyên ngành trong thời gian ngắn thường tạo cảm giác ngợp cho hơn 80% học viên mới. Đây là phản ứng tâm lý hoàn toàn bình thường khi bạn bước ra khỏi vùng an toàn.'
+      },
+      {
+        id: 'guide-link',
+        title: '2. Tài liệu Hướng dẫn vượt ngợp',
+        content: 'Ban tổ chức đã thiết kế riêng một cẩm nang trực quan trên Canva để giúp bạn gỡ rối tâm lý và định hình lộ trình đọc tài liệu hiệu quả:\n\n[Xem Hướng dẫn vượt ngợp trên Canva](https://canva.link/wgmj35t6pzf2pby)'
+      }
+    ]
+  },
+  {
+    id: 'schedule-reminder',
+    category: 'materials-schedule',
+    question: 'Tìm lịch học và Zoom ở đâu? BTC có nhắc lịch học không?',
+    description: 'Lịch học định kỳ, phòng học Zoom cố định toàn khóa và cách tích hợp lịch học vào Google Calendar cá nhân.',
+    last_updated: '4 Tháng 7, 2026',
+    order_index: 3,
+    sections: [
+      {
+        id: 'read-schedule',
+        title: '1. Xem lịch trình tổng quan',
+        content: 'Lịch trình chi tiết đã được tích hợp sẵn trong hệ thống LightMS ở tab **Lịch học** hoặc bạn có thể xem lại tại phần **Lịch trình & Kết nối** trong mục Giới thiệu khóa học.'
+      },
+      {
+        id: 'calendar-integration',
+        title: '2. Tích hợp lịch hẹn Google Calendar & Zoom Link',
+        content: '- **Nhắc lịch:** Đội ngũ The1ight sẽ gửi lời mời Google Calendar tới địa chỉ email của bạn ở đầu khoá học. Hãy nhấn **Yes (Đồng ý tham gia)** để lịch tự động đồng bộ vào điện thoại và máy tính của bạn.\n- **Link Zoom phòng học:** Link phòng học sẽ được thiết lập **CỐ ĐỊNH** suốt khóa học và đính kèm trực tiếp trong phần mô tả của từng sự kiện trên Google Calendar.'
+      }
+    ]
+  },
+  {
+    id: 'tracking-progress',
+    category: 'methods',
+    question: 'Tôi muốn Tracking tiến độ học tập để duy trì động lực, tôi nên làm gì?',
+    description: 'Giới thiệu bảng tính công khai giúp theo dõi bài tập, tích lũy điểm và thi đua lành mạnh cùng tập thể lớp.',
+    last_updated: '1 Tháng 7, 2026',
+    order_index: 4,
+    sections: [
+      {
+        id: 'public-tracking-sheet',
+        title: '1. Bảng tính Tracking Tiến độ Công khai',
+        content: 'Để duy trì động lực học tập trực tuyến, chúng tôi vận hành hệ thống theo dõi tiến độ công khai của toàn bộ lớp học. Tại mục **Dashboard học tập**, bạn có thể thấy tình trạng nộp bài tập, tích lũy hải trình và thứ hạng Kudos của mình cùng tập thể lớp.'
+      }
+    ]
+  },
+  {
+    id: 'kudos-purpose',
+    category: 'gamification',
+    question: 'Kudos là gì? Vì sao cần Phòng tiếp lửa vinh danh?',
+    description: 'Tìm hiểu văn hóa ghi nhận nỗ lực (Kudos) và cách Kudos thúc đẩy cộng đồng học tập bền bỉ.',
+    last_updated: '2 Tháng 7, 2026',
+    order_index: 5,
+    sections: [
+      {
+        id: 'what-is-kudos',
+        title: '1. Định nghĩa Kudos',
+        content: 'Hành trình xây dựng sản phẩm và học tập công nghệ là một chặng đường dài đầy thách thức. Kudos là những lời khen ngợi, lời cảm ơn hoặc sự công nhận nhanh dành cho nỗ lực vượt qua khó khăn của chính bạn hoặc của đồng đội học viên.'
+      },
+      {
+        id: 'when-to-kudos',
+        title: '2. Bạn nên trao Kudos khi nào?',
+        content: 'Chúng tôi khuyến khích các bạn chủ động tạo bài Kudos tại **Bảng vinh danh** cho:\n\n- **Chính bản thân:** Ghi nhận khi bạn vừa hoàn thành một bài tập khó hoặc vượt qua sự trì hoãn của bản thân.\n- **Bạn đồng hành:** Khi nhận được sự hỗ trợ sửa lỗi, giải thích khái niệm từ bạn cùng lớp.\n- **Mentor & Đội ngũ hỗ trợ:** Nhờ những buổi Office Hour tâm huyết hoặc sự gỡ rối kịp thời.'
+      }
+    ]
+  },
+  {
+    id: 'contact-support',
+    category: 'support-community',
+    question: 'Nếu gặp vấn đề kỹ thuật hoặc bài học, tôi liên hệ ai và bằng cách nào?',
+    description: '3 phương thức nhận phản hồi và giải đáp thắc mắc hiệu quả từ Mentor và Quản lý lớp học.',
+    last_updated: '9 Tháng 7, 2026',
+    order_index: 6,
+    sections: [
+      {
+        id: 'three-channels',
+        title: '1. Ba kênh nhận hỗ trợ đắc lực',
+        content: 'Motto của lớp học là **“Hỏi ngu còn hơn không hỏi”**. Đừng ngần ngại sử dụng các phương án sau:\n\n1. **Cách 01 (Khuyến khích nhất):** Đặt câu hỏi tại nhóm cộng đồng lớp học (Zalo đối với Obsidian 101, hoặc Telegram đối với Vibe Coding). Nơi Mentor và các học viên khác hoạt động rất sôi nổi để gỡ rối nhanh.\n2. **Cách 02 (Hỗ trợ vận hành):** Liên hệ trực tiếp với Ms. Đặng Hồng (Quản lý lớp học) qua SĐT **0985679417** hoặc qua trang [Facebook Cá nhân](https://www.facebook.com/danghong.harunoyuki).\n3. **Cách 03:** Tham gia buổi **Office Hour** hàng tuần để thảo luận trực tiếp cùng giảng viên.'
+      }
+    ]
+  },
+  {
+    id: 'why-community-support',
+    category: 'support-community',
+    question: 'Tôi ít dùng mạng xã hội, vì sao nên tham gia nhóm cộng đồng lớp học?',
+    description: 'Lợi ích thực tế của việc kết nối cộng đồng học tập chung trong việc giải đáp nhanh và tiếp thu kiến thức thụ động.',
+    last_updated: '9 Tháng 7, 2026',
+    order_index: 7,
+    sections: [
+      {
+        id: 'community-benefits',
+        title: '1. Giá trị của việc học tập cộng đồng',
+        content: '- **Học hỏi thụ động:** Đọc các đoạn hội thoại giải đáp thắc mắc của bạn học giúp bạn tích lũy kinh nghiệm xử lý vấn đề trước khi tự mình gặp phải.\n- **Phản hồi siêu tốc:** Đội ngũ hỗ trợ kỹ thuật và bạn học online liên tục sẽ giúp gỡ rối ngay lập tức, giữ mạch học không bị gián đoạn.\n- **Tương tác trực tiếp:** Cập nhật ngay các thông báo đột xuất, tài liệu bổ sung và lịch Office Hour mới nhất từ Ban tổ chức.'
+      }
+    ]
+  },
+  {
+    id: 'busy-strategy',
+    category: 'methods',
+    question: 'Kiến thức quá nặng và tôi rất bận. Có chiến thuật nào giúp tôi theo kịp lớp?',
+    description: 'Gợi ý chiến thuật học ngược thực chiến từ đội ngũ giúp tối ưu hóa thời gian học cho học viên bận rộn.',
+    last_updated: '4 Tháng 7, 2026',
+    order_index: 8,
+    sections: [
+      {
+        id: 'dont-watch-recordings',
+        title: '1. Đề nghị: Ngừng xem lại toàn bộ Video Recording!',
+        content: 'Thay vì dành 2-3 tiếng để xem lại từ đầu đến cuối video bài giảng, hãy đổi sang phương pháp học thực chiến:\n\n- **Bắt tay vào làm bài tập ngay:** Khi gặp khó khăn ở bước nào, bạn mới mở video hoặc học liệu tìm kiếm đúng phần kiến thức đó để giải quyết. Điều này giúp não bộ tiếp thu kiến thức chủ động và ghi nhớ sâu sắc hơn.'
+      },
+      {
+        id: 'ai-notebooklm',
+        title: '2. Tra cứu nhanh qua AI NotebookLM',
+        content: 'Ban tổ chức đã xây dựng sẵn cuốn sổ tay thông minh tích hợp học liệu vào Google NotebookLM. Bạn có thể trò chuyện trực tiếp để hỏi đáp nhanh về lý thuyết lẫn thực hành:\n\n[Truy cập Google NotebookLM](https://notebook.google.com/notebook/f2632a96-7fb3-4e23-b67d-1040f4451a3e)'
+      }
+    ]
+  },
+  {
+    id: 'past-courses-recording',
+    category: 'support-community',
+    question: 'Tôi muốn học nâng cao và xem lại bài giảng các khóa cũ thì làm thế nào?',
+    description: 'Cung cấp quyền truy cập tài liệu, bài giảng ghi hình của các khóa học trước như Automation, IDE.',
+    last_updated: '3 Tháng 7, 2026',
+    order_index: 9,
+    sections: [
+      {
+        id: 'past-notion-link',
+        title: '1. Liên kết Kho dữ liệu Khóa trước',
+        content: 'Học viên xuất sắc muốn học vượt hoặc tham khảo các module chuyên sâu từ các khóa trước hoàn toàn có thể truy cập hệ thống lưu trữ Notion tổng quan tại:\n\n[Danh mục bài giảng & Học liệu khóa trước](https://app.notion.com/p/T-ng-h-p-h-c-li-u-Vibe-Coding-201-Batch-01-2f83d83cf6bd80f98898e00229718aec)'
+      }
+    ]
   }
 ];
 

@@ -53,33 +53,19 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeBatch, setActiveBatch] = useState<Batch | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<BatchEnrollment[]>([]);
 
-  // Helper load lessons according to course (D1 first with localStorage cache fallback)
-  const getLessonsForCourse = (course: Course | null | undefined): Lesson[] => {
-    if (!course) return [];
-    const courseKey = course.slug || course.id;
-    try {
-      const saved = localStorage.getItem(`lightms_lessons_${courseKey}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.warn('Lỗi đọc bài học từ localStorage:', e);
-    }
-    return [];
-  };
 
   const fetchLessonsFromD1 = async (course: Course | null | undefined) => {
     if (!course) return;
+    setIsLessonsLoading(true);
     try {
       const d1Lessons = await d1ApiService.getLessons(course.id);
-      if (d1Lessons && d1Lessons.length > 0) {
+      if (d1Lessons && Array.isArray(d1Lessons)) {
         setLessons(d1Lessons);
-        const courseKey = course.slug || course.id;
-        localStorage.setItem(`lightms_lessons_${courseKey}`, JSON.stringify(d1Lessons));
       }
     } catch (e) {
-      console.warn('Lỗi lấy bài học từ D1:', e);
+      console.warn('[CourseContext] Lỗi lấy bài học từ D1:', e);
+    } finally {
+      setIsLessonsLoading(false);
     }
   };
 
@@ -159,7 +145,6 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setActiveCourse(targetCourse || null);
       setActiveBatch(targetBatch || null);
-      setLessons(getLessonsForCourse(targetCourse));
       fetchLessonsFromD1(targetCourse);
     }
 
@@ -184,7 +169,6 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setActiveBatch(batch);
     localStorage.setItem('lightms_active_course_id', course.id);
     localStorage.setItem('lightms_active_batch_id', batch.id);
-    setLessons(getLessonsForCourse(course));
     fetchLessonsFromD1(course);
   };
 
@@ -223,17 +207,8 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateLesson = async (id: string, updates: Partial<Lesson>) => {
-    // 1. Optimistic Update frontend state & localStorage
-    setLessons(prev => {
-      const nextLessons = prev.map(l => (l.id === id ? { ...l, ...updates } : l));
-      const courseKey = activeCourse?.slug || activeCourse?.id || 'default';
-      try {
-        localStorage.setItem(`lightms_lessons_${courseKey}`, JSON.stringify(nextLessons));
-      } catch (e) {
-        console.warn('Lỗi lưu bài học vào localStorage:', e);
-      }
-      return nextLessons;
-    });
+    // 1. Optimistic Update frontend state
+    setLessons(prev => prev.map(l => (l.id === id ? { ...l, ...updates } : l)));
 
     // 2. Persist update to Backend (Cloudflare D1)
     try {
@@ -254,17 +229,8 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       order_index: newLessonData.order_index || (lessons.length + 1),
     };
 
-    // 1. Update frontend state & localStorage
-    setLessons(prev => {
-      const nextLessons = [...prev, newLesson];
-      const courseKey = activeCourse?.slug || activeCourse?.id || 'default';
-      try {
-        localStorage.setItem(`lightms_lessons_${courseKey}`, JSON.stringify(nextLessons));
-      } catch (e) {
-        console.warn('Lỗi lưu bài học mới vào localStorage:', e);
-      }
-      return nextLessons;
-    });
+    // 1. Update frontend state
+    setLessons(prev => [...prev, newLesson]);
 
     // 2. Persist create to Backend (Cloudflare D1)
     try {

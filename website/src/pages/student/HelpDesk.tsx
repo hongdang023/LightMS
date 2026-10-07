@@ -9,8 +9,9 @@ import {
   Send,
   UserCheck
 } from 'lucide-react';
-import { categories } from '../../data/helpDeskData';
+import { categories, DEFAULT_HELP_DESK_FAQS } from '../../data/helpDeskData';
 import { useCommunity } from '../../context/CommunityContext';
+import { useCourse } from '../../context/CourseContext';
 
 interface HelpDeskProps {
   onPageChange?: (page: string) => void;
@@ -47,6 +48,12 @@ function renderMarkdown(text: string): React.ReactNode {
 
 export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange }) => {
   const { helpDeskFaqs } = useCommunity();
+  const { activeCourse } = useCourse();
+
+  // Check whether current course is Vibe Coding or Obsidian
+  const isVibeCourse = activeCourse?.slug === 'vibe-coding-201' || 
+    activeCourse?.id === 'course-vibe-201' || 
+    activeCourse?.id === '3f26048a-6689-400e-99fc-e0499161d934';
 
   // Navigation states: 'home' | 'category' | 'article'
   const [viewState, setViewState] = useState<'home' | 'category' | 'article'>('home');
@@ -57,8 +64,8 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange 
 
   const sectionsRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Use DB-backed faqs, falling back to empty while loading
-  const faqs = helpDeskFaqs;
+  // Use DB-backed faqs, falling back to default FAQs if empty
+  const faqs = (helpDeskFaqs && helpDeskFaqs.length > 0) ? helpDeskFaqs : DEFAULT_HELP_DESK_FAQS;
 
 
   // Global search filtering across all articles
@@ -145,7 +152,7 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange 
           title="Hỏi đáp & Hỗ trợ"
           description="Trung tâm giải đáp thắc mắc học tập, lịch trình lớp học và hướng dẫn xử lý sự cố."
           helpTitle="Help Center"
-          helpSummary="Học liệu, lịch học, Kudos và cổng Telegram Support trực tiếp."
+          helpSummary={isVibeCourse ? "Học liệu, lịch học, Kudos và cổng Telegram Support trực tiếp." : "Học liệu, lịch học, Kudos và nhóm Zalo Lớp học trực tiếp."}
           helpPurpose="Giúp bạn nhanh chóng tháo gỡ mọi vướng mắc kỹ thuật và lý thuyết trên hành trình LightMS."
         />
       )}
@@ -252,26 +259,32 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange 
             </div>
           )}
 
-          {/* TELEGRAM DIRECT SUPPORT */}
+          {/* DIRECT SUPPORT (Dynamic: Zalo for Obsidian, Telegram for Vibe Coding) */}
           <div className="bg-[#214C54]/5 border border-[#214C54]/20 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#214C54]/10 flex items-center justify-center text-[#214C54] shrink-0">
                 <LifeBuoy size={24} className="stroke-[1.5]" />
               </div>
               <div className="text-left">
-                <h4 className="font-extrabold text-xs text-[#15333B]">Phòng Light Support trên Telegram</h4>
-                <p className="text-[10px] text-gray-500 mt-0.5 font-semibold">Tự động kết nối trực tiếp đến trợ lý vận hành lớp để giải đáp trong 5 phút.</p>
+                <h4 className="font-extrabold text-xs text-[#15333B]">
+                  {isVibeCourse ? 'Phòng Light Support trên Telegram' : 'Phòng hỗ trợ học tập trên Zalo'}
+                </h4>
+                <p className="text-[10px] text-gray-500 mt-0.5 font-semibold">
+                  {isVibeCourse 
+                    ? 'Tự động kết nối trực tiếp đến trợ lý vận hành lớp để giải đáp trong 5 phút.' 
+                    : 'Kết nối trực tiếp với nhóm Zalo lớp Obsidian để trao đổi và giải đáp thắc mắc nhanh chóng.'}
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <a 
-                href="https://t.me/+C8OUa6qqgNsyYjQ9" 
+                href={isVibeCourse ? "https://t.me/+C8OUa6qqgNsyYjQ9" : "https://zalo.me/g/zcsfkw4u0vzlna8jq5pi"} 
                 target="_blank" 
                 rel="noreferrer"
                 className="btn bg-[#FFD94C] text-[#15333B] hover:bg-[#e6c245] border-0 text-xs font-extrabold flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-xl transition-all shadow-sm"
               >
                 <Send size={14} className="stroke-[1.5]" />
-                <span>Liên hệ Telegram Support</span>
+                <span>{isVibeCourse ? 'Liên hệ Telegram Support' : 'Liên hệ Zalo Lớp học'}</span>
               </a>
               <a 
                 href="https://www.facebook.com/danghong.harunoyuki" 

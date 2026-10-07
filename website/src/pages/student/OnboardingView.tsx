@@ -23,7 +23,7 @@ interface OnboardingViewProps {
 
 export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = false, onPageChange }) => {
   const { activeUser, users: profiles, updateProfile } = useAuth();
-  const { onboardingDays, updateOnboardingDay, addNotification } = useCommunity();
+  const { onboardingDays, updateOnboardingDay, addNotification, isOnboardingLoading } = useCommunity();
   const { addNauticalMiles, nauticalTransactions } = useGamification();
 
   // Email template config modal states
@@ -329,21 +329,40 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
 
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {onboardingDays.map((dayData) => {
-            const tasks = getTasksForDay(dayData);
-            const totalTasks = tasks.length;
-            const completedTasks = tasks.filter(t => checkedTasks[t.key]).length;
+          {isOnboardingLoading ? (
+            Array.from({ length: 7 }).map((_, idx) => (
+              <div key={idx} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 animate-pulse flex flex-col justify-between h-[320px]">
+                <div className="space-y-4">
+                  <div className="w-12 h-12 bg-gray-200 rounded-2xl" />
+                  <div className="h-5 bg-gray-200 rounded-lg w-3/4" />
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gray-100 rounded w-full" />
+                    <div className="h-3 bg-gray-100 rounded w-5/6" />
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4 border-t border-gray-100">
+                  <div className="h-2 bg-gray-200 rounded-full w-full" />
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                </div>
+              </div>
+            ))
+          ) : (
+            onboardingDays.map((dayData) => {
+              const tasks = getTasksForDay(dayData);
+              const totalTasks = tasks.length;
+              const completedTasks = tasks.filter(t => checkedTasks[t.key]).length;
 
-            return (
-              <DayCard
-                key={dayData.day}
-                dayData={dayData}
-                totalTasks={totalTasks}
-                completedTasks={completedTasks}
-                onClick={() => handleDayCardClick(dayData.day)}
-              />
-            );
-          })}
+              return (
+                <DayCard
+                  key={dayData.day}
+                  dayData={dayData}
+                  totalTasks={totalTasks}
+                  completedTasks={completedTasks}
+                  onClick={() => handleDayCardClick(dayData.day)}
+                />
+              );
+            })
+          )}
         </div>
       ) : (
         <div className="animate-fade-in max-w-4xl mx-auto space-y-5">

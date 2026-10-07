@@ -8,7 +8,7 @@ interface CalendarViewProps {
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPageChange }) => {
-  const { addNotification, calendarEvents } = useCommunity();
+  const { addNotification, calendarEvents, isCalendarLoading } = useCommunity();
   // Default to current date/month
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
@@ -289,14 +289,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 auto-rows-[minmax(90px,auto)] lg:auto-rows-[minmax(105px,auto)]">
-          {gridCells.map((cell, idx) => {
-            const cellMonth = cell.isCurrentMonth ? month : (cell.date > 15 ? month - 1 : month + 1);
-            const cellYear = cellMonth < 0 ? year - 1 : cellMonth > 11 ? year + 1 : year;
-            const normalizedMonth = (cellMonth + 12) % 12;
-            const today = new Date();
-            const isToday = cell.isCurrentMonth && cell.date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-            const events = getEventsForDate(cellYear, normalizedMonth, cell.date, cell.dayOfWeek);
+        {isCalendarLoading ? (
+          <div className="grid grid-cols-7 auto-rows-[minmax(90px,auto)] lg:auto-rows-[minmax(105px,auto)] p-4 gap-2">
+            {Array.from({ length: 35 }).map((_, idx) => (
+              <div key={idx} className="h-24 bg-gray-50 rounded-xl animate-pulse p-2 border border-gray-100 flex flex-col justify-between">
+                <div className="w-5 h-4 bg-gray-200 rounded" />
+                <div className="w-full h-3 bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 auto-rows-[minmax(90px,auto)] lg:auto-rows-[minmax(105px,auto)]">
+            {gridCells.map((cell, idx) => {
+              const cellMonth = cell.isCurrentMonth ? month : (cell.date > 15 ? month - 1 : month + 1);
+              const cellYear = cellMonth < 0 ? year - 1 : cellMonth > 11 ? year + 1 : year;
+              const normalizedMonth = (cellMonth + 12) % 12;
+              const today = new Date();
+              const isToday = cell.isCurrentMonth && cell.date === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+              const events = getEventsForDate(cellYear, normalizedMonth, cell.date, cell.dayOfWeek);
 
             const cellDateMs = new Date(cellYear, normalizedMonth, cell.date).getTime();
             const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
@@ -360,6 +370,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
             );
           })}
         </div>
+        )}
       </div>
 
       {/* Legend Footer */}
