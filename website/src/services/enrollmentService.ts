@@ -3,21 +3,61 @@ import type { Batch, BatchEnrollment } from '../types/database';
 const STORAGE_ENROLLMENTS_KEY = 'lightms_batch_enrollments';
 const STORAGE_BATCHES_KEY = 'lightms_batches';
 
+export const DEFAULT_BATCHES: Batch[] = [
+  {
+    id: 'batch-vibe201-k2',
+    course_id: 'course-vibe-201',
+    batch_code: 'K2',
+    name: 'Vibe Coding 201 - Khóa 2',
+    access_code: 'VIBE201-K2-888',
+    start_date: '2026-07-01',
+    end_date: '2026-08-31',
+    max_students: 50,
+    is_active: true,
+  },
+  {
+    id: 'e574fea2-9260-4961-8b1d-79ef7e16f784',
+    course_id: 'course-vibe-201',
+    batch_code: 'K3',
+    name: 'Vibe Coding 201 - Khóa 3',
+    access_code: 'VIBE201-K3-PROD',
+    start_date: '2026-07-01',
+    end_date: '2026-08-31',
+    max_students: 50,
+    is_active: true,
+  },
+  {
+    id: 'batch-obs101-k1',
+    course_id: 'course-obsidian-101',
+    batch_code: 'K1',
+    name: 'Obsidian 101 - Khóa 1',
+    access_code: 'OBS101-K1-999',
+    start_date: '2026-10-06',
+    end_date: '2026-11-01',
+    max_students: 80,
+    is_active: true,
+  },
+];
+
 export const enrollmentService = {
-  // Lấy danh sách tất cả các batch (từ local storage hoặc đã sync từ D1)
+  // Lấy danh sách tất cả các batch (từ local storage, D1 hoặc mặc định)
   getAllBatches(): Batch[] {
     const saved = localStorage.getItem(STORAGE_BATCHES_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          // Merge với DEFAULT_BATCHES để đảm bảo các lớp học mặc định luôn hiện diện
+          const map = new Map<string, Batch>();
+          DEFAULT_BATCHES.forEach(b => map.set(b.id, b));
+          parsed.forEach((b: Batch) => map.set(b.id, b));
+          return Array.from(map.values());
         }
       } catch (e) {
         console.error('Failed to parse batches from localStorage', e);
       }
     }
-    return [];
+    return DEFAULT_BATCHES;
   },
 
   // Lấy các batch thuộc một course cụ thể

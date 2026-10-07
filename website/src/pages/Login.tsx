@@ -21,7 +21,13 @@ export const Login: React.FC = () => {
     'Ahoy! Ta là Vẹt gác cổng đây! Hãy chọn vai trò của ngươi để bắt đầu bước lên boong tàu LightMS nhé!'
   );
 
-  // Preseeded accounts for quick testing
+  const isDevMode = typeof window !== 'undefined' && (
+    import.meta.env.DEV ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+
+  // Preseeded accounts for quick testing (chỉ dùng nội bộ khi dev)
   const preseededAccounts = [
     {
       name: 'Đặng Tuyết Hồng',
@@ -71,10 +77,13 @@ export const Login: React.FC = () => {
     setPasswordError('');
     if (role === 'admin') {
       setFlowState('admin-password');
+      setShowCustomInput(false);
       setParrotText('Dừng lại! Lối vào phòng Thuyền trưởng cần mật mã tối mật. Hãy nhập mật mã của ngươi!');
     } else {
       setFlowState('google-login');
-      setParrotText('Tuyệt vời! Hãy đăng nhập bằng Gmail học viên để tiếp tục hành trình học tập!');
+      // Mặc định luôn nhập Gmail trực tiếp; chỉ cho phép mở tài khoản mẫu khi ở local dev
+      setShowCustomInput(true);
+      setParrotText('Tuyệt vời! Hãy nhập Gmail của bạn để bắt đầu hành trình học tập!');
     }
   };
 
@@ -438,17 +447,23 @@ export const Login: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2.5 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCustomInput(false);
-                      setError('');
-                      setParrotText('Hì hì, chọn tài khoản có sẵn cũng là ý hay cho nhanh đấy!');
-                    }}
-                    className="flex-1 py-3 px-4 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl font-bold text-xs transition-all text-center cursor-pointer"
-                  >
-                    Quay lại
-                  </button>
+                  {isDevMode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCustomInput(false);
+                        setError('');
+                        setParrotText(
+                          selectedRole === 'admin'
+                            ? 'Chọn tài khoản Admin mẫu để đăng nhập thử nghiệm!'
+                            : 'Chọn tài khoản học viên mẫu để đăng nhập nhanh!'
+                        );
+                      }}
+                      className="flex-1 py-3 px-4 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl font-bold text-xs transition-all text-center cursor-pointer"
+                    >
+                      Tài khoản mẫu (Dev)
+                    </button>
+                  )}
                   <button
                     type="submit"
                     className="flex-1 py-3 px-4 bg-[#214C54] hover:bg-[#15333B] text-white rounded-xl font-bold text-xs shadow-sm hover:shadow transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
