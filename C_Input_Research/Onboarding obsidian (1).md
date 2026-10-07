@@ -8,7 +8,7 @@
 
 * **Task 1:** Xem video [Greeting từ giảng viên](https://youtu.be/pzsBYMMg0Dc?si=_r0FxOKXUEGUweIQ).  
 * **Task 2:** Set up nền tảng hỗ trợ học tập — đọc toàn bộ hướng dẫn tại "01 | Giới thiệu khoá học \[READ ME FIRST\]".  
-* **Task 3:** Điền form Khảo sát Onboarding để giảng viên nắm thông tin và cập nhật giáo trình phù hợp.  
+* **Task 3:** Điền form [Khảo sát Onboarding](https://forms.gle/GydkVm2kd1DdJJJa6) để giảng viên nắm thông tin và cập nhật giáo trình phù hợp.  
 * **Task 4:** Viết 1 post giới thiệu bản thân trong Facebook Group, gắn `#OB_Ngay1` ở đầu bài.  
    💡 *"Giới thiệu bản thân và chia sẻ thói quen ghi chú của bạn"*  
   * Nội dung post: tên \+ công việc/ngành; lý do học (gắn nỗi đau); trở ngại lớn nhất \+ cách khắc phục; điều hy vọng đạt sau 1 tháng; thuận lợi/lợi thế riêng; cam kết số giờ/tuần \+ khung giờ trống; **đặt cược nếu không build được 2nd Brain** (khao trà sữa / presentation / múa bụng...).  
