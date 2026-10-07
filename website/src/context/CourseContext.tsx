@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Course, Batch, Lesson, BatchEnrollment } from '../types/database';
-import { INITIAL_COURSES, OBSIDIAN_LESSONS, VIBE_201_LESSONS } from '../data/seedCourses';
 import { enrollmentService } from '../services/enrollmentService';
 import { d1ApiService } from '../services/d1ApiService';
 import { useAuth } from './AuthContext';
@@ -33,9 +32,20 @@ const CourseContext = createContext<CourseContextType | undefined>(undefined);
 
 export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { activeUser } = useAuth();
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
+  const [courses, setCourses] = useState<Course[]>(() => {
+    try {
+      const saved = localStorage.getItem('lightms_all_courses');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // fallback
+    }
+    return [];
+  });
   const [batches, setBatches] = useState<Batch[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>(VIBE_201_LESSONS);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLessonsLoading, setIsLessonsLoading] = useState(false);
 
   // Active Selected Course & Batch
@@ -43,9 +53,9 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeBatch, setActiveBatch] = useState<Batch | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<BatchEnrollment[]>([]);
 
-  // Helper load lessons according to course (D1 first with localStorage fallback)
+  // Helper load lessons according to course (D1 first with localStorage cache fallback)
   const getLessonsForCourse = (course: Course | null | undefined): Lesson[] => {
-    if (!course) return VIBE_201_LESSONS;
+    if (!course) return [];
     const courseKey = course.slug || course.id;
     try {
       const saved = localStorage.getItem(`lightms_lessons_${courseKey}`);
@@ -55,13 +65,6 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (e) {
       console.warn('Lỗi đọc bài học từ localStorage:', e);
-    }
-
-    if (course.slug === 'vibe-coding-201' || course.id === 'course-vibe-201') {
-      return VIBE_201_LESSONS;
-    }
-    if (course.slug === 'obsidian-101' || course.id === 'course-obsidian-101') {
-      return OBSIDIAN_LESSONS;
     }
     return [];
   };
@@ -88,6 +91,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     d1ApiService.getCourses().then(d1Courses => {
       if (!isCancelled && d1Courses && d1Courses.length > 0) {
         setCourses(d1Courses);
+        localStorage.setItem('lightms_all_courses', JSON.stringify(d1Courses));
       }
     });
 

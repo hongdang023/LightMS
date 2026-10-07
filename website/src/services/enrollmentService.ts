@@ -1,11 +1,10 @@
 import type { Batch, BatchEnrollment } from '../types/database';
-import { INITIAL_BATCHES, INITIAL_ENROLLMENTS } from '../data/seedCourses';
 
 const STORAGE_ENROLLMENTS_KEY = 'lightms_batch_enrollments';
 const STORAGE_BATCHES_KEY = 'lightms_batches';
 
 export const enrollmentService = {
-  // Lấy danh sách tất cả các batch (từ local storage hoặc mock data)
+  // Lấy danh sách tất cả các batch (từ local storage hoặc đã sync từ D1)
   getAllBatches(): Batch[] {
     const saved = localStorage.getItem(STORAGE_BATCHES_KEY);
     if (saved) {
@@ -18,8 +17,7 @@ export const enrollmentService = {
         console.error('Failed to parse batches from localStorage', e);
       }
     }
-    localStorage.setItem(STORAGE_BATCHES_KEY, JSON.stringify(INITIAL_BATCHES));
-    return INITIAL_BATCHES;
+    return [];
   },
 
   // Lấy các batch thuộc một course cụ thể
@@ -31,7 +29,7 @@ export const enrollmentService = {
   // Lấy toàn bộ danh sách enrollments của tất cả học viên
   getAllEnrollments(): BatchEnrollment[] {
     const saved = localStorage.getItem(STORAGE_ENROLLMENTS_KEY);
-    let enrollments: BatchEnrollment[] = INITIAL_ENROLLMENTS;
+    let enrollments: BatchEnrollment[] = [];
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -43,19 +41,12 @@ export const enrollmentService = {
             }
             return e;
           });
-
-          // Merge any missing initial enrollments
-          const existingKeys = new Set(remapped.map((e: any) => `${e.user_id}_${e.batch_id}`));
-          const missing = INITIAL_ENROLLMENTS.filter(
-            ie => !existingKeys.has(`${ie.user_id}_${ie.batch_id}`)
-          );
-          enrollments = [...remapped, ...missing];
+          enrollments = remapped;
         }
       } catch (e) {
         console.error('Failed to parse enrollments from localStorage', e);
       }
     }
-    localStorage.setItem(STORAGE_ENROLLMENTS_KEY, JSON.stringify(enrollments));
     return enrollments;
   },
 

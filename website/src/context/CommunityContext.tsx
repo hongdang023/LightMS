@@ -1,9 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { CalendarEvent, OnboardingDay, AboutContent, NotificationLog, HelpDeskFaq } from '../types/database';
 import { useCourse } from './CourseContext';
-import { DEFAULT_OBSIDIAN_CALENDAR_EVENTS, DEFAULT_OBSIDIAN_ONBOARDING_DAYS } from '../data/seedCourses';
-import { VIBE_201_CALENDAR_EVENTS } from '../data/vibeCalendarEvents';
-import { VIBE_7DAY_ONBOARDING_DAYS } from '../data/vibeOnboardingDays';
 import {
   DEFAULT_OBSIDIAN_ABOUT_CONTENT,
   DEFAULT_VIBE_ABOUT_CONTENT
@@ -59,7 +56,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return isVibeCourse ? 'course-vibe-201' : 'course-obsidian-101';
   }, [activeCourse?.id, isVibeCourse]);
 
-  const getCalendarEventsForBatch = useCallback((batchId: string, isVibe: boolean): CalendarEvent[] => {
+  const getCalendarEventsForBatch = useCallback((batchId: string): CalendarEvent[] => {
     try {
       const saved = localStorage.getItem(`lightms_calendar_events_${batchId}`);
       if (saved) {
@@ -70,10 +67,10 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {
       // fallback
     }
-    return isVibe ? VIBE_201_CALENDAR_EVENTS : DEFAULT_OBSIDIAN_CALENDAR_EVENTS;
+    return [];
   }, []);
 
-  const getOnboardingDaysForCourse = useCallback((courseKey: string, isVibe: boolean): OnboardingDay[] => {
+  const getOnboardingDaysForCourse = useCallback((courseKey: string): OnboardingDay[] => {
     try {
       const saved = localStorage.getItem(`lightms_onboarding_days_${courseKey}`);
       if (saved) {
@@ -89,7 +86,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {
       // fallback
     }
-    return isVibe ? VIBE_7DAY_ONBOARDING_DAYS : DEFAULT_OBSIDIAN_ONBOARDING_DAYS;
+    return [];
   }, []);
 
   const getAboutContentForCourse = useCallback((courseKey: string, isVibe: boolean): AboutContent => {
@@ -112,11 +109,11 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => {
-    return getCalendarEventsForBatch(currentBatchKey, isVibeCourse);
+    return getCalendarEventsForBatch(currentBatchKey);
   });
 
   const [onboardingDays, setOnboardingDays] = useState<OnboardingDay[]>(() => {
-    return getOnboardingDaysForCourse(currentCourseKey, isVibeCourse);
+    return getOnboardingDaysForCourse(currentCourseKey);
   });
 
   const [aboutContent, setAboutContent] = useState<AboutContent>(() => {
@@ -133,7 +130,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setOnboardingDays(d1Days);
         localStorage.setItem(`lightms_onboarding_days_${currentCourseKey}`, JSON.stringify(d1Days));
       } else if (!isCancelled) {
-        setOnboardingDays(getOnboardingDaysForCourse(currentCourseKey, isVibeCourse));
+        setOnboardingDays(getOnboardingDaysForCourse(currentCourseKey));
       }
     });
 
@@ -142,7 +139,7 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setCalendarEvents(d1Events);
         localStorage.setItem(`lightms_calendar_events_${currentBatchKey}`, JSON.stringify(d1Events));
       } else if (!isCancelled) {
-        setCalendarEvents(getCalendarEventsForBatch(currentBatchKey, isVibeCourse));
+        setCalendarEvents(getCalendarEventsForBatch(currentBatchKey));
       }
     });
 
