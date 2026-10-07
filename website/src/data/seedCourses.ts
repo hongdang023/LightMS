@@ -116,7 +116,7 @@ export const INITIAL_BATCHES: Batch[] = [
 ];
 
 
-// Mặc định ban đầu học viên test đã enroll vào Obsidian 101 - Khóa 1
+// Mặc định ban đầu học viên test đã enroll vào Vibe Coding 201 - Khóa 2
 export const INITIAL_ENROLLMENTS: BatchEnrollment[] = [
   {
     "id": "enroll-vibe201-test",

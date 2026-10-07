@@ -197,6 +197,8 @@ export const StudentManagement: React.FC = () => {
     handleCopyHtml,
     handleSendBulkEmail,
     openBulkEmailModal,
+    filterScope,
+    setFilterScope,
     getTasksForDay,
     getOnboardingCompletedCount,
     getLiveClassCompletedCount,
@@ -286,6 +288,9 @@ export const StudentManagement: React.FC = () => {
             filteredStudents={filteredStudents}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            filterScope={filterScope}
+            setFilterScope={setFilterScope}
+            activeBatchName={activeBatch?.name}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             selectedStudentId={selectedStudentId}

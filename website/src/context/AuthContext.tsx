@@ -87,28 +87,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeUser]);
 
-  // Load profiles and admins from localDataService
+  // Load profiles and admins from localDataService and D1
   useEffect(() => {
+    let isCancelled = false;
     const fetchData = async () => {
       try {
         await localDataService.init();
         const loadedUsers = localDataService.getUsers();
         const loadedAdmins = localDataService.getAdmins();
 
-        setAdmins(loadedAdmins);
-        setProfiles(loadedUsers.map(p => {
-          const emailLower = (p.gmail || '').toLowerCase().trim();
-          const isAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower) || loadedAdmins.some(a => (a.gmail || '').toLowerCase().trim() === emailLower);
-          return {
-            ...p,
-            role: isAdmin ? 'admin' : 'student'
-          };
-        }));
+        if (!isCancelled) {
+          setAdmins(loadedAdmins);
+          setProfiles(loadedUsers.map(p => {
+            const emailLower = (p.gmail || '').toLowerCase().trim();
+            const isAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower) || loadedAdmins.some(a => (a.gmail || '').toLowerCase().trim() === emailLower);
+            return {
+              ...p,
+              role: isAdmin ? 'admin' : 'student'
+            };
+          }));
+        }
+
+        // Fetch remote users from D1
+        d1ApiService.getUsers().then(remoteUsers => {
+          if (!isCancelled && remoteUsers && remoteUsers.length > 0) {
+            setProfiles(prev => {
+              const map = new Map<string, Profile>();
+              // Put local ones first
+              prev.forEach(u => {
+                const key = (u.gmail || u.id).toLowerCase();
+                map.set(key, u);
+              });
+              // Merge remote ones (remote takes precedence or adds new)
+              remoteUsers.forEach(ru => {
+                const key = (ru.gmail || ru.id).toLowerCase();
+                const existing = map.get(key);
+                const emailLower = (ru.gmail || '').toLowerCase().trim();
+                const isAdmin = ALLOWED_ADMIN_EMAILS.includes(emailLower) || loadedAdmins.some(a => (a.gmail || '').toLowerCase().trim() === emailLower);
+                map.set(key, {
+                  ...existing,
+                  ...ru,
+                  role: isAdmin ? 'admin' : (ru.role || 'student')
+                });
+                localDataService.upsertUser(ru);
+              });
+              return Array.from(map.values());
+            });
+          }
+        }).catch(err => {
+          console.warn('[AuthContext] D1 getUsers error:', err);
+        });
       } catch (err) {
         console.error('Error fetching profiles/admins in AuthContext:', err);
       }
     };
     fetchData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   const switchUser = (role: UserRole) => {
@@ -148,6 +185,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfiles(prev => [newUser, ...prev]);
       localDataService.upsertUser(newUser);
 
+      // Đồng bộ ngay lập tức lên Cloudflare D1
+      d1ApiService.syncUser(newUser).catch(err => {
+        console.warn('[AuthContext] D1 syncUser error:', err);
+      });
+
       if (effectiveRole === 'admin') {
         const newAdmin: Admin = {
           id: newUser.id,
@@ -167,6 +209,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user = { ...user, role: effectiveRole };
       setProfiles(prev => prev.map(p => p.id === user!.id ? user! : p));
       localDataService.upsertUser(user);
+      d1ApiService.syncUser(user).catch(err => {
+        console.warn('[AuthContext] D1 syncUser update error:', err);
+      });
     }
 
     setActiveUserId(user.id);

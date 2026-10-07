@@ -21,6 +21,7 @@ export interface CourseContextType {
   setIsLessonsLoading: (loading: boolean) => void;
   completeLesson: (lessonId: string) => void;
   updateLesson: (id: string, updates: Partial<Lesson>) => Promise<{ error: any }>;
+  addLesson: (lesson: Omit<Lesson, 'id'> & { id?: string }) => Promise<{ data?: Lesson; error: any }>;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
   enrollWithAccessCode: (accessCode: string, targetBatchId?: string) => { success: boolean; message: string; batch?: Batch };
   selectCourseAndBatch: (course: Course, batch: Batch) => void;
@@ -42,7 +43,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeBatch, setActiveBatch] = useState<Batch | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<BatchEnrollment[]>([]);
 
-  // Helper load lessons according to course
+  // Helper load lessons according to course (D1 first with localStorage fallback)
   const getLessonsForCourse = (course: Course | null | undefined): Lesson[] => {
     if (!course) return VIBE_201_LESSONS;
     const courseKey = course.slug || course.id;
@@ -63,6 +64,20 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return OBSIDIAN_LESSONS;
     }
     return [];
+  };
+
+  const fetchLessonsFromD1 = async (course: Course | null | undefined) => {
+    if (!course) return;
+    try {
+      const d1Lessons = await d1ApiService.getLessons(course.id);
+      if (d1Lessons && d1Lessons.length > 0) {
+        setLessons(d1Lessons);
+        const courseKey = course.slug || course.id;
+        localStorage.setItem(`lightms_lessons_${courseKey}`, JSON.stringify(d1Lessons));
+      }
+    } catch (e) {
+      console.warn('Lỗi lấy bài học từ D1:', e);
+    }
   };
 
   // ── Load Batches and Courses (D1 First) ───────────────────────────────────
@@ -93,10 +108,24 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ── Load Batches and Enrollments when user changes ────────────────────────
   useEffect(() => {
+    let isCancelled = false;
     const loadedBatches = enrollmentService.getAllBatches();
     if (batches.length === 0) {
       setBatches(loadedBatches);
     }
+
+    // Tải enrollments từ D1 để đồng bộ trên tất cả thiết bị
+    d1ApiService.getEnrollments().then(remoteEnrollments => {
+      if (!isCancelled && remoteEnrollments && remoteEnrollments.length > 0) {
+        enrollmentService.syncRemoteEnrollments(remoteEnrollments);
+        if (activeUser) {
+          const updatedUserEnrollments = enrollmentService.getUserEnrollments(activeUser.id);
+          setUserEnrollments(updatedUserEnrollments);
+        }
+      }
+    }).catch(err => {
+      console.warn('[CourseContext] D1 getEnrollments error:', err);
+    });
 
     if (activeUser) {
       const enrollments = enrollmentService.getUserEnrollments(activeUser.id);
@@ -127,7 +156,12 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setActiveCourse(targetCourse || null);
       setActiveBatch(targetBatch || null);
       setLessons(getLessonsForCourse(targetCourse));
+      fetchLessonsFromD1(targetCourse);
     }
+
+    return () => {
+      isCancelled = true;
+    };
   }, [activeUser, courses, batches]);
 
   // Helper check enrollment
@@ -147,6 +181,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('lightms_active_course_id', course.id);
     localStorage.setItem('lightms_active_batch_id', batch.id);
     setLessons(getLessonsForCourse(course));
+    fetchLessonsFromD1(course);
   };
 
 
@@ -157,6 +192,16 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const result = enrollmentService.verifyAndEnroll(activeUser.id, accessCode, targetBatchId);
     if (result.success && result.batch) {
+      // Sync enrollment to Cloudflare D1
+      d1ApiService.createEnrollment({
+        userId: activeUser.id,
+        batchId: result.batch.id,
+        courseId: result.courseId || result.batch.course_id,
+        accessCode: accessCode.trim().toUpperCase()
+      }).catch(err => {
+        console.warn('[CourseContext] D1 createEnrollment error:', err);
+      });
+
       // Refresh enrollments
       const updatedEnrollments = enrollmentService.getUserEnrollments(activeUser.id);
       setUserEnrollments(updatedEnrollments);
@@ -174,6 +219,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateLesson = async (id: string, updates: Partial<Lesson>) => {
+    // 1. Optimistic Update frontend state & localStorage
     setLessons(prev => {
       const nextLessons = prev.map(l => (l.id === id ? { ...l, ...updates } : l));
       const courseKey = activeCourse?.slug || activeCourse?.id || 'default';
@@ -184,7 +230,46 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       return nextLessons;
     });
+
+    // 2. Persist update to Backend (Cloudflare D1)
+    try {
+      await d1ApiService.updateLesson(id, updates);
+    } catch (e) {
+      console.warn('[CourseContext] Không thể lưu lesson lên D1:', e);
+    }
+
     return { error: null };
+  };
+
+  const addLesson = async (newLessonData: Omit<Lesson, 'id'> & { id?: string }) => {
+    const courseId = activeCourse?.id || 'course-obsidian-101';
+    const newLesson: Lesson = {
+      ...newLessonData,
+      id: newLessonData.id || `lesson-${Date.now()}`,
+      course_id: newLessonData.course_id || courseId,
+      order_index: newLessonData.order_index || (lessons.length + 1),
+    };
+
+    // 1. Update frontend state & localStorage
+    setLessons(prev => {
+      const nextLessons = [...prev, newLesson];
+      const courseKey = activeCourse?.slug || activeCourse?.id || 'default';
+      try {
+        localStorage.setItem(`lightms_lessons_${courseKey}`, JSON.stringify(nextLessons));
+      } catch (e) {
+        console.warn('Lỗi lưu bài học mới vào localStorage:', e);
+      }
+      return nextLessons;
+    });
+
+    // 2. Persist create to Backend (Cloudflare D1)
+    try {
+      await d1ApiService.createLesson(newLesson);
+    } catch (e) {
+      console.warn('[CourseContext] Không thể tạo lesson lên D1:', e);
+    }
+
+    return { data: newLesson, error: null };
   };
 
   const updateBatch = (id: string, updates: Partial<Batch>) => {
@@ -209,6 +294,7 @@ export const CourseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsLessonsLoading,
         completeLesson,
         updateLesson,
+        addLesson,
         updateBatch,
         enrollWithAccessCode,
         selectCourseAndBatch,

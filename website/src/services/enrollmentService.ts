@@ -36,16 +36,8 @@ export const enrollmentService = {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Clean out any fake / mock students or obsolete test enrollments
-          const cleaned = parsed.filter(e => 
-            !e.user_id?.startsWith('obs-') && 
-            !e.id?.startsWith('enroll-obs-') && 
-            e.id !== 'enroll-test-obs101' &&
-            !(e.batch_id === 'batch-obs101-k1' && (e.user_id === 'student-1' || e.id?.includes('test')))
-          );
-
           // Remap obsolete batch codes if any
-          const remapped = cleaned.map(e => {
+          const remapped = parsed.map(e => {
             if (e.batch_id === 'batch-vibe201-k3' || e.batch_id === 'e574fea2-9260-4961-8b1d-79ef7e16f784') {
               return { ...e, batch_id: 'batch-vibe201-k2', access_code_used: 'VIBE201-K2-888' };
             }
@@ -65,6 +57,20 @@ export const enrollmentService = {
     }
     localStorage.setItem(STORAGE_ENROLLMENTS_KEY, JSON.stringify(enrollments));
     return enrollments;
+  },
+
+  // Đồng bộ thêm danh sách enrollments từ Cloudflare D1
+  syncRemoteEnrollments(remoteEnrollments: BatchEnrollment[]): BatchEnrollment[] {
+    if (!Array.isArray(remoteEnrollments) || remoteEnrollments.length === 0) {
+      return this.getAllEnrollments();
+    }
+    const current = this.getAllEnrollments();
+    const map = new Map<string, BatchEnrollment>();
+    current.forEach(e => map.set(`${e.user_id}_${e.batch_id}`, e));
+    remoteEnrollments.forEach(re => map.set(`${re.user_id}_${re.batch_id}`, re));
+    const merged = Array.from(map.values());
+    localStorage.setItem(STORAGE_ENROLLMENTS_KEY, JSON.stringify(merged));
+    return merged;
   },
 
   // Lấy danh sách học viên đã ghi danh theo Batch ID cụ thể
@@ -140,7 +146,7 @@ export const enrollmentService = {
     let addedCount = 0;
 
     matchedBatches.forEach(b => {
-      const exists = newEnrollments.some(e => e.batch_id === b.id);
+      const exists = newEnrollments.some(e => e.batch_id === b.id && e.user_id === userId);
       if (!exists) {
         newEnrollments.push({
           id: `enroll-${Date.now()}-${b.id}`,

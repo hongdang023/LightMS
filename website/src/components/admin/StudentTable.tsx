@@ -6,6 +6,9 @@ interface StudentTableProps {
   filteredStudents: any[];
   activeTab: 'all' | 'risk' | 'outstanding' | 'guest';
   setActiveTab: (tab: 'all' | 'risk' | 'outstanding' | 'guest') => void;
+  filterScope?: 'batch' | 'all';
+  setFilterScope?: (scope: 'batch' | 'all') => void;
+  activeBatchName?: string;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedStudentId: string | null;
@@ -24,6 +27,9 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   filteredStudents,
   activeTab,
   setActiveTab,
+  filterScope = 'batch',
+  setFilterScope,
+  activeBatchName,
   searchQuery,
   setSearchQuery,
   selectedStudentId,
@@ -45,8 +51,40 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       <div className="p-4 bg-gray-50 border-b border-gray-200 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider">Danh sách học viên</h3>
-            <p className="text-[10px] text-[#3E5E63] font-semibold mt-0.5">Quản lý kết quả nộp bài tập và tần suất tương tác học tập.</p>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider">Danh sách học viên</h3>
+              {setFilterScope && (
+                <div className="flex items-center bg-gray-200/70 p-0.5 rounded-lg border border-gray-300">
+                  <button
+                    type="button"
+                    onClick={() => setFilterScope('batch')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition-all ${
+                      filterScope === 'batch'
+                        ? 'bg-[#214C54] text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {activeBatchName ? `Lớp ${activeBatchName}` : 'Lớp hiện tại'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterScope('all')}
+                    className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition-all ${
+                      filterScope === 'all'
+                        ? 'bg-[#214C54] text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Toàn hệ thống
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-[#3E5E63] font-semibold mt-0.5">
+              {filterScope === 'all' 
+                ? 'Đang hiển thị tất cả tài khoản học viên đã đăng nhập vào hệ thống.' 
+                : 'Quản lý kết quả nộp bài tập và tần suất tương tác học tập của lớp.'}
+            </p>
           </div>
 
           {/* Search Bar */}

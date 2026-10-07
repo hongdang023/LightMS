@@ -13,6 +13,7 @@ export const useStudentManagementData = () => {
   const { onboardingDays, addNotification } = useCommunity();
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'risk' | 'outstanding' | 'guest'>('all');
+  const [filterScope, setFilterScope] = useState<'batch' | 'all'>('batch');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'overview' | 'onboarding' | 'submissions'>('list');
@@ -25,15 +26,18 @@ export const useStudentManagementData = () => {
   const [bulkBody, setBulkBody] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
-  // Filter students enrolled in activeBatch
+  // Filter students enrolled in activeBatch or all registered students
   const enrolledStudentIds = useMemo(() => {
     if (!activeBatch) return new Set(users.filter(u => u.role === 'student').map(u => u.id));
     return new Set(enrollmentService.getEnrollmentsForBatch(activeBatch.id).map(e => e.user_id));
   }, [activeBatch, users]);
 
   const students = useMemo(() => {
+    if (filterScope === 'all') {
+      return users.filter(u => u.role === 'student');
+    }
     return users.filter(u => u.role === 'student' && enrolledStudentIds.has(u.id));
-  }, [users, enrolledStudentIds]);
+  }, [users, enrolledStudentIds, filterScope]);
   const activeStudent = users.find(s => s.id === selectedStudentId);
 
   const liveClassAssignments = lessons.filter(l => !!l.assignment_description);
@@ -384,6 +388,8 @@ export const useStudentManagementData = () => {
     setSelectedStudentId,
     activeTab,
     setActiveTab,
+    filterScope,
+    setFilterScope,
     searchQuery,
     setSearchQuery,
     toastMessage,

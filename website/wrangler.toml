@@ -7,8 +7,4 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "lightms-d1-prod"
-database_id = "00000000-0000-0000-0000-000000000000"
-
-[[r2_buckets]]
-binding = "STORAGE"
-bucket_name = "lightms-assets"
+database_id = "407039a4-d2ca-4c8c-8ba4-45b8a3697828"

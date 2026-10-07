@@ -5,7 +5,8 @@ import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
 import type { Lesson } from '../../types/database';
 import { EditableText } from '../../components/EditableText';
-import { X, Save, Undo, Lightbulb, Key } from 'lucide-react';
+import { X, Save, Undo, Lightbulb, Key, Plus } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
 import { LessonMaterials } from '../../components/syllabus/LessonMaterials';
 import { LessonAssignmentSection } from '../../components/syllabus/LessonAssignmentSection';
 import { LessonCard } from '../../components/syllabus/LessonCard';
@@ -15,7 +16,7 @@ export const SyllabusView: React.FC<{
   isEditMode?: boolean;
 }> = ({ isEditMode = false }) => {
   const { activeUser, users: profiles, setProfiles, updateProfile } = useAuth();
-  const { lessons, isLessonsLoading, completeLesson, updateLesson } = useCourse();
+  const { lessons, isLessonsLoading, completeLesson, updateLesson, addLesson } = useCourse();
   const { nauticalTransactions, addNauticalMiles, unlockBadge } = useGamification();
 
   const filteredLessons = lessons;
@@ -29,6 +30,11 @@ export const SyllabusView: React.FC<{
   const [draftLesson, setDraftLesson] = useState<Lesson | null>(null);
   const [hasHomework, setHasHomework] = useState(false);
   const [newConceptInput, setNewConceptInput] = useState('');
+
+  // State for Add Lesson Modal
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newLessonTitle, setNewLessonTitle] = useState('');
+  const [newLessonDate, setNewLessonDate] = useState('');
 
   const activeLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0];
 
@@ -241,6 +247,47 @@ export const SyllabusView: React.FC<{
 
 
 
+  const handleCreateLesson = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLessonTitle.trim()) {
+      alert('Vui lòng nhập tiêu đề buổi học!');
+      return;
+    }
+
+    const nextOrder = filteredLessons.length + 1;
+    const titleWithPrefix = newLessonTitle.trim().startsWith('Buổi') 
+      ? newLessonTitle.trim() 
+      : `Buổi ${nextOrder}: ${newLessonTitle.trim()}`;
+
+    const res = await addLesson({
+      title: titleWithPrefix,
+      content: 'Nội dung chi tiết của buổi học đang được biên soạn.',
+      video_url: '',
+      order_index: nextOrder,
+      start_date: newLessonDate ? new Date(newLessonDate).toISOString() : undefined,
+      target: 'Mục tiêu của buổi học này.',
+      has_materials: true,
+      slide_url: '',
+      study_note_url: '',
+      key_concepts: [],
+      supporting_resources: [],
+      assignment_description: '',
+      assignment_rubric_checklist: [],
+    });
+
+    if (res.error) {
+      showToast('❌ Có lỗi xảy ra khi tạo buổi học!');
+    } else {
+      showToast('✨ Đã thêm buổi học mới thành công!');
+      setIsAddModalOpen(false);
+      setNewLessonTitle('');
+      setNewLessonDate('');
+      if (res.data) {
+        setSelectedLessonId(res.data.id);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in select-none pb-20 max-w-5xl mx-auto text-left">
       {selectedLessonId && activeLesson ? (
@@ -254,19 +301,39 @@ export const SyllabusView: React.FC<{
             ← Quay lại lộ trình học
           </button>
 
-          <PageHeader
-            title={activeLesson.title.replace(/^Buổi\s+\d+\s*:\s*/i, '')}
-            description={`Buổi học số ${
-              activeLesson.title.match(/^Buổi\s+(\d+)/i) 
-                ? activeLesson.title.match(/^Buổi\s+(\d+)/i)![1] 
-                : (activeLesson.order_index - 1).toString()
-            } - Khám phá các học phần và bài tập trên hải trình của bạn.`}
-            helpTitle="Chi tiết buổi học"
-            helpSummary={activeLesson.target || 'Nội dung chi tiết của buổi học.'}
-            helpPurpose="Giúp bạn học lý thuyết, tiếp cận tài nguyên và làm bài tập về nhà."
-          />
+          {isEditMode && draftLesson ? (
+            <div className="space-y-2 p-5 bg-white border border-gray-200 rounded-2xl shadow-sm">
+              <label className="text-xs font-black text-[#214C54] uppercase tracking-wider block">
+                Tiêu đề buổi học
+              </label>
+              <EditableText
+                value={draftLesson.title}
+                onSave={(newValue) => setDraftLesson({ ...draftLesson, title: newValue })}
+                className="text-xl font-black text-[#15333B] w-full"
+              />
+              <p className="text-xs text-gray-400 font-medium">
+                Buổi học số {
+                  draftLesson.title.match(/^Buổi\s+(\d+)/i) 
+                    ? draftLesson.title.match(/^Buổi\s+(\d+)/i)![1] 
+                    : (draftLesson.order_index - 1).toString()
+                } - Khám phá các học phần và bài tập trên hải trình của bạn.
+              </p>
+            </div>
+          ) : (
+            <PageHeader
+              title={activeLesson.title.replace(/^Buổi\s+\d+\s*:\s*/i, '')}
+              description={`Buổi học số ${
+                activeLesson.title.match(/^Buổi\s+(\d+)/i) 
+                  ? activeLesson.title.match(/^Buổi\s+(\d+)/i)![1] 
+                  : (activeLesson.order_index - 1).toString()
+              } - Khám phá các học phần và bài tập trên hải trình của bạn.`}
+              helpTitle="Chi tiết buổi học"
+              helpSummary={activeLesson.target || 'Nội dung chi tiết của buổi học.'}
+              helpPurpose="Giúp bạn học lý thuyết, tiếp cận tài nguyên và làm bài tập về nhà."
+            />
+          )}
 
-          {!isLessonStarted(activeLesson) ? (
+          {!isLessonStarted(activeLesson) && !isEditMode && activeUser?.role !== 'admin' ? (
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center text-center space-y-3">
               <span className="text-4xl animate-bounce">⏳</span>
               <h3 className="text-base font-black text-[#214C54]">Buổi học chưa diễn ra</h3>
@@ -276,6 +343,17 @@ export const SyllabusView: React.FC<{
             </div>
           ) : (
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
+            {!isLessonStarted(activeLesson) && (
+              <div className="bg-amber-50/60 border border-amber-200/60 rounded-xl p-3.5 flex items-center gap-3">
+                <span className="text-lg shrink-0">⏳</span>
+                <div className="text-xs text-amber-800">
+                  <p className="font-bold">Buổi học chưa diễn ra đối với học viên</p>
+                  <p className="text-[11px] text-amber-700 font-medium">
+                    Học viên sẽ chỉ xem được nội dung này sau ngày {activeLesson.start_date ? new Date(activeLesson.start_date).toLocaleDateString('vi-VN') : 'khai giảng'}. Bạn có thể chuẩn bị sẵn slide, bài tập và học liệu ngay bây giờ.
+                  </p>
+                </div>
+              </div>
+            )}
             {/* Agenda */}
             <div className="space-y-2.5">
               <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📋 Nội dung chính</h4>
@@ -414,6 +492,18 @@ export const SyllabusView: React.FC<{
             helpTitle="Lộ trình học tập"
             helpSummary="Danh sách toàn bộ các buổi học trong khóa học."
             helpPurpose="Theo dõi tiến độ, xem bài học đã mở và hoàn thành các thử thách."
+            action={
+              (isEditMode || activeUser?.role === 'admin') ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
+                  onClick={() => setIsAddModalOpen(true)}
+                >
+                  Thêm buổi học
+                </Button>
+              ) : undefined
+            }
           />
 
           <div className="space-y-3">
@@ -443,6 +533,80 @@ export const SyllabusView: React.FC<{
                 />
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Thêm buổi học mới */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-black text-[#15333B] flex items-center gap-2">
+                <span>➕</span>
+                <span>Thêm buổi học mới</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="w-7 h-7 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateLesson} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-[#214C54] block mb-1.5">
+                  Tên / Chủ đề buổi học <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: Xây dựng Knowledge Graph thông minh"
+                  value={newLessonTitle}
+                  onChange={(e) => setNewLessonTitle(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] font-medium"
+                />
+                <span className="text-[10px] text-gray-400 block mt-1">
+                  Hệ thống sẽ tự động thêm tiền tố "Buổi {filteredLessons.length + 1}:" nếu bạn không nhập.
+                </span>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#214C54] block mb-1.5">
+                  Ngày bắt đầu / Dự kiến mở
+                </label>
+                <input
+                  type="date"
+                  value={newLessonDate}
+                  onChange={(e) => setNewLessonDate(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#214C54] focus:ring-1 focus:ring-[#214C54] font-medium"
+                />
+                <span className="text-[10px] text-gray-400 block mt-1">
+                  Để trống nếu muốn mở ngay lập tức cho học viên.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsAddModalOpen(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
+                >
+                  Tạo buổi học
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
