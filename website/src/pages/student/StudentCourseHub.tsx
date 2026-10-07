@@ -9,7 +9,9 @@ import {
   KeyRound,
   Layers,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Lock,
+  Info
 } from 'lucide-react';
 import { useCourse } from '../../context/CourseContext';
 import { useAuth } from '../../context/AuthContext';
@@ -319,7 +321,7 @@ export const StudentCourseHub: React.FC<StudentCourseHubProps> = ({ onEnterClass
                             />
                             {!isCourseActive && (
                               <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
-                                <span className="text-[10px] text-white">🔒</span>
+                                <Lock size={12} className="text-white stroke-[1.5]" />
                               </div>
                             )}
                           </div>
@@ -365,8 +367,9 @@ export const StudentCourseHub: React.FC<StudentCourseHubProps> = ({ onEnterClass
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-                <p className="text-[11px] text-gray-400">
-                  💡 Bạn có thể đăng ký nhiều khóa học đồng thời trong cùng một tài khoản.
+                <p className="text-[11px] text-gray-400 flex items-center justify-center gap-1.5">
+                  <Info size={13} className="text-gray-400 stroke-[1.5]" />
+                  <span>Bạn có thể đăng ký nhiều khóa học đồng thời trong cùng một tài khoản.</span>
                 </p>
               </div>
             </div>

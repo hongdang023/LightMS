@@ -78,11 +78,11 @@ export const CommunityProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const saved = localStorage.getItem(`lightms_onboarding_days_${courseKey}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If cached data contains outdated/fabricated day titles or old Facebook Group link, discard cache
+        // If cached data contains outdated/fabricated day titles, old Facebook Group link, or outdated survey form link, discard cache
         const isStale = Array.isArray(parsed) && parsed.some((d: any) => 
           typeof d.title === 'string' && (d.title.includes('Cloudflare') || d.title.includes('Mindset & Thiết lập')) ||
           (typeof d.companionHint === 'string' && (d.companionHint.includes('Tri thức chỉ có giá trị') || d.companionHint.includes('Ghi nhớ nhỏ: Bạn không cần'))) ||
-          (typeof d.checklist === 'string' && d.checklist.includes('1342256920980058'))
+          (typeof d.checklist === 'string' && (d.checklist.includes('1342256920980058') || d.checklist.includes('forms.google.com') || (d.day === 1 && !d.checklist.includes('forms.gle'))))
         );
         if (Array.isArray(parsed) && parsed.length > 0 && !isStale) return parsed;
       }
