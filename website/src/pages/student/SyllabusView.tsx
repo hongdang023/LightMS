@@ -5,7 +5,7 @@ import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
 import type { Lesson } from '../../types/database';
 import { EditableText } from '../../components/EditableText';
-import { X, Save, Undo, Lightbulb, Key, Plus } from 'lucide-react';
+import { X, Save, Undo, Lightbulb, Key, Plus, BookOpen, ClipboardCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { LessonMaterials } from '../../components/syllabus/LessonMaterials';
 import { LessonAssignmentSection } from '../../components/syllabus/LessonAssignmentSection';
@@ -74,9 +74,9 @@ export const SyllabusView: React.FC<{
       }
       const { error } = await updateLesson(draftLesson.id, updates);
       if (error) {
-        showToast(`❌ Lỗi khi lưu dữ liệu: ${error.message || 'Vui lòng thử lại!'}`);
+        showToast(`Lỗi khi lưu dữ liệu: ${error.message || 'Vui lòng thử lại!'}`);
       } else {
-        showToast('✨ Đã lưu mọi thay đổi thành công!');
+        showToast('Đã lưu mọi thay đổi thành công!');
       }
     }
   };
@@ -90,7 +90,7 @@ export const SyllabusView: React.FC<{
     }
   };
 
-  // Parse current system date (June 25, 2026)
+  // Checks if a lesson's scheduled date has arrived
   const isLessonStarted = (lesson: Lesson): boolean => {
     if (!lesson.start_date) return true;
     const start = new Date(lesson.start_date).getTime();
@@ -98,14 +98,22 @@ export const SyllabusView: React.FC<{
     return now >= start;
   };
 
-  // Checks if a lesson is locked based on prerequisite:
-  const isLessonLocked = (lesson: Lesson): boolean => {
-    if (activeUser?.role === 'admin') return false; // Admin never locked
-    // Lesson 0 is never locked
-    if (lesson.order_index === 1) return false;
+  // Checks if admin has uploaded at least one real learning material
+  const hasLessonMaterials = (lesson: Lesson): boolean => {
+    return !!(lesson.video_url?.trim() || lesson.slide_url?.trim() || lesson.study_note_url?.trim());
+  };
 
-    // If the lesson has not started yet, it is locked
+  // Checks if a lesson is locked for students:
+  // Locked when: (1) scheduled date hasn't arrived yet, OR (2) no materials uploaded
+  // Admin always has full access.
+  const isLessonLocked = (lesson: Lesson): boolean => {
+    if (activeUser?.role === 'admin') return false;
+
+    // Locked if the lesson hasn't started yet
     if (!isLessonStarted(lesson)) return true;
+
+    // Locked if no learning materials have been uploaded yet
+    if (!hasLessonMaterials(lesson)) return true;
 
     return false;
   };
@@ -132,7 +140,7 @@ export const SyllabusView: React.FC<{
     }).length;
 
     if (checkedRequiredCount < requiredRubrics.length) {
-      if (!window.confirm(`⚠️ Bạn chưa tick chọn đủ các tiêu chí bắt buộc (${checkedRequiredCount}/${requiredRubrics.length}). Bạn vẫn muốn hoàn thành chứ?`)) {
+      if (!window.confirm(`Bạn chưa tick chọn đủ các tiêu chí bắt buộc (${checkedRequiredCount}/${requiredRubrics.length}). Bạn vẫn muốn hoàn thành chứ?`)) {
         return;
       }
     }
@@ -189,7 +197,7 @@ export const SyllabusView: React.FC<{
       }
 
       completeLesson(activeLesson.id);
-      showToast('Đã nộp bài tập và nhận +50 Hải lý thành công! 🚀');
+      showToast('Đã nộp bài tập và nhận +50 Hải lý thành công!');
     } catch (err: any) {
       console.error(err);
       alert('Có lỗi xảy ra khi nộp bài tập. Vui lòng thử lại!');
@@ -276,9 +284,9 @@ export const SyllabusView: React.FC<{
     });
 
     if (res.error) {
-      showToast('❌ Có lỗi xảy ra khi tạo buổi học!');
+      showToast('Có lỗi xảy ra khi tạo buổi học!');
     } else {
-      showToast('✨ Đã thêm buổi học mới thành công!');
+      showToast('Đã thêm buổi học mới thành công!');
       setIsAddModalOpen(false);
       setNewLessonTitle('');
       setNewLessonDate('');
@@ -333,17 +341,30 @@ export const SyllabusView: React.FC<{
             />
           )}
 
-          {!isLessonStarted(activeLesson) && !isEditMode && activeUser?.role !== 'admin' ? (
+          {isLessonLocked(activeLesson) && !isEditMode && activeUser?.role !== 'admin' ? (
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center text-center space-y-3">
-              <span className="text-4xl animate-bounce">⏳</span>
-              <h3 className="text-base font-black text-[#214C54]">Buổi học chưa diễn ra</h3>
-              <p className="text-xs text-gray-500 max-w-md leading-relaxed">
-                Nội dung chi tiết, tài nguyên học tập và bài tập về nhà của buổi học này sẽ được cập nhật sớm. Vui lòng quay lại sau!
-              </p>
+              {!isLessonStarted(activeLesson) ? (
+                <>
+                  <span className="text-4xl animate-bounce">⏳</span>
+                  <h3 className="text-base font-black text-[#214C54]">Buổi học chưa diễn ra</h3>
+                  <p className="text-xs text-gray-500 max-w-md leading-relaxed">
+                    Nội dung buổi học sẽ mở vào ngày {activeLesson.start_date ? new Date(activeLesson.start_date).toLocaleDateString('vi-VN') : 'khai giảng'}. Vui lòng quay lại sau!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="text-4xl">🔒</span>
+                  <h3 className="text-base font-black text-[#214C54]">Học liệu chưa sẵn sàng</h3>
+                  <p className="text-xs text-gray-500 max-w-md leading-relaxed">
+                    Buổi học đã diễn ra nhưng giảng viên chưa upload học liệu (recording/slide/ghi chú). Vui lòng chờ thêm một chút!
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
-            {!isLessonStarted(activeLesson) && (
+            {/* Admin-only warning banners */}
+            {activeUser?.role === 'admin' && !isLessonStarted(activeLesson) && (
               <div className="bg-amber-50/60 border border-amber-200/60 rounded-xl p-3.5 flex items-center gap-3">
                 <span className="text-lg shrink-0">⏳</span>
                 <div className="text-xs text-amber-800">
@@ -354,9 +375,23 @@ export const SyllabusView: React.FC<{
                 </div>
               </div>
             )}
+            {activeUser?.role === 'admin' && isLessonStarted(activeLesson) && !hasLessonMaterials(activeLesson) && (
+              <div className="bg-rose-50/60 border border-rose-200/60 rounded-xl p-3.5 flex items-center gap-3">
+                <span className="text-lg shrink-0">🔒</span>
+                <div className="text-xs text-rose-800">
+                  <p className="font-bold">Học liệu chưa được upload — Học viên đang bị khoá</p>
+                  <p className="text-[11px] text-rose-700 font-medium">
+                    Buổi này đã diễn ra nhưng chưa có recording/slide/ghi chú. Thêm ít nhất 1 học liệu để mở khoá cho học viên.
+                  </p>
+                </div>
+              </div>
+            )}
             {/* Agenda */}
             <div className="space-y-2.5">
-              <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📋 Nội dung chính</h4>
+              <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest flex items-center gap-1.5">
+                <BookOpen size={16} className="stroke-[1.5]" />
+                <span>Nội dung chính</span>
+              </h4>
               {isEditMode && draftLesson ? (
                 <div className="space-y-1.5 w-full">
                   <EditableText
@@ -465,21 +500,30 @@ export const SyllabusView: React.FC<{
               setEvidenceUrl={setEvidenceUrl}
             />
 
-            {/* Survey Section */}
-            <div className="border-t border-gray-100 pt-6 space-y-3">
-              <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📝 Khảo sát buổi học</h4>
-              <p className="text-xs text-slate-500 leading-normal">
-                Hãy dành 1 phút để giúp chúng tôi cải thiện chất lượng giảng dạy cho các buổi học sau nhé.
-              </p>
-              <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-xl w-full sm:w-auto shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
-              >
-                <span>📝 Điền Form Khảo Sát Buổi Học</span>
-              </a>
-            </div>
+            {/* Survey Section (Hidden for Kick-off Meeting & Pitching Day) */}
+            {!(
+              (activeLesson.title && /kick-off|pitching/i.test(activeLesson.title)) ||
+              (activeLesson.id && /kick-off|pitching/i.test(activeLesson.id))
+            ) && (
+              <div className="border-t border-gray-100 pt-6 space-y-3">
+                <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest flex items-center gap-1.5">
+                  <ClipboardCheck size={16} className="stroke-[1.5]" />
+                  <span>Khảo sát buổi học</span>
+                </h4>
+                <p className="text-xs text-slate-500 leading-normal">
+                  Hãy dành 1 phút để giúp chúng tôi cải thiện chất lượng giảng dạy cho các buổi học sau nhé.
+                </p>
+                <a
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-xl w-full sm:w-auto shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
+                >
+                  <ClipboardCheck size={14} className="stroke-[1.5]" />
+                  <span>Điền Form Khảo Sát Buổi Học</span>
+                </a>
+              </div>
+            )}
             </div>
           )}
         </div>
@@ -543,7 +587,7 @@ export const SyllabusView: React.FC<{
           <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-md w-full p-6 space-y-5 animate-scale-in">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-black text-[#15333B] flex items-center gap-2">
-                <span>➕</span>
+                <Plus size={18} className="stroke-[1.5]" />
                 <span>Thêm buổi học mới</span>
               </h3>
               <button
@@ -615,7 +659,8 @@ export const SyllabusView: React.FC<{
       {isEditMode && selectedLessonId && (
         <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 py-3 px-6 shadow-lg z-40 flex items-center justify-end gap-3 transition-all duration-200 animate-slide-up">
           <span className="text-xs text-amber-700 font-bold mr-auto hidden sm:inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200/50 px-3 py-1.5 rounded-xl">
-            ⚠️ Bạn đang ở chế độ chỉnh sửa. Nhớ lưu lại các nội dung đã thay đổi!
+            <AlertCircle size={14} className="stroke-[1.5]" />
+            <span>Bạn đang ở chế độ chỉnh sửa. Nhớ lưu lại các nội dung đã thay đổi!</span>
           </span>
           
           <button
@@ -641,7 +686,7 @@ export const SyllabusView: React.FC<{
       {/* Floating Success Toast notification */}
       {toastMsg && (
         <div className="fixed bottom-20 right-6 z-50 bg-[#15333B] border border-amber-400 text-white px-4 py-3 rounded-xl shadow-xl animate-fade-in flex items-center gap-2">
-          <span className="text-base">✨</span>
+          <CheckCircle2 size={16} className="text-amber-400 stroke-[1.5]" />
           <span className="text-xs font-bold">{toastMsg}</span>
         </div>
       )}

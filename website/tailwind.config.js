@@ -14,6 +14,16 @@ export default {
         'deep-gold': '#EAB308',
         'canvas-gray': '#F0F0F0',
         'cream': '#FDF5DA',
+        // Custom color steps used throughout the codebase
+        // Using flat key format to avoid overriding Tailwind's default palette
+        'gray-150': '#EBEBEB',
+        'gray-250': '#DEDEDE',
+        'gray-505': '#6B6B6B',
+        'gray-750': '#454545',
+        'red-650': '#DC2626',
+        'emerald-550': '#10B981',
+        'emerald-650': '#059669',
+        'amber-550': '#F59E0B',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

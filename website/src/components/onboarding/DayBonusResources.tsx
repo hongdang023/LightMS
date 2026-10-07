@@ -1,6 +1,7 @@
 import React from 'react';
 import type { OnboardingDay } from '../../types/database';
 import { renderRichText } from '../../data/onboardingVisuals';
+import { Bot, BookOpen, Link2 } from 'lucide-react';
 
 interface DayBonusResourcesProps {
   activeDayData: OnboardingDay;
@@ -17,7 +18,9 @@ export const DayBonusResources: React.FC<DayBonusResourcesProps> = ({
     <div className="space-y-4">
       {/* Companion Mascot speech box */}
       <div className="bg-white border-2 border-sky-100 p-5 rounded-2xl flex items-start gap-4">
-        <span className="text-3xl">🦜</span>
+        <div className="w-10 h-10 rounded-full bg-[#214C54] border border-[#FFD94C] flex items-center justify-center shrink-0">
+          <Bot size={22} className="text-[#FFD94C]" />
+        </div>
         <div className="space-y-1">
           <span className="text-xs text-sky-700 font-black block uppercase tracking-wider">
             Bác Vẹt Đồng Hành gợi ý:
@@ -34,7 +37,7 @@ export const DayBonusResources: React.FC<DayBonusResourcesProps> = ({
       {activeDayData.bonusResources && (
         <div className="bg-amber-50/60 border-2 border-amber-100 p-5 rounded-2xl">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-base">💬</span>
+            <BookOpen size={16} className="text-amber-700 stroke-[1.5]" />
             <span className="text-xs text-amber-700 font-black uppercase tracking-wider">
               Bonus: Tài liệu đọc thêm cho bạn
             </span>
@@ -55,9 +58,7 @@ export const DayBonusResources: React.FC<DayBonusResourcesProps> = ({
                     rel="noreferrer"
                     className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-amber-100 transition-colors group"
                   >
-                    <span className="text-amber-500 group-hover:text-amber-600 text-sm shrink-0">
-                      🔗
-                    </span>
+                    <Link2 size={14} className="text-amber-500 group-hover:text-amber-600 stroke-[1.5] shrink-0" />
                     <span className="text-sm text-sky-600 group-hover:text-sky-700 font-medium group-hover:underline">
                       {label}
                     </span>

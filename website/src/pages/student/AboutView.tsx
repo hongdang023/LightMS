@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AnchorIcon, RouteIcon, GiftIcon } from '../../components/Icons';
 import { PageHeader } from '../../components/PageHeader';
 import { useCommunity } from '../../context/CommunityContext';
-import { Save, Undo, BookOpen } from 'lucide-react';
+import { Save, Undo, BookOpen, AlertTriangle } from 'lucide-react';
 import type { 
   PlatformButton, 
   BenefitClub 
@@ -447,7 +447,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onPageChange, isEditMode =
       {isEditMode && (
         <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-250 py-3 px-6 shadow-xl z-50 flex items-center justify-end gap-3 animate-slide-up select-none">
           <span className="text-xs text-amber-700 font-bold mr-auto hidden sm:inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200/50 px-3 py-1.5 rounded-xl">
-            ⚠️ Chế độ Admin: Nhớ nhấn "Lưu thay đổi" để hệ thống cập nhật vào Database!
+            <AlertTriangle size={14} className="stroke-[1.5]" /> Chế độ Admin: Nhớ nhấn "Lưu thay đổi" để hệ thống cập nhật vào Database!
           </span>
           
           <button

@@ -1,7 +1,21 @@
 import React from 'react';
 import type { Lesson } from '../../types/database';
 import { EditableText } from '../EditableText';
-import { Trash2, Plus } from 'lucide-react';
+import { 
+  Trash2, 
+  Plus, 
+  ClipboardList, 
+  FileCheck, 
+  Target, 
+  CheckCircle2, 
+  Award, 
+  Link as LinkIcon, 
+  AlertTriangle, 
+  Users, 
+  Send, 
+  ExternalLink,
+  Inbox
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
 
@@ -45,8 +59,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
   const submittedUrl = match ? match[1] : '';
   return (
     <div className="border-t border-gray-100 pt-6 space-y-4">
-      <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">
-        📝 Bài tập về nhà
+      <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest flex items-center gap-1.5">
+        <ClipboardList size={16} className="stroke-[1.5]" />
+        <span>Bài tập về nhà</span>
       </h4>
 
       {isEditMode && draftLesson ? (
@@ -83,8 +98,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
             <>
               {/* Description */}
               <div className="p-4 bg-amber-50/40 border border-amber-200/50 rounded-xl w-full">
-                <label className="text-[10px] text-[#214C54] font-black uppercase tracking-wider block mb-2">
-                  📝 Yêu cầu bài tập:
+                <label className="text-[10px] text-[#214C54] font-black uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                  <FileCheck size={14} className="stroke-[1.5]" />
+                  <span>Yêu cầu bài tập:</span>
                 </label>
                 <EditableText
                   value={draftLesson.assignment_description || ''}
@@ -98,8 +114,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
 
               {/* Rubrics */}
               <div className="space-y-3 w-full bg-amber-50/40 border border-amber-200/50 p-4 rounded-xl">
-                <span className="text-[10px] font-bold text-[#214C54] uppercase tracking-wider block">
-                  📋 Tiêu chí đánh giá (Checklist):
+                <span className="text-[10px] font-bold text-[#214C54] uppercase tracking-wider block flex items-center gap-1.5">
+                  <ClipboardList size={14} className="stroke-[1.5]" />
+                  <span>Tiêu chí đánh giá (Checklist):</span>
                 </span>
                 <div className="space-y-2.5">
                   {(draftLesson.assignment_rubric_checklist || []).map((item, idx) => (
@@ -183,7 +200,7 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
             </>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 text-center space-y-2">
-              <span className="text-2xl animate-bounce">📭</span>
+              <Inbox size={32} className="text-gray-400 stroke-[1.5]" />
               <span className="text-xs font-bold text-[#214C54] block">
                 Buổi học này không có bài tập về nhà.
               </span>
@@ -221,8 +238,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
             <div className="space-y-4">
               {/* Rubrics Checklist Results */}
               <div className="bg-emerald-500/5 border border-emerald-500/25 p-5 rounded-2xl space-y-3 bg-emerald-500/5">
-                <span className="text-[10px] text-emerald-800 font-black uppercase tracking-widest block">
-                  🎯 Báo cáo hoàn thành bài tập (Rubrics):
+                <span className="text-[10px] text-emerald-800 font-black uppercase tracking-widest block flex items-center gap-1.5">
+                  <Target size={14} className="stroke-[1.5]" />
+                  <span>Báo cáo hoàn thành bài tập (Rubrics):</span>
                 </span>
                 <div className="space-y-2">
                   {(activeLesson.assignment_rubric_checklist || []).map((item, idx) => (
@@ -230,7 +248,7 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                       key={idx}
                       className="flex items-start gap-2.5 text-sm text-[#15333B] font-semibold"
                     >
-                      <span className="text-sm leading-none shrink-0">✅</span>
+                      <CheckCircle2 size={15} className="text-emerald-600 stroke-[1.5] shrink-0 mt-0.5" />
                       <span className="text-[#3E5E63]">
                         {item.item}{' '}
                         {item.is_optional && (
@@ -247,8 +265,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
               {/* Completed State Information */}
               <div className="p-4 bg-[#214C54]/5 border border-[#214C54]/10 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <span className="text-xs text-[#214C54] font-black uppercase tracking-wider block mb-0.5">
-                    🎉 Trạng thái:
+                  <span className="text-xs text-[#214C54] font-black uppercase tracking-wider block mb-0.5 flex items-center gap-1.5">
+                    <Award size={14} className="text-[#EAB308] stroke-[1.5]" />
+                    <span>Trạng thái:</span>
                   </span>
                   <p className="text-sm text-emerald-600 font-bold">
                     Đã hoàn thành bài học và bài tập
@@ -283,8 +302,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
               {/* Facebook Post URL Input */}
               <div className="bg-white border border-gray-250 rounded-2xl p-5 space-y-3 shadow-sm">
                 <div>
-                  <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block">
-                    🔗 Link Facebook nộp bài (Bắt buộc):
+                  <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block flex items-center gap-1.5">
+                    <LinkIcon size={14} className="stroke-[1.5]" />
+                    <span>Link Facebook nộp bài (Bắt buộc):</span>
                   </span>
                   <span className="text-[10px] text-slate-505 block mt-0.5 leading-normal font-medium">
                     Để đảm bảo công bằng và ghi nhận điểm, vui lòng dán link bài đăng bằng chứng nộp bài trên Facebook Group của bạn.
@@ -299,8 +319,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#214C54] font-semibold text-gray-700 bg-white shadow-sm"
                 />
                 {evidenceUrl && !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl) && (
-                  <p className="text-[10px] text-red-500 font-bold animate-fade-in">
-                    ⚠️ Vui lòng nhập đúng đường dẫn bài viết trên Facebook (bắt đầu bằng https://facebook.com hoặc https://www.facebook.com)
+                  <p className="text-[10px] text-red-500 font-bold animate-fade-in flex items-center gap-1.5 mt-1">
+                    <AlertTriangle size={13} className="stroke-[1.5]" />
+                    <span>Vui lòng nhập đúng đường dẫn bài viết trên Facebook (bắt đầu bằng https://facebook.com hoặc https://www.facebook.com)</span>
                   </p>
                 )}
               </div>
@@ -309,8 +330,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
               {(activeLesson.assignment_rubric_checklist || []).length > 0 && (
                 <div className="bg-amber-50/30 border border-amber-200/50 rounded-2xl p-5 space-y-3.5">
                   <div>
-                    <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block">
-                      🎯 Báo cáo hoàn thành bài tập (Rubrics):
+                    <span className="text-[10px] text-[#214C54] font-black uppercase tracking-widest block flex items-center gap-1.5">
+                      <Target size={14} className="stroke-[1.5]" />
+                      <span>Báo cáo hoàn thành bài tập (Rubrics):</span>
                     </span>
                     <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal">
                       Vui lòng tự đối chiếu sản phẩm của bạn với các tiêu chuẩn đầu ra dưới đây
@@ -347,7 +369,10 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
               {/* Facebook Group Navigation Button */}
               <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-5 space-y-3">
                 <div>
-                  <span className="text-[10px] text-blue-800 font-black uppercase tracking-widest block">👥 Đăng bài tập lên Facebook Group lớp:</span>
+                  <span className="text-[10px] text-blue-800 font-black uppercase tracking-widest block flex items-center gap-1.5">
+                    <Users size={14} className="stroke-[1.5]" />
+                    <span>Đăng bài tập lên Facebook Group lớp:</span>
+                  </span>
                   <span className="text-[10px] text-slate-500 block mt-0.5 leading-normal">
                     Hãy đăng sản phẩm bài tập của bạn lên Facebook Group để cùng thảo luận và nhận góp ý từ lớp.
                   </span>
@@ -358,20 +383,22 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs font-black rounded-xl w-full shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer text-center"
                 >
-                  <span>🚀 Đi tới Facebook Group Lớp</span>
+                  <ExternalLink size={14} className="stroke-[1.5]" />
+                  <span>Đi tới Facebook Group Lớp</span>
                 </a>
               </div>
 
               <button
                 type="submit"
                 disabled={!evidenceUrl.trim() || !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl)}
-                className={`w-full py-3 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer ${
+                className={`w-full py-3 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 ${
                   (!evidenceUrl.trim() || !/^(https?:\/\/)?(www\.|m\.)?facebook\.com\/.+/i.test(evidenceUrl))
                     ? 'bg-gray-200 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
                     : 'bg-[#214C54] hover:bg-[#15333B]'
                 }`}
               >
-                🚀 Hoàn thành bài tập & nhận Hải lý
+                <Send size={14} className="stroke-[1.5]" />
+                <span>Hoàn thành bài tập & nhận Hải lý</span>
               </button>
             </form>
           )}

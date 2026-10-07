@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Lesson } from '../../types/database';
+import { Lock, Check, Clock, ArrowRight } from 'lucide-react';
 
 interface LessonCardProps {
   lesson: Lesson;
@@ -24,7 +25,7 @@ export const LessonCard: React.FC<LessonCardProps> = ({
     if (locked) {
       return (
         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200 shrink-0 select-none">
-          🔒
+          <Lock size={16} className="stroke-[1.5]" />
         </div>
       );
     }
@@ -35,15 +36,15 @@ export const LessonCard: React.FC<LessonCardProps> = ({
     if (completed) {
       bgClass = 'bg-emerald-500 text-white border border-emerald-500 shadow-sm';
       statusIcon = (
-        <span className="absolute -top-1 -right-1 bg-emerald-600 text-white rounded-full w-4.5 h-4.5 flex items-center justify-center text-[9px] font-bold border-2 border-white select-none">
-          ✓
+        <span className="absolute -top-1 -right-1 bg-emerald-600 text-white rounded-full w-4.5 h-4.5 flex items-center justify-center border-2 border-white select-none">
+          <Check size={10} className="stroke-[2.5]" />
         </span>
       );
     } else if (!isStarted) {
       bgClass = 'bg-amber-100 text-amber-800 border border-amber-200';
       statusIcon = (
-        <span className="absolute -top-1 -right-1 bg-amber-500 text-white rounded-full w-4.5 h-4.5 flex items-center justify-center text-[9px] font-bold border-2 border-white select-none">
-          ⏳
+        <span className="absolute -top-1 -right-1 bg-amber-500 text-white rounded-full w-4.5 h-4.5 flex items-center justify-center border-2 border-white select-none">
+          <Clock size={10} className="stroke-[2.5]" />
         </span>
       );
     }
@@ -93,11 +94,21 @@ export const LessonCard: React.FC<LessonCardProps> = ({
         </div>
       </div>
       <span
-        className={`text-xs font-black shrink-0 ${
+        className={`text-xs font-black shrink-0 flex items-center gap-1 ${
           locked ? 'text-gray-300' : 'text-[#214C54] hover:underline'
         }`}
       >
-        {locked ? '🔒 Đã khóa' : 'Học ngay ➔'}
+        {locked ? (
+          <>
+            <Lock size={12} className="stroke-[1.5]" />
+            <span>Đã khóa</span>
+          </>
+        ) : (
+          <>
+            <span>Học ngay</span>
+            <ArrowRight size={12} className="stroke-[1.5]" />
+          </>
+        )}
       </span>
     </button>
   );

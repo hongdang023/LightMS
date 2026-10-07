@@ -206,14 +206,18 @@ export const OnboardingForm: React.FC<OnboardingFormProps> = ({ onComplete: _onC
 
             <div className="bg-[#214C54]/40 border border-[#3E5E63] rounded-2xl p-5 mb-8 w-full space-y-3.5 text-left">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#FFD94C]/20 flex items-center justify-center text-sm font-bold text-[#FFD94C]">⛵</div>
+                <div className="w-8 h-8 rounded-lg bg-[#FFD94C]/20 flex items-center justify-center text-sm font-bold text-[#FFD94C]">
+                  <Compass size={18} className="stroke-[1.5]" />
+                </div>
                 <div>
                   <span className="text-xs text-white/50 block">Phần thưởng khởi động</span>
                   <span className="text-sm font-bold text-white">+50 Hải lý tích lũy</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-sm">🎫</div>
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-sm text-emerald-400">
+                  <Award size={18} className="stroke-[1.5]" />
+                </div>
                 <div>
                   <span className="text-xs text-white/50 block">Mở khóa huy hiệu</span>
                   <span className="text-sm font-bold text-white">Huy hiệu Thẻ căn cước</span>

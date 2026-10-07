@@ -7,7 +7,9 @@ import {
   Phone, 
   Send,
   Save, 
-  CheckCircle2
+  CheckCircle2,
+  Check,
+  Plus
 } from 'lucide-react';
 import type { AdminRole } from '../../types/database';
 
@@ -149,13 +151,14 @@ export const AdminProfileView: React.FC = () => {
                     type="button"
                     key={b}
                     onClick={() => handleBatchToggle(b)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
                       isSelected
                         ? 'bg-[#214C54] text-white border-[#214C54]'
                         : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                     }`}
                   >
-                    {isSelected ? `✓ ${b}` : `+ ${b}`}
+                    {isSelected ? <Check size={12} className="stroke-[2]" /> : <Plus size={12} className="stroke-[2]" />}
+                    <span>{b}</span>
                   </button>
                 );
               })}

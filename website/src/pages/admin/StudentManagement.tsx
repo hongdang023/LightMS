@@ -12,7 +12,12 @@ import {
   ClipboardList,
   ExternalLink,
   CheckCircle,
-  Clock
+  Clock,
+  X,
+  AlertTriangle,
+  CheckCircle2,
+  Copy,
+  Send
 } from 'lucide-react';
 import { 
   DemographicsChartCard, 
@@ -146,7 +151,17 @@ const SubmissionsDeskTab: React.FC<SubmissionsDeskTabProps> = ({ students }) => 
                         status === 'submitted' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                         'bg-amber-50 text-amber-700 border border-amber-200'
                       }`}>
-                        {status === 'submitted' ? '📬 Đã nộp bài' : '⏳ Chưa nộp'}
+                        {status === 'submitted' ? (
+                          <>
+                            <CheckCircle2 size={12} className="stroke-[1.5]" />
+                            Đã nộp bài
+                          </>
+                        ) : (
+                          <>
+                            <Clock size={12} className="stroke-[1.5]" />
+                            Chưa nộp
+                          </>
+                        )}
                       </span>
                     </td>
                   </tr>
@@ -274,7 +289,9 @@ export const StudentManagement: React.FC = () => {
         <div className="fixed top-5 right-5 z-50 bg-[#15333B] text-white px-5 py-3 rounded-2xl shadow-2xl border border-[#3E5E63] flex items-center gap-3 animate-scale-up">
           <Trophy className="text-yellow-400 w-5 h-5 animate-bounce" />
           <span className="text-xs font-bold" dangerouslySetInnerHTML={{ __html: toastMessage }}></span>
-          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2">✕</button>
+          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2 flex items-center justify-center">
+            <X size={14} />
+          </button>
         </div>
       )}
       
@@ -430,7 +447,7 @@ export const StudentManagement: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-xs font-black text-[#15333B]">
                           Ngày {day.day}
                         </td>
-                        <td className="px-6 py-4 text-xs font-bold text-gray-750 max-w-xs truncate" title={day.title}>
+                        <td className="px-6 py-4 text-xs font-bold text-gray-700 max-w-xs truncate" title={day.title}>
                           {day.title.split(': ')[1] || day.title}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -439,9 +456,9 @@ export const StudentManagement: React.FC = () => {
                               <span>{dayPercent}%</span>
                               <span className="text-[#214C54]">{dayCompletions}/{students.length} HV</span>
                             </div>
-                            <div className="w-full bg-gray-150 h-2 rounded-full overflow-hidden">
+                            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                               <div 
-                                className="bg-[#214C54] h-full rounded-full transition-all duration-550 ease-out" 
+                                className="bg-[#214C54] h-full rounded-full transition-all duration-500 ease-out" 
                                 style={{ width: `${dayPercent}%` }}
                               ></div>
                             </div>
@@ -450,16 +467,18 @@ export const StudentManagement: React.FC = () => {
                         <td className="px-6 py-4 text-xs">
                           {maxDrop > 0 && maxDropTask ? (
                             <div className="space-y-0.5">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-red-650 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">
-                                ⚠️ Drop {maxDrop} HV
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-red-700 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">
+                                <AlertTriangle size={11} className="stroke-[1.5]" />
+                                Drop {maxDrop} HV
                               </span>
                               <span className="block text-[11px] font-bold text-gray-600 truncate max-w-[200px]" title={`Task ${maxDropTask.idx}: ${cleanDropTaskName}`}>
                                 Task {maxDropTask.idx}: {cleanDropTaskName}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-[10px] font-extrabold text-emerald-650 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded uppercase tracking-wider">
-                              ✅ Ổn định (0 drop)
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                              <CheckCircle2 size={11} className="stroke-[1.5]" />
+                              Ổn định (0 drop)
                             </span>
                           )}
                         </td>
@@ -477,13 +496,13 @@ export const StudentManagement: React.FC = () => {
                                   .split('\n')[0]
                                   .trim();
 
-                                let colorClass = 'bg-red-500 hover:bg-red-650';
+                                let colorClass = 'bg-red-500 hover:bg-red-600';
                                 if (task.isOptional) {
-                                  colorClass = 'bg-gray-400 hover:bg-gray-505';
+                                  colorClass = 'bg-gray-400 hover:bg-gray-500';
                                 } else if (taskPercent >= 80) {
-                                  colorClass = 'bg-emerald-550 hover:bg-emerald-600';
+                                  colorClass = 'bg-emerald-500 hover:bg-emerald-600';
                                 } else if (taskPercent >= 45) {
-                                  colorClass = 'bg-amber-550 hover:bg-amber-600';
+                                  colorClass = 'bg-amber-500 hover:bg-amber-600';
                                 }
 
                                 return (
@@ -541,7 +560,7 @@ export const StudentManagement: React.FC = () => {
                 onClick={() => { setIsBulkEmailModalOpen(false); setBulkSubject(''); setBulkBody(''); }}
                 className="w-8 h-8 rounded-full bg-[#15333B]/5 hover:bg-[#15333B]/10 flex items-center justify-center text-[#15333B] transition-colors"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
@@ -622,7 +641,17 @@ export const StudentManagement: React.FC = () => {
                     onClick={handleCopyHtml}
                     className="btn border border-teal-600 text-teal-850 hover:bg-teal-50/50 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5"
                   >
-                    {copySuccess ? 'Đã sao chép! ✓' : 'Sao chép định dạng 📋'}
+                    {copySuccess ? (
+                      <>
+                        <CheckCircle2 size={13} className="text-teal-700 stroke-[1.5]" />
+                        Đã sao chép!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={13} className="text-teal-700 stroke-[1.5]" />
+                        Sao chép định dạng
+                      </>
+                    )}
                   </button>
                   
                   <div className="flex gap-2">
@@ -637,7 +666,8 @@ export const StudentManagement: React.FC = () => {
                       type="submit"
                       className="btn bg-[#214C54] hover:bg-[#15333B] text-white text-xs font-extrabold px-4 py-2 flex items-center gap-1.5 rounded-xl shadow-md transition-colors"
                     >
-                      Gửi qua Gmail 🚀
+                      <Send size={13} className="stroke-[1.5]" />
+                      Gửi qua Gmail
                     </button>
                   </div>
                 </div>
@@ -649,7 +679,7 @@ export const StudentManagement: React.FC = () => {
                 <div className="bg-[#FDF5DA] p-6 rounded-2xl border border-[#ffd94c] flex-1 flex flex-col justify-start">
                   <div className="bg-[#15333B] p-4 rounded-t-xl text-center border-b-4 border-[#ffd94c]">
                     <span className="text-[#ffd94c] font-black text-xs tracking-wider block">
-                      🦜 VẸT LẮM MỒM - THE1IGHT 🦜
+                      VẸT LẮM MỒM — THE1IGHT
                     </span>
                   </div>
                   <div className="bg-white p-5 rounded-b-xl flex-1 shadow-sm">
@@ -660,8 +690,9 @@ export const StudentManagement: React.FC = () => {
                       {bulkBody || '(Không có nội dung)'}
                     </div>
                     <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-                      <span className="inline-block bg-[#214C54] text-white text-[10px] font-black px-4 py-2 rounded-lg cursor-pointer">
-                        VÀO HỆ THỐNG LIGHTMS 🚀
+                      <span className="inline-flex items-center gap-1.5 bg-[#214C54] text-white text-[10px] font-black px-4 py-2 rounded-lg cursor-pointer">
+                        VÀO HỆ THỐNG LIGHTMS
+                        <ExternalLink size={12} className="stroke-[1.5]" />
                       </span>
                     </div>
                   </div>

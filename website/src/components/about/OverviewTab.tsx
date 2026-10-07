@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check, Target } from 'lucide-react';
 
 interface OverviewTabProps {
   isEditMode: boolean;
@@ -109,7 +110,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         <div className="grid grid-cols-1 gap-3 pl-1 pt-1">
           {draftGachDauDong.map((item, idx) => (
             <div key={idx} className="flex items-start gap-3 p-3.5 bg-slate-50/60 border border-slate-150/80 rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
-              <span className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">✓</span>
+              <span className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                <Check size={12} className="stroke-[2.5]" />
+              </span>
               <div className="font-semibold text-xs md:text-sm text-[#3E5E63] leading-relaxed">{renderRichText(item)}</div>
             </div>
           ))}
@@ -117,7 +120,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       )}
 
       <h3 className="font-extrabold text-sm md:text-base text-[#15333B] pt-6 flex items-center gap-2">
-        <span>🎯</span> Tư duy sản phẩm qua 3 trụ cột:
+        <Target size={18} className="text-[#214C54] stroke-[1.5]" />
+        <span>Tư duy sản phẩm qua 3 trụ cột:</span>
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">

@@ -143,7 +143,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       <div className="overflow-x-auto">
         {filteredStudents.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center text-gray-400">
-            <span className="text-4xl mb-2">🔍</span>
+            <Search className="w-10 h-10 mb-2 text-gray-300 stroke-[1.5]" />
             <p className="text-xs font-bold">Không tìm thấy học viên nào phù hợp.</p>
           </div>
         ) : (

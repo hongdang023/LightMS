@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Profile, Lesson } from '../../types/database';
+import { User, CheckCircle2, XCircle } from 'lucide-react';
 
 interface StudentDossierPanelProps {
   activeStudent: Profile | null;
@@ -29,7 +30,7 @@ export const StudentDossierPanel: React.FC<StudentDossierPanelProps> = ({
   if (!activeStudent) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-        <span className="text-5xl">👤</span>
+        <User size={48} className="text-gray-300 stroke-[1.5]" />
         <div>
           <h4 className="font-extrabold text-sm text-[#15333B]">Hồ sơ chi tiết học viên</h4>
           <p className="text-xs text-gray-400 max-w-xs mt-1">
@@ -253,8 +254,12 @@ export const StudentDossierPanel: React.FC<StudentDossierPanelProps> = ({
                               className="flex items-center justify-between gap-2 py-0.5"
                             >
                               <span className="truncate">{t.label}</span>
-                              <span className="font-bold shrink-0">
-                                {isChecked ? '✅' : '❌'}
+                              <span className="shrink-0 flex items-center">
+                                {isChecked ? (
+                                  <CheckCircle2 size={13} className="text-emerald-600 stroke-[1.5]" />
+                                ) : (
+                                  <XCircle size={13} className="text-gray-300 stroke-[1.5]" />
+                                )}
                               </span>
                             </div>
                           );

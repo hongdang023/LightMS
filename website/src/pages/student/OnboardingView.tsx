@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
-import { ChevronLeft, ClipboardList, Target, CheckCircle2, Mail, Trophy, Sparkles, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ClipboardList, Target, CheckCircle2, Mail, Trophy, Sparkles, ArrowRight, X } from 'lucide-react';
 import { EditableText } from '../../components/EditableText';
 import type { OnboardingDay } from '../../types/database';
 import { 
@@ -183,7 +183,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
               );
               addNotification(
                 'Thử thách hoàn thành!', 
-                `Tuyệt vời! Bạn đã hoàn thành tất cả nhiệm vụ bắt buộc của Ngày ${day} và nhận thêm 50 hải lý! ⛵`, 
+                `Tuyệt vời! Bạn đã hoàn thành tất cả nhiệm vụ bắt buộc của Ngày ${day} và nhận thêm 50 hải lý!`, 
                 'system'
               );
             }
@@ -360,7 +360,9 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
           {isEditMode && (
             <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
               <div className="flex items-center gap-3">
-                <span className="text-2xl text-amber-600">✉️</span>
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                  <Mail size={20} className="stroke-[1.5]" />
+                </div>
                 <div>
                   <span className="text-sm font-bold text-amber-800 block">Mẫu Email Thông Báo (Ngày {activeDayData.day})</span>
                   <span className="text-xs text-amber-600">Soạn và gửi email thông báo thủ công cho học viên</span>
@@ -527,7 +529,9 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ isEditMode = fal
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 bg-[#15333B] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-4 border border-teal-800/30 animate-slide-up select-text">
           <span className="text-xs font-bold">{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2 cursor-pointer border-0 bg-transparent">✕</button>
+          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2 cursor-pointer border-0 bg-transparent p-1">
+            <X size={16} />
+          </button>
         </div>
       )}
     </div>

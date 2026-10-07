@@ -4,7 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import { Markdown } from 'tiptap-markdown';
-import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, Trash2, Link2 } from 'lucide-react';
 import { normalizeHtmlToMarkdown } from '../../data/onboardingVisuals';
 
 interface TaskEditRowProps {
@@ -181,14 +181,15 @@ export const TaskEditRow: React.FC<TaskEditRowProps> = ({
                 editor.chain().focus().setLink({ href: url }).run();
               }
             }}
-            className={`px-2.5 h-7 flex items-center justify-center text-xs rounded-lg transition-colors border gap-1 ${
+            className={`px-2.5 h-7 flex items-center justify-center text-xs rounded-lg transition-colors border gap-1.5 ${
               editor.isActive('link')
                 ? 'bg-[#214C54]/15 text-[#214C54] border-[#214C54]/30 shadow-xs'
                 : 'text-slate-700 hover:bg-white border-transparent hover:border-slate-200/80 hover:shadow-sm'
             }`}
             title="Gắn link"
           >
-            🔗 Link
+            <Link2 size={12} className="stroke-[1.5]" />
+            Link
           </button>
           <button
             type="button"

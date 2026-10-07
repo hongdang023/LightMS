@@ -1,4 +1,5 @@
 import React from 'react';
+import { Compass, Rocket, Anchor, Laptop, GraduationCap, ArrowRight } from 'lucide-react';
 
 interface ScheduleTabProps {
   isEditMode: boolean;
@@ -58,7 +59,8 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
         ) : (
           <div className="space-y-4">
             <h3 className="font-extrabold text-base text-[#15333B] flex items-center gap-2">
-              <span>⚓</span> Lộ trình học:
+              <Compass size={18} className="text-[#214C54] stroke-[1.5]" />
+              <span>Lộ trình học:</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {draftSchedule.split('\n\n').filter(p => p.trim().includes('Chặng')).map((stage, idx) => {
@@ -68,14 +70,21 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                 const titlePart = parts[0] || '';
                 const descPart = parts.slice(1).join(' - ') || '';
                 
-                const icons = ['🚀', '⛵', '💻', '🎓'];
+                const stageIcons = [
+                  <Rocket size={18} className="stroke-[1.5]" />,
+                  <Anchor size={18} className="stroke-[1.5]" />,
+                  <Laptop size={18} className="stroke-[1.5]" />,
+                  <GraduationCap size={18} className="stroke-[1.5]" />
+                ];
                 const borderColors = ['border-t-[#DC2626]', 'border-t-[#7C3AED]', 'border-t-[#EA580C]', 'border-t-[#B45309]'];
                 
                 return (
                   <div key={idx} className={`p-5 rounded-2xl border-t-4 ${borderColors[idx % 4]} border border-gray-150 bg-white shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300`}>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">{icons[idx % 4]}</span>
+                        <span className="p-1 rounded-lg bg-gray-50 text-[#214C54]">
+                          {stageIcons[idx % 4]}
+                        </span>
                         <h4 className="font-black text-[#15333B] text-sm md:text-[15px]">{titlePart}</h4>
                       </div>
                       <p className="text-xs md:text-sm text-[#3E5E63] leading-relaxed font-semibold mb-4">{descPart}</p>
@@ -84,18 +93,20 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({
                     {idx === 0 && (
                       <button 
                         onClick={() => onPageChange('onboarding')}
-                        className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors"
+                        className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors inline-flex items-center gap-1.5"
                       >
-                        Đi đến Onboarding ➔
+                        <span>Đi đến Onboarding</span>
+                        <ArrowRight size={11} className="stroke-[1.5]" />
                       </button>
                     )}
                     
                     {idx === 2 && (
                       <button 
                         onClick={() => onPageChange('syllabus')}
-                        className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors"
+                        className="self-start text-[10px] font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] cursor-pointer transition-colors inline-flex items-center gap-1.5"
                       >
-                        Đi đến Lộ trình học ➔
+                        <span>Đi đến Lộ trình học</span>
+                        <ArrowRight size={11} className="stroke-[1.5]" />
                       </button>
                     )}
                   </div>

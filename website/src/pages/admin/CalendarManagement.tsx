@@ -342,7 +342,7 @@ export const CalendarManagement: React.FC = () => {
   const handleBulkShift = (e: React.FormEvent) => {
     e.preventDefault();
     if (!shiftStartDate) return;
-    if (window.confirm(`⚠️ Dời tất cả lịch từ ngày ${shiftStartDate} tiến thêm ${shiftDays} ngày?`)) {
+    if (window.confirm(`Dời tất cả lịch từ ngày ${shiftStartDate} tiến thêm ${shiftDays} ngày?`)) {
       shiftCalendarEvents(shiftStartDate, shiftDays);
     }
   };

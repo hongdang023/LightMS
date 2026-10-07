@@ -235,7 +235,7 @@ VALUES (${escapeSql(ev.id)}, 'batch-vibe201-k2', ${escapeSql(ev.title || 'Event'
 
   // Obsidian 101 Events
   const obsidianCalendar = [
-    { id: 'evt-obs-kickoff', title: 'Kick-off lớp Obsidian', event_type: 'kick-off', startTime: '2026-10-06T20:30:00Z', endTime: '2026-10-06T22:30:00Z', details: 'Khai giảng và làm quen phương pháp Second Brain' },
+    { id: 'evt-obs-kickoff', title: 'Kick-off lớp Obsidian', event_type: 'kick-off', startTime: '2026-10-06T20:30:00Z', endTime: '2026-10-06T22:30:00Z', details: 'Giới thiệu tổng quan về khoá học, giảng viên, nền tảng học tập và các lưu ý quan trọng về lịch trình của lớp' },
     { id: 'evt-obs-b1', title: 'Buổi 1: Foundation Setup', event_type: 'live-class', startTime: '2026-10-13T20:30:00Z', endTime: '2026-10-13T22:30:00Z', details: 'Xây dựng Vault cá nhân chuẩn mực và Home page' },
     { id: 'evt-obs-b2', title: 'Buổi 2: Distill', event_type: 'live-class', startTime: '2026-10-18T10:00:00Z', endTime: '2026-10-18T12:00:00Z', details: 'Chắt lọc tri thức với Progressive Summarization' },
     { id: 'evt-obs-b3', title: 'Buổi 3: Capture', event_type: 'live-class', startTime: '2026-10-20T20:30:00Z', endTime: '2026-10-20T22:30:00Z', details: 'Thu nạp thông tin đa lĩnh vực' },

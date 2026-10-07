@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCourse } from '../../context/CourseContext';
 import { PageHeader } from '../../components/PageHeader';
-import { Settings as SettingsIcon, Calendar, KeyRound, ShieldCheck, Check } from 'lucide-react';
+import { Settings as SettingsIcon, Calendar, KeyRound, ShieldCheck, Check, CheckCircle2, X } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { 
@@ -73,7 +73,7 @@ export const Settings: React.FC = () => {
       is_active: isActive
     });
 
-    showToast("Đã lưu thiết lập Lớp học thành công! 🎉");
+    showToast("Đã lưu thiết lập Lớp học thành công!");
   };
 
   const showToast = (msg: string) => {
@@ -262,9 +262,12 @@ export const Settings: React.FC = () => {
 
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-[#15333B] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-4 border border-teal-800/30 animate-slide-up select-text">
+        <div className="fixed bottom-5 right-5 z-50 bg-[#15333B] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-3 border border-teal-800/30 animate-slide-up select-text">
+          <CheckCircle2 size={16} className="text-emerald-400 stroke-[1.5] shrink-0" />
           <span className="text-xs font-bold">{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2 cursor-pointer border-0 bg-transparent">✕</button>
+          <button onClick={() => setToastMessage(null)} className="text-gray-400 hover:text-white ml-2 cursor-pointer border-0 bg-transparent flex items-center justify-center">
+            <X size={14} />
+          </button>
         </div>
       )}
     </div>

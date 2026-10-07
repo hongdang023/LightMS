@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   BookOpen, Wrench, Bot, Compass, Palette, FlaskConical, Anchor, 
-  ClipboardList 
+  ClipboardList, ExternalLink 
 } from 'lucide-react';
 import type { OnboardingDay } from '../types/database';
 
@@ -231,14 +231,14 @@ export const parseInlineMarkdown = (text: string): React.ReactNode => {
     }
     if (match[1] && match[2]) {
       parts.push(
-        <a key={`link-${match.index}`} href={match[2]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors">
-          {match[1]} <span className="text-[10px] inline-block ml-0.5">🔗</span>
+        <a key={`link-${match.index}`} href={match[2]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors inline-flex items-center gap-0.5">
+          {match[1]} <ExternalLink size={10} className="inline-block stroke-[1.5]" />
         </a>
       );
     } else if (match[3] && match[4]) {
       parts.push(
-        <a key={`link-html-${match.index}`} href={match[3]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors">
-          {match[4]} <span className="text-[10px] inline-block ml-0.5">🔗</span>
+        <a key={`link-html-${match.index}`} href={match[3]} target="_blank" rel="noreferrer" className="text-sky-600 hover:text-sky-700 hover:underline font-bold transition-colors inline-flex items-center gap-0.5">
+          {match[4]} <ExternalLink size={10} className="inline-block stroke-[1.5]" />
         </a>
       );
     } else if (match[5]) {

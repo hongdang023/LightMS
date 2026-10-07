@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu, BookOpen } from 'lucide-react';
+import { ChevronRight, LogOut, UserCircle, LayoutDashboard, Menu, BookOpen, Compass } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCourse } from '../context/CourseContext';
 import { useGamification } from '../context/GamificationContext';
@@ -165,10 +165,10 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ currentPage, onPageC
               style={{ width: `${progressPercent}%` }}
             />
             <div
-              className="absolute -top-2.5 text-sm transition-all duration-1000 ease-out"
-              style={{ left: `calc(${progressPercent}% - 8px)` }}
+              className="absolute -top-1.5 transition-all duration-1000 ease-out flex items-center justify-center w-5 h-5 rounded-full bg-white border border-[#214C54] shadow-xs text-[#214C54]"
+              style={{ left: `calc(${progressPercent}% - 10px)` }}
             >
-              ⛵
+              <Compass size={11} className="stroke-[2]" />
             </div>
           </div>
         </div>

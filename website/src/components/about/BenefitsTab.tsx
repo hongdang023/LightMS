@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Gift } from 'lucide-react';
 import type { BenefitClub } from '../../data/aboutViewData';
 
 interface BenefitsTabProps {
@@ -36,7 +36,10 @@ export const BenefitsTab: React.FC<BenefitsTabProps> = ({
   return (
     <div className="space-y-6 animate-fade-in text-left">
       <div>
-        <h3 className="font-extrabold text-base text-[#15333B] mb-4">🎁 Quyền lợi học viên:</h3>
+        <h3 className="font-extrabold text-base text-[#15333B] mb-4 flex items-center gap-2">
+          <Gift size={18} className="text-[#214C54] stroke-[1.5]" />
+          <span>Quyền lợi học viên:</span>
+        </h3>
         
         {/* Editable Dynamic Benefit Clubs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

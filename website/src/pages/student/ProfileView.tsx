@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useGamification } from '../../context/GamificationContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { PageHeader } from '../../components/PageHeader';
+import { School, Compass } from 'lucide-react';
 
 interface ProfileViewProps {
   onPageChange?: (page: string) => void;
@@ -556,8 +557,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onPageChange: _onPageC
       <div className="space-y-6">
         {isAdmin ? (
           <div className="card space-y-4 bg-white border-gray-200">
-            <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-100 pb-3">
-              🏫 Lớp học phụ trách
+            <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-100 pb-3 flex items-center gap-2">
+              <School size={16} className="text-[#214C54] stroke-[1.5]" />
+              Lớp học phụ trách
             </h3>
             
             <div className="flex flex-wrap gap-2">
@@ -574,8 +576,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onPageChange: _onPageC
           </div>
         ) : (
           <div className="card space-y-4">
-            <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-100 pb-3">
-              ⚓ Nhật Ký Hành Trình Hải Lý
+            <h3 className="font-extrabold text-sm text-[#15333B] border-b border-gray-100 pb-3 flex items-center gap-2">
+              <Compass size={16} className="text-[#214C54] stroke-[1.5]" />
+              Nhật Ký Hành Trình Hải Lý
             </h3>
             
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1.5 custom-scrollbar">

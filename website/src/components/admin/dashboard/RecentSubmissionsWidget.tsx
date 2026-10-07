@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail } from 'lucide-react';
+import { Mail, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import type { Profile, Lesson } from '../../../types/database';
 
 interface RecentSubmissionsWidgetProps {
@@ -34,7 +34,8 @@ export const RecentSubmissionsWidget: React.FC<RecentSubmissionsWidgetProps> = (
       <div className="flex items-center justify-between border-b border-gray-100 pb-4">
         <div>
           <h3 className="font-extrabold text-sm text-[#15333B] uppercase tracking-wider flex items-center gap-2">
-            🚨 Danh Sách Học Viên Cần Hỗ Trợ Tiến Độ ({studentsWithBottlenecks.length})
+            <ShieldAlert size={16} className="text-red-600 stroke-[1.5]" />
+            Danh Sách Học Viên Cần Hỗ Trợ Tiến Độ ({studentsWithBottlenecks.length})
           </h3>
           <p className="text-[11px] text-[#3E5E63] font-medium mt-0.5">
             Danh sách học viên chưa nộp bài tập về nhà hoặc đang bị nghẽn tiến độ học
@@ -43,8 +44,8 @@ export const RecentSubmissionsWidget: React.FC<RecentSubmissionsWidgetProps> = (
       </div>
 
       {studentsWithBottlenecks.length === 0 ? (
-        <div className="p-8 text-center bg-teal-50/50 rounded-2xl border border-teal-100/50 space-y-1">
-          <span className="text-2xl block">🎉</span>
+        <div className="p-8 text-center bg-teal-50/50 rounded-2xl border border-teal-100/50 space-y-2 flex flex-col items-center">
+          <CheckCircle2 size={28} className="text-teal-600 stroke-[1.5]" />
           <span className="text-xs font-bold text-[#214C54] block">
             Tuyệt vời! Tất cả học viên đều đang nộp bài đầy đủ đúng tiến độ.
           </span>

@@ -27,56 +27,56 @@ export const ProductTour: React.FC<ProductTourProps> = ({ activeTab: _activeTab,
 
   const steps: TourStep[] = [
     {
-      title: "Chào mừng thủy thủ đến với LightMS! ⛵",
+      title: "Chào mừng thủy thủ đến với LightMS!",
       content:
         "Hãy dành ra 1 phút để ta dẫn ngươi đi tham quan quanh con tàu này nhé! Ta sẽ chỉ cho ngươi biết các khu vực tính năng chính.",
       position: "center",
     },
     {
       targetId: "nav-item-about",
-      title: "Giới thiệu 🧭",
+      title: "Giới thiệu",
       content:
         "Nơi giới thiệu về khóa học, triết lý giáo dục của The1ight, và các thông tin cơ bản giúp bạn làm quen với môi trường học tập.",
       position: "right",
     },
     {
       targetId: "nav-item-dashboard",
-      title: "Dashboard học tập 🏠",
+      title: "Dashboard học tập",
       content:
         "Nơi hiển thị tiến độ học tập hàng ngày của bạn, danh sách bài tập chưa hoàn thành và các nhiệm vụ cần thực hiện.",
       position: "right",
     },
     {
       targetId: "nav-item-onboarding",
-      title: "Tuần Onboarding 🚀",
+      title: "Tuần Onboarding",
       content:
         "Chặng 1 của khóa học! Bạn sẽ có 7 ngày để thiết lập môi trường làm việc, cam kết học tập, làm quen cách viết problem statement và tương tác với AI.",
       position: "right",
     },
     {
       targetId: "nav-item-syllabus",
-      title: "Lộ trình học (Syllabus) 📚",
+      title: "Lộ trình học",
       content:
         "Nơi lưu trữ giáo trình, các buổi học (video bài giảng, slide), đề bài tập cũng như chấm điểm phản hồi từ Mentor.",
       position: "right",
     },
     {
       targetId: "nav-item-calendar",
-      title: "Lịch học lớp 📅",
+      title: "Lịch học lớp",
       content:
         "Xem lịch các buổi học Live Class, hạn chót nộp bài tập và các sự kiện diễn ra trong suốt khóa học.",
       position: "right",
     },
     {
       targetId: "nav-item-walloffame",
-      title: "Bảng vinh danh 🏆",
+      title: "Bảng vinh danh",
       content:
         "Nơi tôn vinh các học viên xuất sắc, tích lũy nhiều Hải lý nhất và các thành tựu nổi bật trên hành trình chinh phục khóa học.",
       position: "right",
     },
     {
       targetId: "nav-item-help",
-      title: "Hỏi đáp & Hỗ trợ 💬",
+      title: "Hỏi đáp & Hỗ trợ",
       content:
         "Kênh gửi câu hỏi hỗ trợ kỹ thuật, giải đáp thắc mắc về bài học và tương tác trực tiếp với đội ngũ Mentor.",
       position: "right",

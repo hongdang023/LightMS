@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Lesson } from '../../types/database';
+import { BookOpen, Presentation, FileText, Play, Lock, Link2, ExternalLink } from 'lucide-react';
 
 interface LessonMaterialsProps {
   lesson: Lesson;
@@ -20,7 +21,10 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
 }) => {
   return (
     <div className="space-y-3.5 pt-4 border-t border-gray-100">
-      <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest">📚 Tài nguyên học tập</h4>
+      <h4 className="text-sm font-black text-[#214C54] uppercase tracking-widest flex items-center gap-1.5">
+        <BookOpen size={16} className="stroke-[1.5]" />
+        <span>Tài nguyên học tập</span>
+      </h4>
 
       {isEditMode && draftLesson ? (
         <div className="space-y-3 bg-amber-50/45 border border-amber-200/50 rounded-xl p-4 w-full">
@@ -66,9 +70,9 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 cursor-pointer"
             >
-              <span>📄</span>
+              <Presentation size={14} className="stroke-[1.5]" />
               <span>Slide Bài Giảng</span>
-              <span>↗</span>
+              <ExternalLink size={12} className="stroke-[1.5]" />
             </a>
           ) : (
             <button
@@ -76,7 +80,7 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               disabled
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-black cursor-not-allowed select-none"
             >
-              <span>📄</span>
+              <Presentation size={14} className="stroke-[1.5]" />
               <span>Slide Bài Giảng</span>
             </button>
           )}
@@ -88,9 +92,9 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 cursor-pointer"
             >
-              <span>📝</span>
+              <FileText size={14} className="stroke-[1.5]" />
               <span>Study Note</span>
-              <span>↗</span>
+              <ExternalLink size={12} className="stroke-[1.5]" />
             </a>
           ) : (
             <button
@@ -98,7 +102,7 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               disabled
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-black cursor-not-allowed select-none"
             >
-              <span>📝</span>
+              <FileText size={14} className="stroke-[1.5]" />
               <span>Study Note</span>
             </button>
           )}
@@ -111,9 +115,9 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               onClick={() => onCompleteLesson(lesson.id)}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#15333B] hover:bg-[#0f2328] text-amber-400 text-xs font-black shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 cursor-pointer"
             >
-              <span>▶️</span>
+              <Play size={14} className="stroke-[1.5]" />
               <span>Video Recording</span>
-              <span>↗</span>
+              <ExternalLink size={12} className="stroke-[1.5]" />
             </a>
           ) : (
             <button
@@ -121,7 +125,7 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               disabled
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-200 text-gray-400 text-xs font-black cursor-not-allowed select-none"
             >
-              <span>🔒</span>
+              <Lock size={14} className="stroke-[1.5]" />
               <span>Video Recording</span>
             </button>
           )}
@@ -135,9 +139,9 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-sm hover:shadow hover:-translate-y-0.5 transition-all transform active:scale-95 duration-200 cursor-pointer"
               >
-                <span>🔗</span>
+                <Link2 size={14} className="stroke-[1.5]" />
                 <span>{res.label}</span>
-                <span>↗</span>
+                <ExternalLink size={12} className="stroke-[1.5]" />
               </a>
             ))}
         </div>

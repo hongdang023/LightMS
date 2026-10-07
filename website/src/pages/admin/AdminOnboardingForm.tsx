@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { BrandLogo } from '../../components/BrandLogo';
-import { ChevronRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Sparkles, Check, Plus } from 'lucide-react';
 import type { AdminRole } from '../../types/database';
 
 interface AdminOnboardingFormProps {
@@ -165,7 +165,9 @@ export const AdminOnboardingForm: React.FC<AdminOnboardingFormProps> = ({ onComp
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-[#15333B]">{role.label}</span>
                     {formData.admin_role === role.key && (
-                      <span className="w-4 h-4 rounded-full bg-[#214C54] text-white flex items-center justify-center text-[10px] font-bold">✓</span>
+                      <span className="w-4 h-4 rounded-full bg-[#214C54] text-white flex items-center justify-center text-[10px]">
+                        <Check size={10} className="stroke-[2.5]" />
+                      </span>
                     )}
                   </div>
                   <p className="text-[10px] text-gray-500 font-medium mt-1 leading-tight">{role.desc}</p>
@@ -185,13 +187,14 @@ export const AdminOnboardingForm: React.FC<AdminOnboardingFormProps> = ({ onComp
                     type="button"
                     key={b}
                     onClick={() => handleBatchToggle(b)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
                       isSelected
                         ? 'bg-[#15333B] text-white border-[#15333B]'
                         : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                     }`}
                   >
-                    {isSelected ? `✓ ${b}` : `+ ${b}`}
+                    {isSelected ? <Check size={12} className="stroke-[2]" /> : <Plus size={12} className="stroke-[2]" />}
+                    <span>{b}</span>
                   </button>
                 );
               })}

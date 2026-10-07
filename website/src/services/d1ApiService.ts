@@ -58,16 +58,80 @@ class D1ApiService {
       if (!res.ok) return null;
       const data = (await res.json()) as any;
       if (data && data.success && Array.isArray(data.events)) {
-        return data.events.map((e: any) => ({
-          id: e.id,
-          batch_id: e.batchId || e.batch_id,
-          title: e.title,
-          event_type: e.eventType || e.event_type,
-          start_time: e.startTime || e.start_time,
-          end_time: e.endTime || e.end_time,
-          meeting_url: e.meetingUrl || e.meeting_url || '',
-          description: e.description || '',
-        }));
+        return data.events.map((e: any) => {
+          const startTimeStr = e.startTime || e.start_time || '';
+          const endTimeStr = e.endTime || e.end_time || '';
+          let dateNum: number | undefined;
+          let monthNum: number | undefined;
+          let yearNum: number | undefined;
+          let dayOfWeekNum: number | undefined;
+          let timeFormatted = '20:30';
+          let endTimeFormatted = '22:30';
+
+          if (startTimeStr) {
+            const d = new Date(startTimeStr);
+            if (!isNaN(d.getTime())) {
+              dateNum = d.getUTCDate();
+              monthNum = d.getUTCMonth();
+              yearNum = d.getUTCFullYear();
+              // In JS: 0=Sun, 1=Mon... In CalendarEvent: 1=Mon...7=Sun
+              const jsDay = d.getUTCDay();
+              dayOfWeekNum = jsDay === 0 ? 7 : jsDay;
+              timeFormatted = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+            }
+          }
+
+          if (endTimeStr) {
+            const dEnd = new Date(endTimeStr);
+            if (!isNaN(dEnd.getTime())) {
+              endTimeFormatted = `${String(dEnd.getUTCHours()).padStart(2, '0')}:${String(dEnd.getUTCMinutes()).padStart(2, '0')}`;
+            }
+          }
+
+          const rawType = (e.eventType || e.event_type || 'live-class').toLowerCase();
+          let colorClass = 'border-l-4 border-[#EA580C] bg-orange-50 text-orange-950';
+          let dotColorClass = 'bg-[#EA580C]';
+          let legacyType: 'class' | 'community' | 'other' = 'class';
+
+          if (rawType.includes('kick-off') || rawType.includes('kickoff')) {
+            colorClass = 'border-l-4 border-[#DC2626] bg-red-50 text-red-950';
+            dotColorClass = 'bg-[#DC2626]';
+            legacyType = 'community';
+          } else if (rawType.includes('onboarding')) {
+            colorClass = 'border-l-4 border-[#7C3AED] bg-purple-50 text-purple-950';
+            dotColorClass = 'bg-[#7C3AED]';
+            legacyType = 'class';
+            timeFormatted = 'Cả ngày';
+          } else if (rawType.includes('office-hour') || rawType.includes('office hour')) {
+            colorClass = 'border-l-4 border-[#2563EB] bg-blue-50 text-blue-950';
+            dotColorClass = 'bg-[#2563EB]';
+            legacyType = 'community';
+          } else if (rawType.includes('capstone') || rawType.includes('pitching')) {
+            colorClass = 'border-l-4 border-[#D97706] bg-amber-50 text-amber-950';
+            dotColorClass = 'bg-[#D97706]';
+            legacyType = 'class';
+          }
+
+          const isAllDay = rawType.includes('onboarding') || timeFormatted === 'Cả ngày';
+
+          return {
+            id: e.id,
+            batch_id: e.batchId || e.batch_id,
+            title: e.title,
+            time: timeFormatted,
+            endTime: endTimeFormatted,
+            allDay: isAllDay,
+            date: dateNum,
+            month: monthNum,
+            year: yearNum,
+            dayOfWeek: dayOfWeekNum,
+            colorClass,
+            dotColorClass,
+            type: legacyType,
+            eventType: e.eventType || e.event_type,
+            details: e.description || '',
+          };
+        });
       }
     } catch (e) {
       console.warn('[D1ApiService] Failed to fetch calendar events from D1:', e);

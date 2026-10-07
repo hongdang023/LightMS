@@ -5,7 +5,8 @@ import {
   Award, 
   MessageSquare, 
   BookMarked,
-  Layers
+  Layers,
+  AlertTriangle
 } from 'lucide-react';
 
 export interface FAQSection {
@@ -269,7 +270,7 @@ export const getFaqs = (onPageChange?: (page: string) => void): FAQArticle[] => 
         content: (
           <div className="space-y-3">
             <div className="p-3.5 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-xs font-bold text-red-800 flex items-start gap-2">
-              <span className="text-base">⚠️</span>
+              <AlertTriangle size={16} className="text-red-500 shrink-0 mt-0.5 stroke-[1.5]" />
               <div>
                 Thay vì dành 2-3 tiếng để xem lại từ đầu đến cuối video bài giảng, hãy đổi sang phương pháp học thực chiến.
               </div>
@@ -324,8 +325,8 @@ export const getFaqs = (onPageChange?: (page: string) => void): FAQArticle[] => 
               rel="noreferrer" 
               className="inline-flex items-center gap-2 font-bold text-xs bg-[#214C54] text-white px-4 py-2.5 rounded-xl hover:bg-[#15333B] transition-all shadow-sm hover:shadow"
             >
-              <Layers className="w-4 h-4" />
-              🔗 Danh mục bài giảng & Học liệu khóa trước
+              <Layers className="w-4 h-4 stroke-[1.5]" />
+              <span>Danh mục bài giảng & Học liệu khóa trước</span>
             </a>
           </div>
         )

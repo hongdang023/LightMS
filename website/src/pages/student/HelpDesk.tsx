@@ -4,7 +4,10 @@ import {
   Search, 
   ArrowLeft, 
   ChevronRight, 
-  Info
+  Info,
+  LifeBuoy,
+  Send,
+  UserCheck
 } from 'lucide-react';
 import { categories } from '../../data/helpDeskData';
 import { useCommunity } from '../../context/CommunityContext';
@@ -212,9 +215,9 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange 
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-white rounded-2xl border border-gray-150 shadow-sm">
-                  <span className="text-4xl">🔍</span>
-                  <p className="text-xs text-gray-400 font-bold mt-3 text-center">Không tìm thấy bài viết nào phù hợp.</p>
+                <div className="text-center py-12 bg-white rounded-2xl border border-gray-150 shadow-sm flex flex-col items-center justify-center">
+                  <Search size={36} className="text-gray-300 mb-2 stroke-[1.5]" />
+                  <p className="text-xs text-gray-400 font-bold mt-1 text-center">Không tìm thấy bài viết nào phù hợp.</p>
                   <p className="text-[10px] text-gray-400 text-center">Hãy thử tìm kiếm với các từ khóa khác như "lịch", "kudos", "ngợp".</p>
                 </div>
               )}
@@ -252,7 +255,9 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange 
           {/* TELEGRAM DIRECT SUPPORT */}
           <div className="bg-[#214C54]/5 border border-[#214C54]/20 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">🛟</span>
+              <div className="w-10 h-10 rounded-xl bg-[#214C54]/10 flex items-center justify-center text-[#214C54] shrink-0">
+                <LifeBuoy size={24} className="stroke-[1.5]" />
+              </div>
               <div className="text-left">
                 <h4 className="font-extrabold text-xs text-[#15333B]">Phòng Light Support trên Telegram</h4>
                 <p className="text-[10px] text-gray-500 mt-0.5 font-semibold">Tự động kết nối trực tiếp đến trợ lý vận hành lớp để giải đáp trong 5 phút.</p>
@@ -265,16 +270,16 @@ export const HelpDesk: React.FC<HelpDeskProps> = ({ onPageChange: _onPageChange 
                 rel="noreferrer"
                 className="btn bg-[#FFD94C] text-[#15333B] hover:bg-[#e6c245] border-0 text-xs font-extrabold flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-xl transition-all shadow-sm"
               >
-                <span>🚀</span>
+                <Send size={14} className="stroke-[1.5]" />
                 <span>Liên hệ Telegram Support</span>
               </a>
               <a 
                 href="https://www.facebook.com/danghong.harunoyuki" 
                 target="_blank" 
-                rel="noreferrer"
+                rel="noreferrer" 
                 className="btn bg-[#214C54] text-white hover:bg-[#15333B] border-0 text-xs font-extrabold flex items-center gap-1.5 shrink-0 px-4 py-2 rounded-xl transition-all shadow-sm"
               >
-                <span>👩‍💼</span>
+                <UserCheck size={14} className="stroke-[1.5]" />
                 <span>Liên hệ Quản lý lớp học</span>
               </a>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from '../components/BrandLogo';
-import { Shield, User, ArrowRight, X, Lock, BookOpen, Eye, EyeOff } from 'lucide-react';
+import { Shield, User, ArrowRight, X, Lock, BookOpen, Eye, EyeOff, Bot } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { loginWithGmail } = useAuth();
@@ -18,7 +18,7 @@ export const Login: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   
   const [parrotText, setParrotText] = useState(
-    'Ahoy! Ta là Vẹt gác cổng đây! Hãy chọn vai trò của ngươi để bắt đầu bước lên boong tàu LightMS nhé! 🦜'
+    'Ahoy! Ta là Vẹt gác cổng đây! Hãy chọn vai trò của ngươi để bắt đầu bước lên boong tàu LightMS nhé!'
   );
 
   // Preseeded accounts for quick testing
@@ -71,10 +71,10 @@ export const Login: React.FC = () => {
     setPasswordError('');
     if (role === 'admin') {
       setFlowState('admin-password');
-      setParrotText('Dừng lại! Lối vào phòng Thuyền trưởng cần mật mã tối mật. Hãy nhập mật mã của ngươi! 🦜');
+      setParrotText('Dừng lại! Lối vào phòng Thuyền trưởng cần mật mã tối mật. Hãy nhập mật mã của ngươi!');
     } else {
       setFlowState('google-login');
-      setParrotText('Tuyệt vời! Hãy đăng nhập bằng Gmail học viên để tiếp tục hành trình học tập! 🦜');
+      setParrotText('Tuyệt vời! Hãy đăng nhập bằng Gmail học viên để tiếp tục hành trình học tập!');
     }
   };
 
@@ -83,10 +83,10 @@ export const Login: React.FC = () => {
     if (adminPassword === 'AD_lightms2026') {
       setPasswordError('');
       setFlowState('google-login');
-      setParrotText('Mật mã chính xác! Chào mừng Thuyền trưởng hoặc đồng nghiệp, hãy chọn tài khoản để đăng nhập! 🦜');
+      setParrotText('Mật mã chính xác! Chào mừng Thuyền trưởng hoặc đồng nghiệp, hãy chọn tài khoản để đăng nhập!');
     } else {
       setPasswordError('Mật khẩu Admin không chính xác. Vui lòng thử lại!');
-      setParrotText('Arrr! Sai mật khẩu rồi! Ngươi có thực sự là Thuyền trưởng không đấy? 🦜');
+      setParrotText('Arrr! Sai mật khẩu rồi! Ngươi có thực sự là Thuyền trưởng không đấy?');
     }
   };
 
@@ -107,7 +107,7 @@ export const Login: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customEmail)) {
       setError('Địa chỉ email không hợp lệ. Hãy điền đúng định dạng Gmail!');
-      setParrotText('Arrr! Ngươi đang gõ cái gì thế kia? Điền đúng địa chỉ Gmail đi thủy thủ ơi! 🦜');
+      setParrotText('Arrr! Ngươi đang gõ cái gì thế kia? Điền đúng địa chỉ Gmail đi thủy thủ ơi!');
       return;
     }
 
@@ -203,7 +203,7 @@ export const Login: React.FC = () => {
               <button 
                 onClick={() => {
                   setFlowState('role-select');
-                  setParrotText('Chọn vai trò của ngươi để bắt đầu chặng hành trình nhé! 🦜');
+                  setParrotText('Chọn vai trò của ngươi để bắt đầu chặng hành trình nhé!');
                 }}
                 className="text-xs text-white/60 hover:text-white font-semibold flex items-center gap-1.5"
               >
@@ -259,7 +259,7 @@ export const Login: React.FC = () => {
               <button 
                 onClick={() => {
                   setFlowState('role-select');
-                  setParrotText('Hãy chọn vai trò của ngươi để bắt đầu chặng hành trình nhé! 🦜');
+                  setParrotText('Hãy chọn vai trò của ngươi để bắt đầu chặng hành trình nhé!');
                 }}
                 className="text-xs text-white/60 hover:text-white font-semibold flex items-center gap-1.5"
               >
@@ -277,8 +277,8 @@ export const Login: React.FC = () => {
                 setShowChooser(true);
                 setParrotText(
                   selectedRole === 'admin'
-                    ? 'Chọn tài khoản Google Admin hoặc nhập email để đăng nhập! 🦜'
-                    : 'Chọn tài khoản Google học viên hoặc nhập Gmail của bạn! 🦜'
+                    ? 'Chọn tài khoản Google Admin hoặc nhập email để đăng nhập!'
+                    : 'Chọn tài khoản Google học viên hoặc nhập Gmail của bạn!'
                 );
               }}
               className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-700 font-black py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group cursor-pointer"
@@ -322,7 +322,7 @@ export const Login: React.FC = () => {
         </div>
         
         <div className="w-16 h-16 bg-[#214C54] border-2 border-[#FFD94C] rounded-full shadow-lg flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
-          <span className="text-3xl">🦜</span>
+          <Bot size={30} className="text-[#FFD94C]" />
         </div>
       </div>
 
@@ -336,7 +336,7 @@ export const Login: React.FC = () => {
               onClick={() => {
                 setShowChooser(false);
                 setError('');
-                setParrotText('Ơ kìa? Đóng pop-up làm gì thế thủy thủ? Không định đăng nhập để học bài à? 🦜');
+                setParrotText('Ơ kìa? Đóng pop-up làm gì thế thủy thủ? Không định đăng nhập để học bài à?');
               }}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
             >
@@ -407,8 +407,8 @@ export const Login: React.FC = () => {
                     setShowCustomInput(true);
                     setParrotText(
                       selectedRole === 'admin'
-                        ? 'Ồ! Muốn thêm tài khoản Admin mới hả? Điền địa chỉ Gmail đi thủy thủ! 🦜'
-                        : 'Ồ! Ngươi muốn dùng Gmail mới hoàn toàn để đăng ký tài khoản thủy thủ mới hả? Hãy điền vào đi! 🦜'
+                        ? 'Ồ! Muốn thêm tài khoản Admin mới hả? Điền địa chỉ Gmail đi thủy thủ!'
+                        : 'Ồ! Ngươi muốn dùng Gmail mới hoàn toàn để đăng ký tài khoản thủy thủ mới hả? Hãy điền vào đi!'
                     );
                   }}
                   className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed border-gray-200 hover:border-[#214C54] text-gray-600 hover:text-[#214C54] hover:bg-[#214C54]/5 transition-all text-sm font-bold text-center cursor-pointer"
@@ -443,7 +443,7 @@ export const Login: React.FC = () => {
                     onClick={() => {
                       setShowCustomInput(false);
                       setError('');
-                      setParrotText('Hì hì, chọn tài khoản có sẵn cũng là ý hay cho nhanh đấy! 🦜');
+                      setParrotText('Hì hì, chọn tài khoản có sẵn cũng là ý hay cho nhanh đấy!');
                     }}
                     className="flex-1 py-3 px-4 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl font-bold text-xs transition-all text-center cursor-pointer"
                   >

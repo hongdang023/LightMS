@@ -4,7 +4,7 @@ import { useCourse } from '../../context/CourseContext';
 import { useGamification } from '../../context/GamificationContext';
 import { useCommunity } from '../../context/CommunityContext';
 import { enrollmentService } from '../../services/enrollmentService';
-import { ChevronDown, ChevronUp, Video, ArrowRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, Video, ArrowRight, Trophy, Clock } from 'lucide-react';
 
 interface StudentDashboardProps {
   onPageChange: (page: string) => void;
@@ -328,7 +328,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-150/80 flex flex-col justify-between flex-1 space-y-5">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm">🎖️</span>
+                <Trophy size={16} className="text-[#EAB308] stroke-[1.5]" />
                 <h3 className="text-xs font-extrabold text-gray-400 tracking-wider uppercase">
                   Xếp hạng của bạn
                 </h3>
@@ -337,8 +337,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
 
             {/* Highlighted Personal Rank Banner */}
             {leaderboard.length === 0 ? (
-              <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 text-center my-auto">
-                <span className="text-xl mb-1 block">⏳</span>
+              <div className="bg-gray-50 border border-gray-150 rounded-2xl p-4 text-center my-auto flex flex-col items-center">
+                <Clock size={24} className="text-gray-400 mb-1 stroke-[1.5]" />
                 <h4 className="font-extrabold text-xs text-[#15333B]">
                   Khóa học chưa bắt đầu
                 </h4>
@@ -375,10 +375,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onPageChange
             {/* Leaderboard CTA Button */}
             <button
               onClick={() => onPageChange('walloffame')}
-              className="w-full py-2.5 px-4 rounded-full border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all flex items-center justify-center gap-1"
+              className="w-full py-2.5 px-4 rounded-full border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
             >
               <span>Vào Bảng vinh danh</span>
-              <span>➔</span>
+              <ArrowRight size={14} className="stroke-[1.5]" />
             </button>
           </div>
 

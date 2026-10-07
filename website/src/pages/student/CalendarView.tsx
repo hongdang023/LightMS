@@ -248,7 +248,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
               className="border-0 shadow-md text-xs font-black flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer transform active:scale-95 hover:brightness-105"
               style={{ backgroundColor: '#FFD94C', color: '#15333B' }}
             >
-              <span className="text-base">📅</span>
+              <CalendarIcon size={16} className="stroke-[1.5]" />
               <span>Google Calendar</span>
             </button>
             <button
@@ -256,7 +256,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onPageChange: _onPag
               className="border-0 shadow-md text-xs font-black flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer transform active:scale-95 hover:brightness-105"
               style={{ backgroundColor: '#214C54', color: '#FFFFFF' }}
             >
-              <span className="text-base">🍎</span>
+              <CalendarIcon size={16} className="stroke-[1.5]" />
               <span>Apple Calendar</span>
             </button>
           </div>

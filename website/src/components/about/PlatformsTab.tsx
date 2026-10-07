@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, UserCheck, MessageSquare, ArrowRight } from 'lucide-react';
 import type { PlatformButton } from '../../data/aboutViewData';
 
 interface PlatformsTabProps {
@@ -118,36 +118,40 @@ export const PlatformsTab: React.FC<PlatformsTabProps> = ({
                       ) : btn.title.toLowerCase().includes('calendar') ? (
                         <button
                           onClick={() => onPageChange('calendar')}
-                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors inline-flex items-center gap-1.5"
                         >
-                          Đăng ký / Xem Lịch học ➔
+                          <span>Đăng ký / Xem Lịch học</span>
+                          <ArrowRight size={12} className="stroke-[1.5]" />
                         </button>
                       ) : btn.title.toLowerCase().includes('telegram') ? (
                         <a
                           href={btn.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors inline-flex items-center gap-1.5"
                         >
-                          Tham gia Telegram ➔
+                          <span>Tham gia Telegram</span>
+                          <ArrowRight size={12} className="stroke-[1.5]" />
                         </a>
                       ) : btn.title.toLowerCase().includes('zalo') ? (
                         <a
                           href={btn.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors inline-flex items-center gap-1.5"
                         >
-                          Tham gia Zalo ➔
+                          <span>Tham gia Zalo</span>
+                          <ArrowRight size={12} className="stroke-[1.5]" />
                         </a>
                       ) : (
                         <a
                           href={btn.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors"
+                          className="text-xs font-bold text-[#FFD94C] bg-[#15333B] px-2.5 py-1.5 rounded-lg hover:bg-[#214C54] transition-colors inline-flex items-center gap-1.5"
                         >
-                          Đi đến Facebook Group ➔
+                          <span>Đi đến Facebook Group</span>
+                          <ArrowRight size={12} className="stroke-[1.5]" />
                         </a>
                       )}
                     </div>
@@ -215,9 +219,14 @@ export const PlatformsTab: React.FC<PlatformsTabProps> = ({
       </div>
 
       <div>
-        <h3 className="font-extrabold text-base text-[#15333B] mb-3">👨‍🏫 Hoạt động hỗ trợ học tập:</h3>
+        <h3 className="font-extrabold text-base text-[#15333B] mb-3 flex items-center gap-2">
+          <UserCheck size={18} className="text-[#214C54] stroke-[1.5]" />
+          <span>Hoạt động hỗ trợ học tập:</span>
+        </h3>
         <div className="bg-white border border-[#214C54]/20 rounded-2xl p-4 shadow-sm flex items-start gap-4">
-          <div className="text-3xl pt-1">💬</div>
+          <div className="p-2.5 rounded-xl bg-teal-50 text-[#214C54] shrink-0">
+            <MessageSquare size={22} className="stroke-[1.5]" />
+          </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-bold text-[#15333B] text-sm">Office Hour với Trainer</h4>
             {isEditMode ? (
@@ -259,9 +268,10 @@ export const PlatformsTab: React.FC<PlatformsTabProps> = ({
               href="https://zalo.me/g/zcsfkw4u0vzlna8jq5pi" 
               target="_blank" 
               rel="noreferrer"
-              className="inline-block text-xs font-bold text-[#FFD94C] bg-[#15333B] px-3 py-1.5 rounded-md mt-3 hover:bg-[#214C54] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FFD94C] bg-[#15333B] px-3 py-1.5 rounded-md mt-3 hover:bg-[#214C54] transition-colors"
             >
-              👉 Đăng ký Office Hour tại Zalo lớp
+              <span>Đăng ký Office Hour tại Zalo lớp</span>
+              <ArrowRight size={12} className="stroke-[1.5]" />
             </a>
           </div>
         </div>

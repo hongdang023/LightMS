@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ClipboardList } from 'lucide-react';
 import { renderRichText } from '../../data/onboardingVisuals';
 import { TaskEditRow } from './TaskEditRow';
 
@@ -49,8 +49,9 @@ export const DayTaskChecklist: React.FC<DayTaskChecklistProps> = ({
       {isEditMode ? (
         <div className="space-y-3 bg-[#214C54]/5 border-2 border-dashed border-[#214C54]/20 p-4 rounded-2xl">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-[#214C54] uppercase tracking-wider">
-              📝 Quản lý danh sách nhiệm vụ (Admin Mode)
+            <span className="text-xs font-black text-[#214C54] uppercase tracking-wider flex items-center gap-1.5">
+              <ClipboardList size={14} className="stroke-[1.5]" />
+              Quản lý danh sách nhiệm vụ (Admin Mode)
             </span>
             <span className="text-[10px] text-[#214C54]/60 font-semibold">
               Kéo thả / Đổi vị trí / Đổi tên nhiệm vụ
@@ -111,7 +112,7 @@ export const DayTaskChecklist: React.FC<DayTaskChecklistProps> = ({
                     {task.isOptional && (
                       <div className="shrink-0 flex flex-col items-start gap-1">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-600 border border-violet-200">
-                          ✦ Tùy chọn
+                          Tùy chọn
                         </span>
                         {task.optionalNote && (
                           <span className="text-[11px] text-violet-500 italic font-medium">

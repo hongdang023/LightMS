@@ -438,6 +438,24 @@ export const INITIAL_ENROLLMENTS: BatchEnrollment[] = [
 // ── Obsidian 101 Lessons ───────────────────────────────────────────────────
 export const OBSIDIAN_LESSONS: Lesson[] = [
   {
+    id: 'lesson-obs-b0',
+    course_id: 'course-obsidian-101',
+    title: 'Buổi 0: Kick-off Meeting',
+    type: 'video',
+    content: 'Giới thiệu tổng quan về khoá học, giảng viên, nền tảng học tập và các lưu ý quan trọng về lịch trình của lớp.',
+    video_url: 'https://daymai.vn/vc/6abd08681b4f42949c0f7f29',
+    order_index: 0,
+    start_date: '2026-10-06T20:30:00+07:00',
+    target: 'Giới thiệu tổng quan khoá học, giảng viên và làm quen nền tảng',
+    has_materials: true,
+    slide_url: 'https://canva.link/gm0bq5jbk6v2rx7',
+    study_note_url: '',
+    key_concepts: ['Giới thiệu khoá học', 'Nền tảng học tập', 'Lịch trình & Kỷ luật'],
+    supporting_resources: [],
+    assignment_description: '',
+    assignment_rubric_checklist: []
+  },
+  {
     id: 'lesson-obs-b1',
     course_id: 'course-obsidian-101',
     title: 'Buổi 1: Foundation Setup',
@@ -446,13 +464,13 @@ export const OBSIDIAN_LESSONS: Lesson[] = [
 - Cấu trúc thư mục Vault cá nhân tối ưu theo tiêu chuẩn.
 - Thiết kế Dashboard/Home page điều hướng trực quan.
 - Cài đặt và cấu hình bộ Community Plugins cốt lõi (Dataview, Templater, Calendar...).`,
-    video_url: 'https://youtu.be/pzsBYMMg0Dc',
+    video_url: '',
     order_index: 1,
     start_date: '2026-10-13T20:30:00+07:00',
     target: 'Xây vault, Home page và cài các plugins để sử dụng được ngay',
-    has_materials: true,
-    slide_url: 'https://drive.google.com',
-    study_note_url: 'https://app.notion.com',
+    has_materials: false,
+    slide_url: '',
+    study_note_url: '',
     key_concepts: ['Vault Architecture', 'Home Page Dashboard', 'Core Community Plugins'],
     supporting_resources: [
       { label: 'Obsidian Hub Community Docs', url: 'https://hub.obsidian.md/' },
@@ -475,13 +493,13 @@ export const OBSIDIAN_LESSONS: Lesson[] = [
 - Kỹ thuật Progressive Summarization (Tóm tắt lũy tiến).
 - Tư duy Zettelkasten & Atomic Notes (Ghi chú nguyên tử).
 - Tạo liên kết hai chiều (Bidirectional Links) để kết nối các ý tưởng liên ngành.`,
-    video_url: 'https://youtu.be/4SJOdgP0A7g',
+    video_url: '',
     order_index: 2,
     start_date: '2026-10-18T10:00:00+07:00',
     target: 'Cách ghi chú để biến thông tin thô thành tri thức có thể dùng được',
-    has_materials: true,
-    slide_url: 'https://drive.google.com',
-    study_note_url: 'https://app.notion.com',
+    has_materials: false,
+    slide_url: '',
+    study_note_url: '',
     key_concepts: ['Progressive Summarization', 'Zettelkasten & Atomic Notes', 'Bidirectional Linking'],
     supporting_resources: [
       { label: 'Hướng dẫn Zettelkasten - Tuấn Mon', url: 'https://tuanmon.com/zettelkasten-co-gi-ma-minh-lai-me-no-den-vay/' },
@@ -504,13 +522,13 @@ export const OBSIDIAN_LESSONS: Lesson[] = [
 - Sử dụng Web Clipper, Extension để capture bài viết một chạm.
 - Đồng bộ hóa highlight từ Kindle, Readwise, Omnivore, Youtube transcript.
 - Thiết lập quy trình phân loại Inbox nhanh chóng hàng ngày.`,
-    video_url: 'https://youtu.be/DRLfqFJlosE',
+    video_url: '',
     order_index: 3,
     start_date: '2026-10-20T20:30:00+07:00',
     target: 'Nhanh chóng nạp thông tin đa lĩnh vực lab tuỳ chọn',
-    has_materials: true,
-    slide_url: 'https://drive.google.com',
-    study_note_url: 'https://app.notion.com',
+    has_materials: false,
+    slide_url: '',
+    study_note_url: '',
     key_concepts: ['Web Clipper & Capture Workflow', 'Media Synchronizations', 'Inbox Zero for Knowledge'],
     supporting_resources: [
       { label: 'Obsidian Web Clipper Docs', url: 'https://obsidian.md/clipper' }
@@ -559,13 +577,13 @@ export const OBSIDIAN_LESSONS: Lesson[] = [
 - Tích hợp Smart Connections / Text Generator / Copilot vào Vault.
 - Phương pháp LLM Wiki & AI Second Brain của Andrej Karpathy.
 - Xuất bản sản phẩm đầu ra (Bài viết chuyên sâu, báo cáo, kế hoạch hành động).`,
-    video_url: 'https://youtu.be/czONq1sFXqU',
+    video_url: '',
     order_index: 5,
     start_date: '2026-10-27T20:30:00+07:00',
     target: 'Cách phối hợp và làm việc với AI',
-    has_materials: true,
-    slide_url: 'https://drive.google.com',
-    study_note_url: 'https://app.notion.com',
+    has_materials: false,
+    slide_url: '',
+    study_note_url: '',
     key_concepts: ['Smart Connections & AI Plugins', 'Karpathy LLM Wiki Architecture', 'Express & Content Generation'],
     supporting_resources: [
       { label: 'Smart Connections Plugin', url: 'https://github.com/brianpetro/obsidian-smart-connections' },
@@ -587,13 +605,13 @@ export const OBSIDIAN_LESSONS: Lesson[] = [
 - Trưng bày cấu trúc Vault, Dashboard, MOCs và luồng AI workflow.
 - Nhận phản hồi chuyên sâu từ Trainer và các bạn học.
 - Trao chứng nhận và định hướng phát triển hệ thống tri thức dài hạn.`,
-    video_url: 'https://youtu.be/pzsBYMMg0Dc',
+    video_url: '',
     order_index: 6,
     start_date: '2026-11-01T10:00:00+07:00',
     target: 'Tổng kết hành trình và chia sẻ sản phẩm cuối khoá',
-    has_materials: true,
-    slide_url: 'https://drive.google.com',
-    study_note_url: 'https://app.notion.com',
+    has_materials: false,
+    slide_url: '',
+    study_note_url: '',
     key_concepts: ['Second Brain Showcase', 'Knowledge System Review', 'Graduation & Certification'],
     supporting_resources: [
       { label: 'The1ight Graduation Hall of Fame', url: 'https://the1ight.com' }
@@ -623,7 +641,7 @@ export const DEFAULT_OBSIDIAN_CALENDAR_EVENTS: CalendarEvent[] = [
     dotColorClass: 'bg-[#DC2626]',
     type: 'class',
     eventType: 'kick-off',
-    details: 'Giới thiệu lộ trình, làm quen và chuẩn bị tinh thần học tập'
+    details: 'Giới thiệu tổng quan về khoá học, giảng viên, nền tảng học tập và các lưu ý quan trọng về lịch trình của lớp'
   },
   {
     id: 'evt-obs-onboarding-7',

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { OnboardingDay } from '../../types/database';
 import { renderRichText } from '../../data/onboardingVisuals';
+import { Mail, Check, Clock, ArrowLeft } from 'lucide-react';
 
 interface DayDetailHeaderProps {
   activeDayData: OnboardingDay;
@@ -27,7 +28,8 @@ export const DayDetailHeader: React.FC<DayDetailHeaderProps> = ({
           onClick={onBackToGrid}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-[#214C54] hover:text-[#15333B] hover:underline cursor-pointer"
         >
-          ← Quay lại danh sách 8 ngày
+          <ArrowLeft size={13} className="stroke-[1.5]" />
+          <span>Quay lại danh sách 8 ngày</span>
         </button>
 
         {isEditMode && onOpenEmailModal && (
@@ -36,7 +38,8 @@ export const DayDetailHeader: React.FC<DayDetailHeaderProps> = ({
             onClick={() => onOpenEmailModal(activeDayData)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#214C54] hover:bg-[#15333B] text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
           >
-            <span>✉️ Sửa Mẫu Email Ngày {selectedDay}</span>
+            <Mail size={13} className="stroke-[1.5]" />
+            <span>Sửa Mẫu Email Ngày {selectedDay}</span>
           </button>
         )}
       </div>
@@ -47,13 +50,23 @@ export const DayDetailHeader: React.FC<DayDetailHeaderProps> = ({
             THỬ THÁCH NGÀY {activeDayData.day}
           </span>
           <span
-            className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold ${
               isDayCompleted
                 ? 'bg-emerald-100 text-emerald-800'
                 : 'bg-amber-100 text-amber-800'
             }`}
           >
-            {isDayCompleted ? '✓ Đã hoàn thành' : '⏳ Đang thực hiện'}
+            {isDayCompleted ? (
+              <>
+                <Check size={12} className="stroke-[2.5]" />
+                <span>Đã hoàn thành</span>
+              </>
+            ) : (
+              <>
+                <Clock size={12} className="stroke-[2.5]" />
+                <span>Đang thực hiện</span>
+              </>
+            )}
           </span>
         </div>
 
