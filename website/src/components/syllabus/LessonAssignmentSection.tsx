@@ -32,6 +32,9 @@ interface LessonAssignmentSectionProps {
   handleSubmit: (e: React.FormEvent) => void;
   evidenceUrl: string;
   setEvidenceUrl: (url: string) => void;
+  fbGroupUrl?: string;
+  draftFbGroupUrl?: string;
+  setDraftFbGroupUrl?: (url: string) => void;
 }
 
 export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = ({
@@ -47,6 +50,9 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
   handleSubmit,
   evidenceUrl,
   setEvidenceUrl,
+  fbGroupUrl = 'https://www.facebook.com/groups/27216190438021089',
+  draftFbGroupUrl,
+  setDraftFbGroupUrl,
 }) => {
   const { activeUser } = useAuth();
   const { nauticalTransactions } = useGamification();
@@ -197,6 +203,35 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                   Thêm Tiêu Chi Mới
                 </button>
               </div>
+
+              {/* Edit Facebook Group URL */}
+              <div className="space-y-2 pt-2 border-t border-gray-150">
+                <label className="text-xs font-black text-[#214C54] uppercase tracking-wider block flex items-center gap-1.5">
+                  <Users size={14} className="stroke-[1.5]" />
+                  <span>Link Facebook Group lớp (Dùng cho nút nộp bài):</span>
+                </label>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 focus:outline-none focus:border-[#214C54] bg-white font-mono shadow-2xs"
+                    placeholder="https://www.facebook.com/groups/..."
+                    value={draftFbGroupUrl ?? fbGroupUrl}
+                    onChange={(e) => setDraftFbGroupUrl && setDraftFbGroupUrl(e.target.value)}
+                  />
+                  <a
+                    href={draftFbGroupUrl || fbGroupUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer shrink-0"
+                  >
+                    <ExternalLink size={13} />
+                    <span>Mở thử</span>
+                  </a>
+                </div>
+                <span className="text-[10px] text-gray-500 block">
+                  Đường link này sẽ được gán cho nút <strong>"Đi tới Facebook Group Lớp"</strong> khi học viên làm bài tập buổi học này.
+                </span>
+              </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 text-center space-y-2">
@@ -287,7 +322,7 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                   )}
                 </div>
                 <a
-                  href={submittedUrl || "https://www.facebook.com/groups/27216190438021089"}
+                  href={submittedUrl || fbGroupUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
@@ -378,7 +413,7 @@ export const LessonAssignmentSection: React.FC<LessonAssignmentSectionProps> = (
                   </span>
                 </div>
                 <a
-                  href="https://www.facebook.com/groups/27216190438021089"
+                  href={fbGroupUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white text-xs font-black rounded-xl w-full shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer text-center"

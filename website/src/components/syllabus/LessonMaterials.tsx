@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Lesson } from '../../types/database';
-import { BookOpen, Presentation, FileText, Play, Lock, Link2, ExternalLink } from 'lucide-react';
+import { BookOpen, Presentation, FileText, Play, Lock, Link2, ExternalLink, Plus, Trash2 } from 'lucide-react';
 
 interface LessonMaterialsProps {
   lesson: Lesson;
@@ -27,13 +27,13 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
       </h4>
 
       {isEditMode && draftLesson ? (
-        <div className="space-y-3 bg-amber-50/45 border border-amber-200/50 rounded-xl p-4 w-full">
+        <div className="space-y-4 bg-amber-50/45 border border-amber-200/50 rounded-xl p-4 w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-[10px] font-bold text-[#214C54] block mb-1">Slide Bài Giảng URL:</label>
               <input
                 type="text"
-                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#214C54] bg-white font-mono"
+                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#214C54] bg-white font-mono shadow-2xs"
                 placeholder="https://..."
                 value={draftLesson.slide_url || ''}
                 onChange={(e) => setDraftLesson({ ...draftLesson, slide_url: e.target.value })}
@@ -43,7 +43,7 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               <label className="text-[10px] font-bold text-[#214C54] block mb-1">Study Note URL:</label>
               <input
                 type="text"
-                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#214C54] bg-white font-mono"
+                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#214C54] bg-white font-mono shadow-2xs"
                 placeholder="https://..."
                 value={draftLesson.study_note_url || ''}
                 onChange={(e) => setDraftLesson({ ...draftLesson, study_note_url: e.target.value })}
@@ -53,12 +53,82 @@ export const LessonMaterials: React.FC<LessonMaterialsProps> = ({
               <label className="text-[10px] font-bold text-[#214C54] block mb-1">Video Recording URL:</label>
               <input
                 type="text"
-                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#214C54] bg-white font-mono"
+                className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#214C54] bg-white font-mono shadow-2xs"
                 placeholder="https://..."
                 value={draftLesson.video_url || ''}
                 onChange={(e) => setDraftLesson({ ...draftLesson, video_url: e.target.value })}
               />
             </div>
+          </div>
+
+          {/* Supporting Resources Section */}
+          <div className="pt-3 border-t border-amber-200/40 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-[#214C54] flex items-center gap-1.5">
+                <Link2 size={13} className="text-[#214C54]" />
+                <span>Tài liệu học tập bổ sung khác:</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentList = draftLesson.supporting_resources || [];
+                  setDraftLesson({
+                    ...draftLesson,
+                    supporting_resources: [...currentList, { label: '', url: '' }],
+                  });
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#214C54] hover:bg-[#15333B] text-white text-[11px] font-bold rounded-lg transition-all shadow-xs active:scale-95 cursor-pointer"
+              >
+                <Plus size={13} />
+                <span>Thêm tài liệu khác</span>
+              </button>
+            </div>
+
+            {(draftLesson.supporting_resources || []).length === 0 ? (
+              <p className="text-[11px] text-gray-500 italic py-1">
+                Chưa có tài liệu bổ sung nào. Bấm nút <strong>"Thêm tài liệu khác"</strong> ở trên để bổ sung thêm các link tài nguyên học tập (ví dụ: Template Notion, Github repo, File mẫu...).
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {(draftLesson.supporting_resources || []).map((resource, index) => (
+                  <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/80 p-2 rounded-lg border border-amber-200/60 shadow-2xs">
+                    <input
+                      type="text"
+                      className="w-full sm:w-1/3 border border-gray-200 rounded-md px-2 py-1 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#214C54] bg-white"
+                      placeholder="Tên tài liệu (vd: Template Obsidian)"
+                      value={resource.label}
+                      onChange={(e) => {
+                        const nextList = [...(draftLesson.supporting_resources || [])];
+                        nextList[index] = { ...nextList[index], label: e.target.value };
+                        setDraftLesson({ ...draftLesson, supporting_resources: nextList });
+                      }}
+                    />
+                    <input
+                      type="text"
+                      className="w-full sm:flex-1 border border-gray-200 rounded-md px-2 py-1 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 placeholder:font-normal focus:outline-none focus:border-[#214C54] bg-white font-mono"
+                      placeholder="https://..."
+                      value={resource.url}
+                      onChange={(e) => {
+                        const nextList = [...(draftLesson.supporting_resources || [])];
+                        nextList[index] = { ...nextList[index], url: e.target.value };
+                        setDraftLesson({ ...draftLesson, supporting_resources: nextList });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      title="Xóa link tài liệu này"
+                      onClick={() => {
+                        const nextList = (draftLesson.supporting_resources || []).filter((_, i) => i !== index);
+                        setDraftLesson({ ...draftLesson, supporting_resources: nextList });
+                      }}
+                      className="self-end sm:self-auto text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-md transition-all cursor-pointer flex items-center justify-center shrink-0"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : (

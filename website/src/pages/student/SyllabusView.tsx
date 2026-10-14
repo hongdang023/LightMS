@@ -6,7 +6,7 @@ import { useGamification } from '../../context/GamificationContext';
 import { PageHeader } from '../../components/PageHeader';
 import type { Lesson } from '../../types/database';
 import { EditableText } from '../../components/EditableText';
-import { X, Save, Undo, Lightbulb, Key, Plus, BookOpen, ClipboardCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, Save, Undo, Lightbulb, Key, Plus, BookOpen, ClipboardCheck, AlertCircle, CheckCircle2, Edit3, ExternalLink } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { LessonMaterials } from '../../components/syllabus/LessonMaterials';
 import { LessonAssignmentSection } from '../../components/syllabus/LessonAssignmentSection';
@@ -37,6 +37,20 @@ export const SyllabusView: React.FC<{
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonDate, setNewLessonDate] = useState('');
 
+  // Survey form URL state with localStorage persistence
+  const DEFAULT_SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform';
+  const [surveyFormUrl, setSurveyFormUrl] = useState<string>(() => {
+    return localStorage.getItem('lightms_survey_form_url') || DEFAULT_SURVEY_URL;
+  });
+  const [draftSurveyUrl, setDraftSurveyUrl] = useState<string>(surveyFormUrl);
+
+  // Facebook Group URL state with localStorage persistence
+  const DEFAULT_FB_GROUP_URL = 'https://www.facebook.com/groups/27216190438021089';
+  const [fbGroupUrl, setFbGroupUrl] = useState<string>(() => {
+    return localStorage.getItem('lightms_fb_group_url') || DEFAULT_FB_GROUP_URL;
+  });
+  const [draftFbGroupUrl, setDraftFbGroupUrl] = useState<string>(fbGroupUrl);
+
   const activeLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0];
 
   // Initialize draft when active lesson or edit mode changes
@@ -44,12 +58,14 @@ export const SyllabusView: React.FC<{
     if (isEditMode && selectedLessonId && activeLesson) {
       setDraftLesson({ ...activeLesson });
       setHasHomework(!!activeLesson.assignment_description);
+      setDraftSurveyUrl(surveyFormUrl);
+      setDraftFbGroupUrl(fbGroupUrl);
     } else {
       setDraftLesson(null);
       setHasHomework(false);
     }
     setNewConceptInput('');
-  }, [selectedLessonId, isEditMode, activeLesson]);
+  }, [selectedLessonId, isEditMode, activeLesson, surveyFormUrl, fbGroupUrl]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -65,6 +81,7 @@ export const SyllabusView: React.FC<{
         slide_url: draftLesson.slide_url,
         study_note_url: draftLesson.study_note_url,
         video_url: draftLesson.video_url,
+        supporting_resources: draftLesson.supporting_resources || [],
       };
       if (hasHomework) {
         updates.assignment_description = draftLesson.assignment_description || 'Bài tập cho buổi học này.';
@@ -77,6 +94,14 @@ export const SyllabusView: React.FC<{
       if (error) {
         showToast(`Lỗi khi lưu dữ liệu: ${error.message || 'Vui lòng thử lại!'}`);
       } else {
+        if (draftSurveyUrl) {
+          localStorage.setItem('lightms_survey_form_url', draftSurveyUrl.trim());
+          setSurveyFormUrl(draftSurveyUrl.trim());
+        }
+        if (draftFbGroupUrl) {
+          localStorage.setItem('lightms_fb_group_url', draftFbGroupUrl.trim());
+          setFbGroupUrl(draftFbGroupUrl.trim());
+        }
         showToast('Đã lưu mọi thay đổi thành công!');
       }
     }
@@ -86,6 +111,8 @@ export const SyllabusView: React.FC<{
     if (activeLesson) {
       setDraftLesson({ ...activeLesson });
       setHasHomework(!!activeLesson.assignment_description);
+      setDraftSurveyUrl(surveyFormUrl);
+      setDraftFbGroupUrl(fbGroupUrl);
       setNewConceptInput('');
       showToast('Đã hoàn tác các thay đổi chưa lưu.');
     }
@@ -548,6 +575,9 @@ export const SyllabusView: React.FC<{
               handleSubmit={handleSubmit}
               evidenceUrl={evidenceUrl}
               setEvidenceUrl={setEvidenceUrl}
+              fbGroupUrl={fbGroupUrl}
+              draftFbGroupUrl={draftFbGroupUrl}
+              setDraftFbGroupUrl={setDraftFbGroupUrl}
             />
 
             {/* Survey Section (Hidden for Kick-off Meeting & Pitching Day) */}
@@ -563,15 +593,46 @@ export const SyllabusView: React.FC<{
                 <p className="text-xs text-slate-500 leading-normal">
                   Hãy dành 1 phút để giúp chúng tôi cải thiện chất lượng giảng dạy cho các buổi học sau nhé.
                 </p>
-                <a
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-xl w-full sm:w-auto shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
-                >
-                  <ClipboardCheck size={14} className="stroke-[1.5]" />
-                  <span>Điền Form Khảo Sát Buổi Học</span>
-                </a>
+
+                {isEditMode ? (
+                  <div className="bg-amber-50/45 border border-amber-200/50 rounded-xl p-3.5 space-y-2 max-w-2xl">
+                    <label className="text-[11px] font-bold text-[#214C54] flex items-center gap-1.5">
+                      <Edit3 size={13} className="text-[#214C54]" />
+                      <span>Đường dẫn Form Khảo Sát Buổi Học:</span>
+                    </label>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <input
+                        type="text"
+                        className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-[#15333B] font-semibold placeholder:text-gray-400 focus:outline-none focus:border-[#214C54] bg-white font-mono shadow-2xs"
+                        placeholder="https://docs.google.com/forms/..."
+                        value={draftSurveyUrl}
+                        onChange={(e) => setDraftSurveyUrl(e.target.value)}
+                      />
+                      <a
+                        href={draftSurveyUrl || surveyFormUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-lg transition-all shadow-xs cursor-pointer shrink-0"
+                      >
+                        <ExternalLink size={12} />
+                        <span>Xem thử</span>
+                      </a>
+                    </div>
+                    <span className="text-[10px] text-gray-500 block">
+                      Khi bấm <strong>"Lưu thay đổi"</strong> ở thanh cuối trang, liên kết khảo sát mới sẽ được áp dụng cho học viên.
+                    </span>
+                  </div>
+                ) : (
+                  <a
+                    href={surveyFormUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#724AE8] hover:bg-[#5b37c7] text-white text-xs font-black rounded-xl w-full sm:w-auto shadow-sm hover:shadow active:scale-95 transition-all cursor-pointer"
+                  >
+                    <ClipboardCheck size={14} className="stroke-[1.5]" />
+                    <span>Điền Form Khảo Sát Buổi Học</span>
+                  </a>
+                )}
               </div>
             )}
             </div>
