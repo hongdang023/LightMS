@@ -37,16 +37,21 @@ export const SyllabusView: React.FC<{
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonDate, setNewLessonDate] = useState('');
 
+  const activeLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0];
+
   // Course-specific defaults
-  const isObsidian = activeCourse?.slug?.includes('obsidian') || activeCourse?.id?.includes('obsidian');
+  const isObsidian = Boolean(
+    activeCourse?.slug?.includes('obsidian') || 
+    activeCourse?.id?.includes('obsidian') ||
+    activeLesson?.course_id?.includes('obsidian') ||
+    activeLesson?.id?.includes('obs')
+  );
   const courseDefaultFbGroupUrl = isObsidian
     ? 'https://www.facebook.com/groups/2251571492466555'
     : 'https://www.facebook.com/groups/27216190438021089';
   const courseDefaultSurveyUrl = isObsidian
     ? 'https://forms.gle/ZZzpKTXEKPtgvZ5K8'
     : 'https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform';
-
-  const activeLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0];
 
   // Active URLs derived directly from activeLesson with course defaults as fallback
   const fbGroupUrl = activeLesson?.fb_group_url || courseDefaultFbGroupUrl;
