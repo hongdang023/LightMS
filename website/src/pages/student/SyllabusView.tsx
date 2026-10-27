@@ -17,7 +17,7 @@ export const SyllabusView: React.FC<{
   isEditMode?: boolean;
 }> = ({ isEditMode = false }) => {
   const { activeUser, users: profiles, setProfiles, updateProfile } = useAuth();
-  const { lessons, isLessonsLoading, completeLesson, updateLesson, addLesson } = useCourse();
+  const { activeCourse, lessons, isLessonsLoading, completeLesson, updateLesson, addLesson } = useCourse();
   const { nauticalTransactions, addNauticalMiles, unlockBadge } = useGamification();
 
   const filteredLessons = lessons;
@@ -37,35 +37,42 @@ export const SyllabusView: React.FC<{
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonDate, setNewLessonDate] = useState('');
 
-  // Survey form URL state with localStorage persistence
-  const DEFAULT_SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform';
-  const [surveyFormUrl, setSurveyFormUrl] = useState<string>(() => {
-    return localStorage.getItem('lightms_survey_form_url') || DEFAULT_SURVEY_URL;
-  });
-  const [draftSurveyUrl, setDraftSurveyUrl] = useState<string>(surveyFormUrl);
-
-  // Facebook Group URL state with localStorage persistence
-  const DEFAULT_FB_GROUP_URL = 'https://www.facebook.com/groups/27216190438021089';
-  const [fbGroupUrl, setFbGroupUrl] = useState<string>(() => {
-    return localStorage.getItem('lightms_fb_group_url') || DEFAULT_FB_GROUP_URL;
-  });
-  const [draftFbGroupUrl, setDraftFbGroupUrl] = useState<string>(fbGroupUrl);
+  // Course-specific defaults
+  const isObsidian = activeCourse?.slug?.includes('obsidian') || activeCourse?.id?.includes('obsidian');
+  const courseDefaultFbGroupUrl = isObsidian
+    ? 'https://www.facebook.com/groups/2251571492466555'
+    : 'https://www.facebook.com/groups/27216190438021089';
+  const courseDefaultSurveyUrl = isObsidian
+    ? 'https://forms.gle/ZZzpKTXEKPtgvZ5K8'
+    : 'https://docs.google.com/forms/d/e/1FAIpQLSdF81_cCcZU68_t9OzCMce2BN_Q3sWs8sODHsTs0g6YP6BpGQ/viewform';
 
   const activeLesson = filteredLessons.find(l => l.id === selectedLessonId) || filteredLessons[0];
 
+  // Active URLs derived directly from activeLesson with course defaults as fallback
+  const fbGroupUrl = activeLesson?.fb_group_url || courseDefaultFbGroupUrl;
+  const surveyFormUrl = activeLesson?.survey_url || courseDefaultSurveyUrl;
+
+  const [draftSurveyUrl, setDraftSurveyUrl] = useState<string>(surveyFormUrl);
+  const [draftFbGroupUrl, setDraftFbGroupUrl] = useState<string>(fbGroupUrl);
+
   // Initialize draft when active lesson or edit mode changes
   useEffect(() => {
-    if (isEditMode && selectedLessonId && activeLesson) {
-      setDraftLesson({ ...activeLesson });
-      setHasHomework(!!activeLesson.assignment_description);
-      setDraftSurveyUrl(surveyFormUrl);
-      setDraftFbGroupUrl(fbGroupUrl);
-    } else {
-      setDraftLesson(null);
-      setHasHomework(false);
+    if (activeLesson) {
+      const lessonFb = activeLesson.fb_group_url || courseDefaultFbGroupUrl;
+      const lessonSurvey = activeLesson.survey_url || courseDefaultSurveyUrl;
+      setDraftSurveyUrl(lessonSurvey);
+      setDraftFbGroupUrl(lessonFb);
+
+      if (isEditMode && selectedLessonId) {
+        setDraftLesson({ ...activeLesson, fb_group_url: lessonFb, survey_url: lessonSurvey });
+        setHasHomework(!!activeLesson.assignment_description);
+      } else {
+        setDraftLesson(null);
+        setHasHomework(false);
+      }
     }
     setNewConceptInput('');
-  }, [selectedLessonId, isEditMode, activeLesson, surveyFormUrl, fbGroupUrl]);
+  }, [selectedLessonId, isEditMode, activeLesson?.id, activeLesson?.fb_group_url, activeLesson?.survey_url, courseDefaultFbGroupUrl, courseDefaultSurveyUrl]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -82,6 +89,8 @@ export const SyllabusView: React.FC<{
         study_note_url: draftLesson.study_note_url,
         video_url: draftLesson.video_url,
         supporting_resources: draftLesson.supporting_resources || [],
+        fb_group_url: (draftFbGroupUrl || '').trim(),
+        survey_url: (draftSurveyUrl || '').trim(),
       };
       if (hasHomework) {
         updates.assignment_description = draftLesson.assignment_description || 'Bài tập cho buổi học này.';
@@ -94,14 +103,6 @@ export const SyllabusView: React.FC<{
       if (error) {
         showToast(`Lỗi khi lưu dữ liệu: ${error.message || 'Vui lòng thử lại!'}`);
       } else {
-        if (draftSurveyUrl) {
-          localStorage.setItem('lightms_survey_form_url', draftSurveyUrl.trim());
-          setSurveyFormUrl(draftSurveyUrl.trim());
-        }
-        if (draftFbGroupUrl) {
-          localStorage.setItem('lightms_fb_group_url', draftFbGroupUrl.trim());
-          setFbGroupUrl(draftFbGroupUrl.trim());
-        }
         showToast('Đã lưu mọi thay đổi thành công!');
       }
     }
@@ -111,8 +112,8 @@ export const SyllabusView: React.FC<{
     if (activeLesson) {
       setDraftLesson({ ...activeLesson });
       setHasHomework(!!activeLesson.assignment_description);
-      setDraftSurveyUrl(surveyFormUrl);
-      setDraftFbGroupUrl(fbGroupUrl);
+      setDraftSurveyUrl(activeLesson.survey_url || courseDefaultSurveyUrl);
+      setDraftFbGroupUrl(activeLesson.fb_group_url || courseDefaultFbGroupUrl);
       setNewConceptInput('');
       showToast('Đã hoàn tác các thay đổi chưa lưu.');
     }

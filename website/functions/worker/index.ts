@@ -203,6 +203,8 @@ export default {
             supportingResourcesJson: JSON.stringify(body.supporting_resources || body.supportingResources || []),
             assignmentDescription: body.assignment_description || body.assignmentDescription || '',
             assignmentRubricJson: JSON.stringify(body.assignment_rubric_checklist || body.assignmentRubricJson || []),
+            fbGroupUrl: body.fb_group_url !== undefined ? body.fb_group_url : (body.fbGroupUrl || ''),
+            surveyUrl: body.survey_url !== undefined ? body.survey_url : (body.surveyUrl || ''),
             createdAt: nowIso,
           });
 
@@ -244,6 +246,12 @@ export default {
           }
           if (body.assignment_rubric_checklist !== undefined || body.assignmentRubricJson !== undefined) {
             updateData.assignmentRubricJson = JSON.stringify(body.assignment_rubric_checklist || body.assignmentRubricJson);
+          }
+          if (body.fb_group_url !== undefined || body.fbGroupUrl !== undefined) {
+            updateData.fbGroupUrl = body.fb_group_url !== undefined ? body.fb_group_url : body.fbGroupUrl;
+          }
+          if (body.survey_url !== undefined || body.surveyUrl !== undefined) {
+            updateData.surveyUrl = body.survey_url !== undefined ? body.survey_url : body.surveyUrl;
           }
 
           await db.update(schema.lessons).set(updateData).where(eq(schema.lessons.id, body.id));

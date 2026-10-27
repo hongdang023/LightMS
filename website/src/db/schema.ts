@@ -96,6 +96,8 @@ export const lessons = sqliteTable('lessons', {
   supportingResourcesJson: text('supporting_resources_json').default('[]'),
   assignmentDescription: text('assignment_description'),
   assignmentRubricJson: text('assignment_rubric_json').default('[]'),
+  fbGroupUrl: text('fb_group_url'),
+  surveyUrl: text('survey_url'),
   createdAt: text('created_at').notNull(),
 });
 

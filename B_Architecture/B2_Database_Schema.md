@@ -114,6 +114,8 @@ export const lessons = sqliteTable('lessons', {
   assignmentDescription: text('assignment_description'),
   assignmentResourceUrl: text('assignment_resource_url'),
   assignmentRubricJson: text('assignment_rubric_json').default('[]'),
+  fbGroupUrl: text('fb_group_url'), // Link Facebook Group lớp để nộp bài
+  surveyUrl: text('survey_url'), // Link Google Form khảo sát buổi học
   createdAt: text('created_at').notNull(),
 });
 ```

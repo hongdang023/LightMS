@@ -94,6 +94,8 @@ export interface Lesson {
   supporting_resources?: { label: string; url: string }[];
   assignment_description?: string;
   assignment_rubric_checklist?: { item: string; checked: boolean; is_optional?: boolean }[];
+  fb_group_url?: string;
+  survey_url?: string;
 }
 
 export interface NauticalMilesTransaction {

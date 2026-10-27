@@ -267,6 +267,8 @@ class D1ApiService {
             supporting_resources: resources,
             assignment_description: l.assignmentDescription || l.assignment_description || '',
             assignment_rubric_checklist: rubrics,
+            fb_group_url: l.fbGroupUrl || l.fb_group_url || '',
+            survey_url: l.surveyUrl || l.survey_url || '',
           };
         });
       }
